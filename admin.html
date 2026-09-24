@@ -388,7 +388,7 @@
 .hr-row-child{border-left:3px solid var(--accent-lt,#dfe3ff);background:var(--surface2);}   /* margin-left は深さに応じて行ごとに指定 */
 .hr-child-tag{display:inline-block;margin-right:6px;padding:0 6px;border-radius:8px;font-size:9px;font-weight:700;background:var(--accent-lt);color:var(--accent-text);vertical-align:middle;}
 /* ログ作成補助：ボタンごとの中の項目の区切り（本物の質問ではなく、見出し＋その場で追加できるボタン） */
-.hr-log-opt-divider{display:flex;align-items:center;gap:6px;padding:3px 0 2px;margin-top:0;border-top:1px dashed var(--border);}
+.hr-log-opt-divider{display:flex;align-items:center;gap:6px;padding:6px 14px 4px;margin:0 -14px;border-top:1px dashed var(--border);}   /* 点線は、行の実線（border-bottom）と同じ幅にそろえる */
 .hr-log-opt-divider-label{font-size:9px;font-weight:700;color:var(--text3);white-space:nowrap;opacity:.8;}
 .hr-log-opt-add{height:18px;padding:0 7px;border-radius:3px;border:1px solid var(--border);background:var(--surface);color:var(--text3);font-size:10px;font-family:inherit;cursor:pointer;}
 .hr-log-opt-add:hover{border-color:var(--accent);color:var(--accent-text);}
@@ -6429,7 +6429,10 @@ var _rtActive = null;
 document.addEventListener('keydown', function(e) {
   if (e.key !== 'Enter') return;
   var t = e.target;
-  if (t && t.classList && (t.classList.contains('choice-label-in') || t.classList.contains('hr-rt-line'))) e.preventDefault();
+  // 「項目名」欄（hr-rt-line-multi）だけは改行できるようにした。
+  // 選択肢名・ボタン名・出力名・詳細（choice-label-in／hr-rt-line）は、引き続き1行のまま。
+  if (t && t.classList && (t.classList.contains('choice-label-in')
+    || (t.classList.contains('hr-rt-line') && !t.classList.contains('hr-rt-line-multi')))) e.preventDefault();
 });
 
 document.addEventListener('focusin', function(e) {
@@ -14188,14 +14191,14 @@ window.addEventListener('resize',function(){
     var hasImg = /<img\b|<table\b/i.test(html);
     return { text: text, html: ((text !== '' || hasImg) && _hrRichHasFmt(html)) ? html : '' };
   }
-  function _hrMkRichLine(placeholder, css) {
+  function _hrMkRichLine(placeholder, css, allowMultiline) {
     var d = document.createElement('div');
-    d.className = 'rt-edit hr-rt-line';
+    d.className = 'rt-edit hr-rt-line' + (allowMultiline ? ' hr-rt-line-multi' : '');
     d.contentEditable = 'true';
     d.dataset.ph = placeholder || '';
     d.style.cssText = css + 'height:auto;min-height:28px;padding:4px 8px;line-height:1.5;overflow:hidden;';
     Object.defineProperty(d, 'value', {
-      get: function() { return _hrReadRich(d).text.replace(/\n/g, ' '); },
+      get: function() { var t = _hrReadRich(d).text; return allowMultiline ? t : t.replace(/\n/g, ' '); },
       set: function(v) { d.textContent = (v == null) ? '' : String(v); },
       configurable: true
     });
@@ -14209,10 +14212,11 @@ window.addEventListener('resize',function(){
       if (html) d.innerHTML = window.hearingSanitizeHtml(html);
       else d.textContent = (plain == null) ? '' : String(plain);
     };
-    // 1 行なので貼り付けは文字だけにする（外部の書式・改行を持ち込まない）
+    // 貼り付けは文字だけにする（外部の書式は持ち込まない。改行は、許可されている欄だけ残す）
     d.addEventListener('paste', function(e) {
       e.preventDefault();
-      var t = ((e.clipboardData || window.clipboardData).getData('text') || '').replace(/[\r\n]+/g, ' ');
+      var t = (e.clipboardData || window.clipboardData).getData('text') || '';
+      if (!allowMultiline) t = t.replace(/[\r\n]+/g, ' ');
       document.execCommand('insertText', false, t);
     });
     return d;
@@ -14245,7 +14249,9 @@ window.addEventListener('resize',function(){
 
   /** 管理画面のプレビューに出す項目名（書式つきならそのまま、無ければエスケープ） */
   function _hrLabelAdmin(q) {
-    return q.labelHtml ? window.hearingSanitizeHtml(q.labelHtml) : escHtml(q.label);
+    var html = q.labelHtml ? window.hearingSanitizeHtml(q.labelHtml) : escHtml(q.label || '').replace(/\n/g, '<br>');
+    if (q.type === 'heading') html = window.hearingParseHeadingLinks(html);
+    return html;
   }
 
   function _hrInsertSlot(inp) {
@@ -14757,7 +14763,7 @@ window.addEventListener('resize',function(){
         return '<option value="' + escHtml(o.v) + '">' + escHtml(window.hearingPrefixLabel(o.v)) + '</option>';
       }).join('');
 
-    var labelInp = _hrMkRichLine('項目名（例：契約種別）', INP + 'flex:1;min-width:0;');
+    var labelInp = _hrMkRichLine('項目名（例：契約種別）', INP + 'flex:1;min-width:0;', true);
 
     // 出力名と出力文を1つにまとめた欄。
     // [入力] を含めれば文章として、含まなければ「出力名：回答」として出力する。
@@ -14793,18 +14799,23 @@ window.addEventListener('resize',function(){
       '<option value="toggle">トグルボタン</option>' +
       '<option value="log">ログ作成補助</option>' +
       '<option value="spacer">空白行</option>' +
-      '<option value="qtycheck">チェック＋数量</option>';
-    // ログ作成補助の中には、入力や選択の項目だけを置ける（見出し・空白行・ログ作成補助は置かない）
+      '<option value="qtycheck">チェック＋数量</option>' +
+      '<option value="image">画像</option>';
+    // 中には、空白行だけは置けない（見出し・ログ作成補助は中に置ける。ログ作成補助の中にログ作成補助も可）
     if (parentId) {
-      ['heading', 'log', 'spacer'].forEach(function(v) {
+      ['spacer'].forEach(function(v) {
         var o = typeSel.querySelector('option[value="' + v + '"]'); if (o) typeSel.removeChild(o);
       });
     }
     // 「差し込み」から新しく作るときは、記述（フリーテキスト）は対象外にする
     // （記述は中の項目として「項目名：値」でそのまま出るので、差し込みにする必要が薄いため）
     if (opts && opts.noText) {
-      var otxt = typeSel.querySelector('option[value="text"]'); if (otxt) typeSel.removeChild(otxt);
-      if (typeSel.value === 'text') typeSel.value = 'select';
+      // 「差し込み」から新しく作るときは、記述・見出し・ログ作成補助は対象外にする
+      // （差し込む値として意味を持たないため）
+      ['text', 'heading', 'log', 'image'].forEach(function(v) {
+        var o = typeSel.querySelector('option[value="' + v + '"]'); if (o) typeSel.removeChild(o);
+      });
+      if (['text', 'heading', 'log', 'image'].indexOf(typeSel.value) >= 0) typeSel.value = 'select';
     }
     var typeRow = row('回答方法', typeSel);
     container.insertBefore(typeRow, mainRow);   // 並びは：テンプレート名 → 回答方法 → 項目名・出力
@@ -14858,7 +14869,7 @@ window.addEventListener('resize',function(){
       'background:var(--surface2);border-radius:6px;';
     container.appendChild(extra);
 
-    var multiline = null, multi = null, optsArea = null, qtyPhInput = null, includeOutputChk = null;
+    var multiline = null, multi = null, optsArea = null, qtyPhInput = null, includeOutputChk = null, textPhInput = null, imgBody = null;
     var _syncOtherBtn = null;   // 「その他（手入力）」ボタンの出し分け
 
     var addOptRow = function(val, details, logText, logHtml, lHtml, detailsHtml) {
@@ -14936,7 +14947,7 @@ window.addEventListener('resize',function(){
         // 記述（フリーテキスト）は、中の項目として直接「項目名：値」で出るので、
         // わざわざ {{項目名}} で差し込む必要が薄い。差し込みの候補からは外す。
         var refCandidates = _hrQuestionsGet().filter(function(x) {
-          return x && x.label && x.type !== 'heading' && x.type !== 'spacer' && x.type !== 'log' && x.type !== 'text';
+          return x && x.label && x.type !== 'heading' && x.type !== 'spacer' && x.type !== 'log' && x.type !== 'text' && x.type !== 'image';
         });
         refSel.innerHTML = '<option value="">＋ 他の項目の回答を挿入…</option>' +
           '<option value="__new__">＋ 新しい項目を作って差し込む…</option>' +
@@ -14955,10 +14966,12 @@ window.addEventListener('resize',function(){
             if (!optV) { toast('⚠️ 先にボタン名を入力してください'); inp.focus(); return; }
             // 通常の追加フォームと全く同じもの（項目名・選択肢の欄、「その他（手入力）」ボタンなど）を、
             // このボタン専用の中の項目として、その場に開く。保存されたら、続けて {{項目名}} を差し込む。
-            var old2 = refWrap.parentNode.querySelector(':scope > #hrRowEditArea');
+            // 通常の編集フォーム（#hrRowEditArea）と ID がぶつかると、
+            // 「開いている編集フォームを探して閉じる」処理などが混乱するため、別の ID にする
+            var old2 = refWrap.parentNode.querySelector(':scope > .hr-quickref-area');
             if (old2) old2.parentNode.removeChild(old2);
             var qArea = document.createElement('div');
-            qArea.id = 'hrRowEditArea';
+            qArea.className = 'hr-quickref-area';
             refWrap.parentNode.insertBefore(qArea, refWrap.nextSibling);
             _openInlineAddForm(qArea, null, {
               parentId: formId, parentOpt: optV, noText: true,
@@ -15039,9 +15052,41 @@ window.addEventListener('resize',function(){
       slotBtn.style.display = (t === 'log') ? 'none' : '';
       extra.style.display = '';
 
+      if (t === 'image') {
+        slotBtn.style.display = 'none';
+        extra.innerHTML = '';
+        var imgNote = document.createElement('div');
+        imgNote.style.cssText = 'font-size:10px;color:var(--text3);';
+        imgNote.textContent = '書式バーの「🖼 画像」から、表示する画像を挿入してください（項目名は無くても構いません）。';
+        extra.appendChild(imgNote);
+        imgBody = document.createElement('div');
+        imgBody.className = 'rt-edit';
+        imgBody.contentEditable = 'true';
+        imgBody.dataset.role = 'imgbody';
+        imgBody.dataset.ph = 'ここに画像を挿入します';
+        imgBody.innerHTML = (isEdit && editQ.type === 'image' && editQ.imageHtml)
+          ? window.hearingSanitizeHtml(editQ.imageHtml) : '';
+        imgBody.style.cssText = INP + 'height:auto;min-height:80px;padding:8px;line-height:1.6;overflow:auto;';
+        extra.appendChild(imgBody);
+        return;
+      }
+
       if (t === 'text') {
         setAllowChk('multiline');
-        extra.style.display = 'none';
+        extra.style.display = '';
+        extra.innerHTML = '';
+        var tPhRow = document.createElement('div');
+        tPhRow.style.cssText = 'display:flex;align-items:center;gap:8px;';
+        var tPhLbl = document.createElement('span');
+        tPhLbl.style.cssText = 'font-size:11px;color:var(--text2);flex:0 0 auto;white-space:nowrap;';
+        tPhLbl.textContent = 'プレースホルダー（未入力時の案内文）';
+        textPhInput = document.createElement('input');
+        textPhInput.type = 'text';
+        textPhInput.style.cssText = INP + 'flex:1;';
+        textPhInput.placeholder = '例：自由にご記入ください';
+        textPhInput.value = (isEdit && editQ.type === 'text' && editQ.placeholder) || '';
+        tPhRow.appendChild(tPhLbl); tPhRow.appendChild(textPhInput);
+        extra.appendChild(tPhRow);
         return;
       }
 
@@ -15305,6 +15350,11 @@ window.addEventListener('resize',function(){
         if (t === 'heading' && includeOutputChk && !includeOutputChk.checked) newQ.includeInOutput = false;
       } else if (t === 'text') {
         newQ.multiline = !!(multiline && multiline.checked);
+        if (textPhInput && textPhInput.value.trim()) newQ.placeholder = textPhInput.value.trim();
+      } else if (t === 'image') {
+        var imgHtml = imgBody ? window.hearingSanitizeHtml(imgBody.innerHTML) : '';
+        if (!/<img\b/i.test(imgHtml)) { toast('⚠️ 画像を挿入してください'); return; }
+        newQ.imageHtml = imgHtml;
       } else {
         if (t === 'qtycheck' && qtyPhInput) newQ.placeholder = qtyPhInput.value.trim();
         newQ.options = [];
@@ -15857,8 +15907,8 @@ window.addEventListener('resize',function(){
         if (q.__divider) {
           // 本物の質問ではなく、ボタンごとの中の項目をまとめる見出し（＋その場で追加できる小さなボタン）
           var divDepth = (depthOf[q.parentLogId] || 0) + 1;
-          h += '<div class="hr-log-opt-divider" style="margin-left:' + (24 * divDepth) + 'px" data-log-id="' + escHtml(q.parentLogId) + '" data-opt="' + escHtml(q.optV) + '">'
-            + '<span class="hr-log-opt-divider-label">↳ ' + escHtml(q.optLabel) + '</span>'
+          h += '<div class="hr-log-opt-divider" data-log-id="' + escHtml(q.parentLogId) + '" data-opt="' + escHtml(q.optV) + '">'
+            + '<span class="hr-log-opt-divider-label" style="margin-left:' + (24 * divDepth) + 'px">↳ ' + escHtml(q.optLabel) + '</span>'
             + '<button type="button" class="hr-row-addkid hr-log-opt-add" data-log-id="' + escHtml(q.parentLogId) + '" data-opt="' + escHtml(q.optV) + '">＋ 項目</button>'
             + '</div>';
           return;

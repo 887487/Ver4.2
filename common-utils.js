@@ -1379,7 +1379,7 @@ window.stripFixedSideMenuSections = function (list) {
 // そのため data.js（hearingQuestions）には持たせず、ここで定義して必ず補う。
 // data.js や IndexedDB に古い q_memo が残っていても、読み込み時に取り除いてここの定義を使う。
 window.HEARING_MEMO_ITEM = {
-  id: 'q_memo', field: 'memo', label: '【 📝Memo 】', type: 'text', multiline: true,
+  id: 'q_memo', field: 'memo', label: 'メモ', type: 'text', multiline: true,
   placeholder: '自由記入欄…', common: true, enabled: true, builtin: true, showIf: []
 };
 function _hrIsMemoQ(q) { return !!q && (q.id === 'q_memo' || q.field === 'memo'); }
@@ -3510,7 +3510,7 @@ window.hearingChildItemsForOpt = function(q, optV, s) {
   var over = (typeof _hrPatternOverrides === 'function') ? _hrPatternOverrides(s || hearingState) : {};
   return window.filterQuestionsByTemplate(_hrGetQuestions()).filter(function(k) {
     if (k.parentId !== q.id || k.parentOpt !== optV || !k.enabled) return false;
-    if (k.type === 'heading' || k.type === 'log' || k.type === 'spacer') return false;
+    if (k.type === 'spacer') return false;   // 空白行は中を持てない（見出し・ログ作成補助は中に置ける）
     if (k.id in over) return !!over[k.id];
     return _hrEvalShowIf(k.showIf, s || hearingState);
   });
@@ -3521,7 +3521,7 @@ window.hearingChildItems = function(q, s) {
   var over = (typeof _hrPatternOverrides === 'function') ? _hrPatternOverrides(s || hearingState) : {};
   return window.filterQuestionsByTemplate(_hrGetQuestions()).filter(function(k) {
     if (k.parentId !== q.id || !k.enabled) return false;
-    if (k.type === 'heading' || k.type === 'log' || k.type === 'spacer') return false;
+    if (k.type === 'spacer') return false;   // 空白行は中を持てない（見出し・ログ作成補助は中に置ける）
     if (k.id in over) return !!over[k.id];
     return _hrEvalShowIf(k.showIf, s || hearingState);
   });
@@ -4561,9 +4561,25 @@ window.hearingTextToHtml = function (text) {
 // 書式が無いものは、これまでと同じ表示になる。
 
 /** 項目名の表示用 HTML */
+/**
+ * 見出しの文字の中にある「[表示名](URL)」を、クリックできるリンクに変える。
+ * http:// と https:// の URL だけを許可する（他は書いたとおりの文字のまま残す）。
+ * 渡す文字列は、あらかじめ escHtml 済みであること（そのままでは [ ] ( ) は変換されない文字なので安全に扱える）。
+ */
+window.hearingParseHeadingLinks = function (escapedHtml) {
+  if (!escapedHtml || String(escapedHtml).indexOf('](') < 0) return escapedHtml;
+  return String(escapedHtml).replace(/\[([^\[\]]+)\]\((https?:\/\/[^\s()]+)\)/g, function (m, disp, url) {
+    return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + disp + '</a>';
+  });
+};
+
 window.hrLabelHtml = function (q) {
   if (!q) return '';
-  return q.labelHtml ? window.hearingSanitizeHtml(q.labelHtml) : q.label;
+  // 書式が無いときも、項目名の中の改行はそのまま見えるようにする（<br> にする。文字は escHtml で安全に）
+  var html = q.labelHtml ? window.hearingSanitizeHtml(q.labelHtml) : escHtml(q.label || '').replace(/\n/g, '<br>');
+  // 見出しでは、[表示名](URL) の書き方をリンクにする
+  if (q.type === 'heading') html = window.hearingParseHeadingLinks(html);
+  return html;
 };
 /** 選択肢名の表示用 HTML（書式が無ければ従来どおり名前そのまま） */
 window.hrOptHtml = function (o) {
@@ -4915,7 +4931,10 @@ function _hrSelectManualHTML(q, s) {
     opts.map(function (o) { return _mkOpt(o.v, v, o.l); }).join('') +
     // 選択肢に手入力のものがあれば、自動の「その他（手入力）」は足さない
     // （両方出ると「その他」が2つ並んでしまう）
-    (window.hearingNeedsManual(q) ? '<option value="__manual__"' + (v === '__manual__' ? ' selected' : '') + '>その他（手入力）</option>' : '') +
+    // 「その他（手入力）」は、既に手入力の選択肢が無いときだけ自動で足す
+    // （ある選択肢に既に手入力の印が付いていれば、それが「その他（手入力）」そのものなので、二重には出さない）
+    ((window.hearingNeedsManual(q) && !opts.some(function (o) { return o.manual; }))
+      ? '<option value="__manual__"' + (v === '__manual__' ? ' selected' : '') + '>その他（手入力）</option>' : '') +
     '</select>';
   h += '<div style="display:' + (showManual ? 'block' : 'none') + ';margin-top:6px;">' +
     '<input type="text" class="hr-text-input" placeholder="' + escHtml(q.manualPlaceholder || '') + '"' +
@@ -4957,6 +4976,17 @@ function _hearingItemHTMLRaw(q, s) {
   var fld = q.field || q.id;
   var pf  = window.getHearingPrefix(q);
 
+  // 見出しは、中の項目（ログ作成補助の中に置かれたとき）としても使える。
+  // トップレベルの見出し（グループの開閉）とは別の、シンプルな区切り表示にする。
+  if (q.type === 'heading' && q.parentId) {
+    return '<div class=\"hr-heading\">' + escHtml(pf ? pf + ' ' : '') + window.hrLabelHtml(q) + '</div>';
+  }
+  // 画像：入力欄を持たない。管理側で挿入した画像をそのまま表示するだけ
+  if (q.type === 'image') {
+    if (!q.imageHtml) return '';
+    var imgLabel = q.label ? '<div class=\"hr-label\">' + escHtml(pf ? pf + ' ' : '') + window.hrLabelHtml(q) + '</div>' : '';
+    return '<div class=\"hr-row hr-image-row\">' + imgLabel + '<div class=\"hr-btns\">' + q.imageHtml + '</div></div>';
+  }
   if (q.type === 'bool') {
     return _hrRow(window.hrLabelHtml(q), _boolBtns(fld, s[fld], q.trueLabel || 'はい', q.falseLabel || 'いいえ'), '', pf);
   }
@@ -5234,7 +5264,7 @@ window.getFixedText = function (key) {
 };
 
 // ログ作成補助で、複数のボタンを選んだときの区切り線
-var LOG_SEPARATOR = '－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－';
+var LOG_SEPARATOR = '--------------------------------------------------';
 window.LOG_SEPARATOR = LOG_SEPARATOR;
 
 // ── お知らせ ────────────────────────────────────────
@@ -5511,7 +5541,7 @@ function renderHearing() {
       h += '<div class="hr-group' + (opened ? ' open' : '') + '">'
         // 見出しは折りたたまず、区切りとして出すだけにする
         +   '<div class="hr-heading">'
-        +     escHtml(window.getHearingPrefix(q)) + escHtml(q.label)
+        +     escHtml(window.getHearingPrefix(q)) + window.hrLabelHtml(q)
         +   '</div>'
         +   '<div class="hr-group-body">';
       _hrGroupOpen = true;
@@ -5639,7 +5669,7 @@ function _hrLineHtml(item) {
   var esc = function (t) { return escHtml(t).replace(/\n/g, '<br>'); };
   if (item.kind === 'heading') {
     var pf = (typeof item.prefix === 'string') ? item.prefix : window.getHearingDefaultPrefix();
-    return escHtml(pf ? pf + ' ' : '') + (item.textHtml || escHtml(item.text));
+    return escHtml(pf ? pf + ' ' : '') + window.hearingParseHeadingLinks(item.textHtml || escHtml(item.text));
   }
   if (item.kind === 'policy') return '対応方針：' + (item.htmlValue ? window.hearingSanitizeHtml(item.htmlValue) : esc(item.value));
   if (item.logOnly) return item.htmlValue || esc(item.value);
@@ -5647,7 +5677,9 @@ function _hrLineHtml(item) {
   if (item.outTpl && window.hearingHasSlot(item.outTpl)) {
     return window.hearingFillSlotHtml(item.outTplHtml || escHtml(item.outTpl), valH);
   }
-  return (item.outLabelHtml || escHtml(item.outLabel)) + '：' + valH;
+  // 項目名が空のときは「：」を付けず、値だけにする
+  var labH = item.outLabelHtml || escHtml(item.outLabel);
+  return labH ? (labH + '：' + valH) : valH;
 }
 window._hrLineHtml = _hrLineHtml;
 
@@ -5670,7 +5702,8 @@ function _hrLineText(item) {
   if (item.outTpl && window.hearingHasSlot(item.outTpl)) {
     return window.hearingFillSlot(item.outTpl, item.value);
   }
-  return item.outLabel + '：' + item.value;
+  // 項目名が空のときは「：」を付けず、値だけにする
+  return item.outLabel ? (item.outLabel + '：' + item.value) : item.value;
 }
 window._hrLineText = _hrLineText;
 
@@ -5741,7 +5774,7 @@ function buildHearingLines(s) {
         // このボタンだけの中の項目（他のボタンの中の項目とは混ざらない）
         var kidItems = [];
         qs.forEach(function (k) {
-          if (k.parentId !== q.id || k.parentOpt !== v || k.type === 'heading' || k.type === 'log' || k.type === 'spacer') return;
+          if (k.parentId !== q.id || k.parentOpt !== v || k.type === 'spacer') return;   // 空白行は中に置けない（見出し・ログ作成補助は置ける）
           emitWithChildren(k, kidItems);
         });
 
@@ -5780,6 +5813,16 @@ function buildHearingLines(s) {
       var hrp = _hrRichParts(q);
       if (hrp.outLabelHtml) hh.textHtml = hrp.outLabelHtml;
       out.push(hh);
+      return;
+    }
+
+    // 画像：入力を持たない。挿入した画像を、結果文・コピー（HTML側）に出す。plain な文字は無い
+    if (q.type === 'image') {
+      if (!q.imageHtml) return;
+      out.push({
+        kind: 'row', label: q.label, outLabel: (q.outLabel || q.label),
+        value: '', htmlValue: q.imageHtml, type: '', outTpl: '', multiline: true, logOnly: true
+      });
       return;
     }
 
@@ -5871,7 +5914,7 @@ function buildHearingLines(s) {
     emit(q, out);
     if (q.type === 'log') return;   // ログは自分の emit の中で子をまとめ済み
     qs.forEach(function (k) {
-      if (k.parentId !== q.id || k.type === 'heading' || k.type === 'log' || k.type === 'spacer') return;
+      if (k.parentId !== q.id || k.type === 'spacer') return;   // 空白行は中に置けない（見出し・ログ作成補助は置ける）
       emitWithChildren(k, out);
     });
   };
@@ -5956,8 +5999,9 @@ function renderHearingSummary() {
     var block = (it.isMemo || it.multiline);
     if (block) { valClass += ' hr-sum-multiline'; val = val.replace(/\n/g, '<br>'); }
     // 画面の結果文とコピー結果を完全に一致させるため、出力名（未設定なら項目名）で出す
+    var sumLabH = it.outLabelHtml || escHtml(it.outLabel);
     h += '<div class="hr-summary-row' + (block ? ' hr-summary-block' : '') + '">' +
-         '<span class="hr-sum-label">' + (it.outLabelHtml || escHtml(it.outLabel)) + '</span>' +
+         (sumLabH ? '<span class="hr-sum-label">' + sumLabH + '</span>' : '') +
          '<span class="' + valClass + '">' + val + '</span></div>';
   });
   h += '</div>';
@@ -6567,43 +6611,21 @@ window.refreshAppCacheFromIDB = function (keys) {
   }
 
   /**
-   * file が「いま開いているツールのフォルダ」から読み込めるかを確かめる。
-   * 見えない iframe の中で読み込むので、このページのデータには影響しない。
-   * @param force true ならこのタブで確かめ済みでも確かめ直す
-   * @return Promise<boolean>（確かめられない環境では true 扱い）
+   * file が「いま開いているツールのフォルダ」にありそうかを確かめる。
+   * @param force 使わない（過去の確認結果に関わらず isDataFile だけで判断するため）
+   * @return Promise<boolean>
+   *
+   * 以前は、見えない iframe の中で実際に読み込めるかまで確かめていた。
+   * ただし、この確認自体が file:// のセキュリティ制限（'file:' URLs are treated as
+   * unique security origins）に阻まれて失敗する環境があり、実際には正しく読み込める
+   * ファイルまで「読み込めない」と誤判定し、既に表示できていたデータまで巻き込んで
+   * 無効化してしまう不具合があった。
+   * 実際に読み込めるかどうかは、選ばれたときに <script src="..."> で本読み込みするときの
+   * onerror（_loadFailed）で確実に分かるため、ここでの事前確認はやめ、
+   * ファイル名の形（isDataFile）だけで候補として扱うようにした。
    */
   function probe(file, force) {
-    if (!AP.isDataFile(file)) return Promise.resolve(false);
-    if (P.loaded && file === P.file) return Promise.resolve(true);
-    var c = probeCache();
-    if (!force && Object.prototype.hasOwnProperty.call(c, file)) return Promise.resolve(c[file]);
-    return new Promise(function (resolve) {
-      var fr = document.createElement('iframe');
-      fr.setAttribute('aria-hidden', 'true');
-      fr.tabIndex = -1;
-      fr.style.cssText = 'position:absolute;width:0;height:0;border:0;visibility:hidden;';
-      var done = false;
-      var fin = function (ok) {
-        if (done) return;
-        done = true;
-        clearTimeout(tm);
-        if (fr.parentNode) fr.parentNode.removeChild(fr);
-        probeCacheSet(file, ok);
-        resolve(ok);
-      };
-      var tm = setTimeout(function () { fin(false); }, 15000);
-      fr.onload = function () {
-        var st;
-        try { st = fr.contentWindow.__pst; } catch (e) { st = 'na'; }
-        if (st === 'na') { done = true; clearTimeout(tm); if (fr.parentNode) fr.parentNode.removeChild(fr); resolve(true); return; }
-        fin(st === 1);
-      };
-      // srcdoc の iframe は親と同じ場所（開いているフォルダ）を基準に相対パスを解決する
-      fr.srcdoc = '<!DOCTYPE html><meta charset="UTF-8"><script>window.__pst=0<\/script>'
-        + '<script src="' + encodeURIComponent(file).replace(/"/g, '%22') + '"'
-        + ' onload="window.__pst=1" onerror="window.__pst=-1"><\/script>';
-      (document.body || document.documentElement).appendChild(fr);
-    });
+    return Promise.resolve(AP.isDataFile(file));
   }
   /** 複数を確かめて、読み込めたものだけ返す */
   function probeAll(files, force) {
@@ -6937,6 +6959,12 @@ window.refreshAppCacheFromIDB = function (keys) {
       });
       return;
     }
+    // 既に「標準（data.js）」を読み込めていて、他のプロファイルの手がかりも無いときは、
+    // ここで自動の検出（iframe でファイルを読めるか確かめる処理）を行わない。
+    // 環境によっては、この確認が file:// のセキュリティ制限に阻まれて失敗することがあり、
+    // 正常に読み込めているデータまで巻き込んで無効化してしまうおそれがあるため。
+    // （プロファイルが増えた場合は、［🔍 検出］ボタンから手動で確かめられる）
+    if (P.isDefault && !AP.readList().length) { updateBadge(); return; }
     detectAuto().then(function (list) { afterDetect(list, false); });
   }
 
