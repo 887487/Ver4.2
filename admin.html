@@ -14803,7 +14803,9 @@ window.addEventListener('resize',function(){
       '<option value="toggle">トグルボタン</option>' +
       '<option value="log">ログ作成補助</option>' +
       '<option value="spacer">空白行</option>' +
-      '<option value="qtycheck">チェック＋数量</option>' +
+      // 「チェック＋数量」は、チェックボックス／トグルボタン／ラジオボタンの追加設定
+      // （「数量も選べるようにする」）から有効にする。回答方法としては直接選ばせない。
+      '<option value="qtycheck" style="display:none">チェック＋数量</option>' +
       '<option value="image">画像</option>';
     // 中には、空白行だけは置けない（見出し・ログ作成補助は中に置ける。ログ作成補助の中にログ作成補助も可）
     if (parentId) {
@@ -14829,7 +14831,9 @@ window.addEventListener('resize',function(){
       labelInp.setRich(editQ.labelHtml, editQ.label || '');
       outTplInp.setRich(editQ.outHtml, editQ.outTpl || editQ.outLabel || '');
       pfxSel.value = (typeof editQ.prefix === 'string') ? editQ.prefix : '';
-      typeSel.value = editQ.type || 'text';
+      // 「チェック＋数量」は回答方法のプルダウンには出さないので、
+      // 編集時は見た目上「チェックボックス」を選んだ状態にし、下のチェックで数量つきに戻す
+      typeSel.value = (editQ.type === 'qtycheck') ? 'checkbox' : (editQ.type || 'text');
       var _ids = window.getQuestionTplIds(editQ);
       tplChks.forEach(function(c) { c.checked = _ids.indexOf(c.value) >= 0; });
       syncTpl(null);
@@ -14873,7 +14877,8 @@ window.addEventListener('resize',function(){
       'background:var(--surface2);border-radius:6px;';
     container.appendChild(extra);
 
-    var multiline = null, multi = null, optsArea = null, qtyPhInput = null, includeOutputChk = null, textPhInput = null, imgBody = null;
+    var multiline = null, multi = null, optsArea = null, qtyPhInput = null, includeOutputChk = null, textPhInput = null, imgBody = null, qtyToggleChk = null;
+    var _qtyMode = (isEdit && editQ.type === 'qtycheck');   // 「数量も選べるようにする」の状態。チェックボックスの操作だけで変わる
     var _syncOtherBtn = null;   // 「その他（手入力）」ボタンの出し分け
 
     var addOptRow = function(val, details, logText, logHtml, lHtml, detailsHtml) {
@@ -15025,6 +15030,9 @@ window.addEventListener('resize',function(){
       multiline = multi = optsArea = null;
       setAllowChk('');
       var t = typeSel.value;
+      // 「数量も選べるようにする」がオンなら、UI の組み立てはずっと qtycheck 扱いにする
+      // （回答方法のプルダウン自体は checkbox／toggle／radio のまま見せる）
+      var tUi = (_qtyMode && (t === 'checkbox' || t === 'toggle' || t === 'radio')) ? 'qtycheck' : t;
 
       // ログ作成補助は「ボタン」だけで成り立つので、項目名・記号・出力の欄は出さない
       // （項目名を入力させない）。他の回答方法に戻したら元どおり出す。
@@ -15102,7 +15110,7 @@ window.addEventListener('resize',function(){
       var hdTxt = document.createElement('span');
       hdTxt.textContent = (t === 'toggle') ? '各項目名と詳細'
                         : (t === 'log')    ? 'ボタンと差し込む文章'
-                        : (t === 'qtycheck') ? '各項目名（「●」の部分が数量に置き換わります）'
+                        : (tUi === 'qtycheck') ? '各項目名（「●」の部分が数量に置き換わります）'
                         : '各項目名';
       hd.appendChild(hdTxt);
       extra.appendChild(hd);
@@ -15121,12 +15129,29 @@ window.addEventListener('resize',function(){
           + '入れると「項目 → 詳細」の2段になり、空欄なら ON／OFF の切り替えになります。';
         extra.appendChild(note);
       }
-      if (t === 'qtycheck') {
+      if (tUi === 'qtycheck') {
         var qnote = document.createElement('div');
         qnote.style.cssText = 'font-size:10px;color:var(--text3);';
         qnote.textContent = '項目名に「●」を入れておくと、下のテキストエリアに入力した値に置き換わります（例：テスト、●本）。'
           + 'チェックした項目だけ、項目名を付けずにそのまま出力されます。';
         extra.appendChild(qnote);
+      }
+      // 「チェック＋数量」は、チェックボックス／トグルボタン／ラジオボタンの追加設定として選べるようにする
+      // （回答方法のプルダウンには出さない。選ぶと内部的には従来どおり qtycheck として保存される）
+      if (t === 'checkbox' || t === 'toggle' || t === 'radio') {
+        var qtyToggleRow = document.createElement('label');
+        qtyToggleRow.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);cursor:pointer;';
+        qtyToggleChk = document.createElement('input');
+        qtyToggleChk.type = 'checkbox';
+        qtyToggleChk.checked = _qtyMode;
+        var qtyToggleTxt = document.createElement('span');
+        qtyToggleTxt.textContent = '数量も選べるようにする（チェック＋数量。項目名の「●」が数量に置き換わります）';
+        qtyToggleRow.appendChild(qtyToggleChk); qtyToggleRow.appendChild(qtyToggleTxt);
+        extra.insertBefore(qtyToggleRow, extra.firstChild);
+        qtyToggleChk.addEventListener('change', function() {
+          _qtyMode = qtyToggleChk.checked;   // 回答方法のプルダウン自体はいじらない
+          renderExtra();
+        });
       }
 
       optsArea = document.createElement('div');
@@ -15181,7 +15206,7 @@ window.addEventListener('resize',function(){
       if (!(isEdit && Array.isArray(editQ.options) && editQ.options.length)) {
         addOptRow(''); addOptRow('');
       }
-      if (t === 'qtycheck') {
+      if (tUi === 'qtycheck') {
         var qtyRow = document.createElement('div');
         qtyRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-top:2px;';
         var qtyLbl = document.createElement('span');
@@ -15317,6 +15342,9 @@ window.addEventListener('resize',function(){
       }
 
       var t = typeSel.value;
+      // 「チェック＋数量」は回答方法のプルダウンでは選べない（見た目は checkbox／toggle／radio のまま）。
+      // 実際に保存する種類は、あくまで「数量も選べるようにする」のチェック状態で決める。
+      if (_qtyMode && (t === 'checkbox' || t === 'toggle' || t === 'radio')) t = 'qtycheck';
       // 出力欄は1つ。[入力] を含めば文章、含まなければ「出力名：回答」
       var outVal = outTplInp.value.trim();
       var lblRich = _hrReadRich(labelInp), outRich = _hrReadRich(outTplInp);

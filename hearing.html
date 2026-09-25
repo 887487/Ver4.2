@@ -70,6 +70,10 @@
   </div>
   <div class="hd-center"></div>
   <div class="hd-right">
+    <div class="hr-tpl-search-wrap">
+      <input type="text" id="hrTplSearchBox" placeholder="テンプレート名で検索" autocomplete="off"
+        oninput="window.hearingFilterTemplates(this.value)">
+    </div>
     <button class="nav-btn" onclick="openNamedTab('FAQ.html','faqTab')">❓ FAQ</button>
     <button class="nav-btn" onclick="openNamedTab('script.html','scriptTab')">📋 スクリプト</button>
     <button class="nav-btn" onclick="openNamedTab('mail.html','mailTab')">✉️ メール</button>

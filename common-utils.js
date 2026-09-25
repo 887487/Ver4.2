@@ -4191,6 +4191,10 @@ function _hrInjectPanel() {
           '<button class="hearing-reset-btn" onclick="resetHearing()">リセット</button>' +
         '</div>' +
       '</div>' +
+      '<div class="hr-tpl-search-wrap hr-tpl-search-wrap-panel">' +
+        '<input type="text" id="hrTplSearchBoxPanel" placeholder="テンプレート名で検索" autocomplete="off"' +
+        ' oninput="window.hearingFilterTemplates(this.value)">' +
+      '</div>' +
       '<div id="hearingCopyToast" class="hearing-copy-toast"></div>' +
       '<div class="hearing-content" id="hearingContent"></div>' +
     '</div>';
@@ -5474,6 +5478,25 @@ window.toggleHearingMulti = function(field, value) {
 /** テンプレートバーの HTML（管理画面の描画からも使う） */
 window._hrTemplateBarHTML = function () { return _hrTemplateBar(); };
 
+/**
+ * テンプレート名で、テンプレート切り替えボタンを絞り込む。
+ * ヘッダー（hearing.html）とパネル（他ページの折りたたみ）、どちらの検索欄からも呼ばれる。
+ * 両方の検索欄がある場合は、文字を合わせておく。
+ */
+window.hearingFilterTemplates = function (raw) {
+  var q = String(raw == null ? '' : raw);
+  ['hrTplSearchBox', 'hrTplSearchBoxPanel'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el && el.value !== q) el.value = q;
+  });
+  var qLower = q.trim().toLowerCase();
+  document.querySelectorAll('.hr-tpl-wrap').forEach(function (wrap) {
+    var btn = wrap.querySelector('.hr-tpl-btn');
+    var name = btn ? btn.textContent.toLowerCase() : '';
+    wrap.style.display = (!qLower || name.indexOf(qLower) >= 0) ? '' : 'none';
+  });
+};
+
 function _hrTemplateBar() {
   var tpls = window.getHearingTemplates();
   if (!tpls.length) return '';
@@ -5581,6 +5604,9 @@ function renderHearing() {
   _hrAutoGrowAll();
   _hrRestoreFocus(focused);
   if (scroller) scroller.scrollTop = scrollTop;
+  // 再描画でテンプレートの絞り込みボタンが作り直されるため、検索欄に文字が入っていれば絞り込みを掛け直す
+  var _tplSearchEl = document.getElementById('hrTplSearchBox') || document.getElementById('hrTplSearchBoxPanel');
+  if (_tplSearchEl && _tplSearchEl.value) window.hearingFilterTemplates(_tplSearchEl.value);
   renderHearingSummary();
   // 管理画面では「＋ 対応方針を追加」に、いま条件になる件数を出す
   if (typeof _hrUpdateAddPolicyBtn === 'function') _hrUpdateAddPolicyBtn();
@@ -5793,8 +5819,9 @@ function buildHearingLines(s) {
         // 「他の項目の回答を入れる」差し込み（{{項目名}}）を、出力の直前に解決する
         var body = (o.text == null) ? '' : window.hearingResolveRefs(String(o.text), s);
         if (o.textHtml) hasRich = true;
-        var bodyHtml = o.textHtml ? window.hearingResolveRefsHtml(window.hearingSanitizeHtml(o.textHtml), s)
-                                   : escHtml(body).replace(/\n/g, '<br>');
+        // 画像は画面（ツール）でだけ見えればよく、結果文・コピー・hr-summary には出さない
+        var bodyHtmlNoImg = o.textHtml ? window.hearingResolveRefsHtml(window.hearingSanitizeHtml(o.textHtml), s).replace(/<img\b[^>]*>/gi, '')
+                                       : escHtml(body).replace(/\n/g, '<br>');
 
         // このボタンだけの中の項目（他のボタンの中の項目とは混ざらない）
         var kidItems = [];
@@ -5803,18 +5830,16 @@ function buildHearingLines(s) {
           emitWithChildren(k, kidItems);
         });
 
-        // 文字が無くても、画像だけの本文はそれ自体が内容（差し込み・出力から落とさない）
-        var bodyHasImg = /<img\b/i.test(o.textHtml || '');
         var segParts = [], segHtmlParts = [];
         if (body) segParts.push(body);
-        if (body || o.textHtml) segHtmlParts.push(bodyHtml);
+        if (body) segHtmlParts.push(bodyHtmlNoImg);
         if (kidItems.length) {
           segParts.push(kidItems.map(_hrLineText).join('\n'));
           segHtmlParts.push(kidItems.map(_hrLineHtml).join('<br>'));
           if (kidItems.some(_hrLineIsRich)) hasRich = true;
         }
-        if (!segParts.length && !bodyHasImg) return;   // このボタンは出す内容が無い
-        blocks.push(segParts.join('\n'));              // 画像だけのときは空文字（plain には映らない）
+        if (!segParts.length) return;   // このボタンは出す内容が無い（画像だけの本文は、出力には何も残らない）
+        blocks.push(segParts.join('\n'));
         htmlBlocks.push(segHtmlParts.join('<br>'));
       });
       if (!blocks.length) return;
