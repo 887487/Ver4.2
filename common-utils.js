@@ -1248,13 +1248,86 @@ var SHORTCUTS = [
 // ── 表のセクション（フォネティックコード／メールドメイン一覧）と、ショートカットの見出し ──
 window.SIDEMENU_DEFAULT_TABLES = [
   {
-    id: 'sm_shortcut', type: 'shortcut', label: '⌨️ ショートカットキー',groups: null   // 実際の内容は _defaultShortcutGroups()（SHORTCUTS）から入れる
+    id: 'sm_shortcut', type: 'shortcut', label: '⌨️ ショートカットキー一覧',
+    note: 'このツール固有の操作は、各ページの「?」から見られる使い方マニュアルをご覧ください。',
+    groups: null   // 実際の内容は _defaultShortcutGroups()（SHORTCUTS）から入れる
   },
   {
-    id: 'sm_phonetic', type: 'table', label: '📖 フォネティックコード',headers: ['アルファベット', '読み方'],rows: [['Ａ','アメリカ'],['Ｂ','ブラジル'],['Ｃ','チャイナ'],['Ｄ','デンマーク'],['Ｅ','イングリッシュ'],['Ｆ','フランス'],['Ｇ','ゴルフ'],['Ｈ','ハワイ'],['Ｉ','イタリア'],['Ｊ','ジャパン'],['Ｋ','コリア'],['Ｌ','ロンドン'],['Ｍ','メキシコ'],['Ｎ','ニューヨーク'],['Ｏ','オーサカ'],['Ｐ','パリ'],['Ｑ','クイーン'],['Ｒ','ローマ'],['Ｓ','スペイン'],['Ｔ','トウキョウ'],['Ｕ','ユナイテッド'],['Ｖ','ビクトリー'],['Ｗ','ワールド'],['Ｘ','エックス線'],['Ｙ','ヨコハマ'],['Ｚ','ゼブラ'],['－','ハイフン'],['＿','アンダーバー']]
+    id: 'sm_phonetic', type: 'table', label: '📖 フォネティックコード',
+    headers: ['アルファベット', '読み方'],
+    rows: [
+      ['A','アメリカ'],['B','ブラジル'],['C','チャイナ'],['D','デンマーク'],
+      ['E','エジプト'],['F','フランス'],['G','ゴルフ'],['H','ホテル'],
+      ['I','イタリア'],['J','ジャパン'],['K','キログラム'],['L','ロンドン'],
+      ['M','メキシコ'],['N','ノルウェー'],['O','オーサカ'],['P','パリ'],
+      ['Q','クイーン'],['R','ローマ'],['S','スペイン'],['T','トウキョウ'],
+      ['U','ユニオン'],['V','ビクトリー'],['W','ワシントン'],['X','エックスレイ'],
+      ['Y','ヨコハマ'],['Z','ゼブラ'],
+      ['-','ハイフン'],['_','アンダーバー']
+    ]
   },
 {
-    id: 'sm_domain', type: 'table', label: '📧 メールドメイン',headers: ['ドメイン'],rows: [['aol.com'],['asahinet.jp'],['au.com'],['auone-net.jp'],　['bbiq.jp'],['biglobe.ne.jp'],['biz.ezweb.ne.jp'],　['canet.ne.jp'],['commufa.jp'],　['dion.ne.jp'],['docomo.ne.jp'],['dream.com'],['dti.ne.jp'],　['eonet.ne.jp'],['excite.co.jp'],['ezweb.ne.jp'],　['gmail.com'],['gmobb.jp'],['gol.com'],['goo.jp'],['googlemail.com'],['goomail.com'],　['hotmail.co.jp'],['hotmail.com'],　['i.softbank.jp'],['icloud.com'],['infoseek.co.jp'],['infoseek.jp'],['itscom.net'],　['jcom.home.ne.jp'],['jcom.zaq.ne.jp'],　['ktv.ne.jp'],　['live.jp'],　['mac.com'],['mail.bbexcite.jp'],['mail.goo.ne.jp'],['me.com'],['mineo.com'],['msn.com'],['mvt-net.com'],　['nifty.com'],　['ocn.ne.jp'],['odn.ne.jp'],['outlook.com'],　['plala.or.jp'],['pobox.com'],　['rakuten.jp'],['rakumail.jp'],　['softbank.ne.jp'],['so-net.ne.jp'],　['vodafone.ne.jp'],　['wakwak.com'],　['yahoo.co.jp'],['yahoo.ne.jp'],['ybb.ne.jp'],['ymobile.ne.jp'],　['ztv.ne.jp']]
+    id: 'sm_domain', type: 'table', label: '📧 メールドメイン一覧',
+    note: 'サイドメニューに表示する参照用の一覧です。ヒアリングシートのメールドメイン候補とは別管理です。',
+    headers: ['ドメイン'],
+    rows: [
+      ['aol.com'],
+      ['asahinet.jp'],
+      ['au.com'],
+      ['auone-net.jp'],
+      ['bbiq.jp'],
+      ['biglobe.ne.jp'],
+      ['biz.ezweb.ne.jp'],
+      ['canet.ne.jp'],
+      ['commufa.jp'],
+      ['dion.ne.jp'],
+      ['docomo.ne.jp'],
+      ['dream.com'],
+      ['dti.ne.jp'],
+      ['eonet.ne.jp'],
+      ['excite.co.jp'],
+      ['ezweb.ne.jp'],
+      ['gmail.com'],
+      ['gmobb.jp'],
+      ['gol.com'],
+      ['goo.jp'],
+      ['googlemail.com'],
+      ['goomail.com'],
+      ['hotmail.co.jp'],
+      ['hotmail.com'],
+      ['i.softbank.jp'],
+      ['icloud.com'],
+      ['infoseek.co.jp'],
+      ['infoseek.jp'],
+      ['itscom.net'],
+      ['jcom.home.ne.jp'],
+      ['jcom.zaq.ne.jp'],
+      ['ktv.ne.jp'],
+      ['live.jp'],
+      ['mac.com'],
+      ['mail.bbexcite.jp'],
+      ['mail.goo.ne.jp'],
+      ['me.com'],
+      ['mineo.com'],
+      ['msn.com'],
+      ['mvt-net.com'],
+      ['nifty.com'],
+      ['ocn.ne.jp'],
+      ['odn.ne.jp'],
+      ['outlook.com'],
+      ['plala.or.jp'],
+      ['pobox.com'],
+      ['rakuten.jp'],
+      ['softbank.ne.jp'],
+      ['so-net.ne.jp'],
+      ['vodafone.ne.jp'],
+      ['wakwak.com'],
+      ['yahoo.co.jp'],
+      ['yahoo.ne.jp'],
+      ['ybb.ne.jp'],
+      ['ymobile.ne.jp'],
+      ['ztv.ne.jp']
+    ]
   }
 ];
 
@@ -1306,7 +1379,7 @@ window.stripFixedSideMenuSections = function (list) {
 // そのため data.js（hearingQuestions）には持たせず、ここで定義して必ず補う。
 // data.js や IndexedDB に古い q_memo が残っていても、読み込み時に取り除いてここの定義を使う。
 window.HEARING_MEMO_ITEM = {
-  id: 'q_memo', field: 'memo', label: '📝Memo', type: 'text', multiline: true,
+  id: 'q_memo', field: 'memo', label: 'メモ', type: 'text', multiline: true,
   placeholder: '自由記入欄…', common: true, enabled: true, builtin: true, showIf: []
 };
 function _hrIsMemoQ(q) { return !!q && (q.id === 'q_memo' || q.field === 'memo'); }
@@ -3291,7 +3364,7 @@ function _buildSideMenuHTML(isDark, sectionsOverride) {
 }
 
 // =============================================================================
-// ⑥ ヒアリングシート（hearing.js 全機能）
+// ⑥ ヒアリングチェックシート（hearing.js 全機能）
 // ※ 変更なし（省略せず全文維持）
 // =============================================================================
 
@@ -4494,8 +4567,14 @@ window.hearingTextToHtml = function (text) {
  * 渡す文字列は、あらかじめ escHtml 済みであること（そのままでは [ ] ( ) は変換されない文字なので安全に扱える）。
  */
 window.hearingParseHeadingLinks = function (escapedHtml) {
-  if (!escapedHtml || String(escapedHtml).indexOf('](') < 0) return escapedHtml;
-  return String(escapedHtml).replace(/\[([^\[\]]+)\]\((https?:\/\/[^\s()]+)\)/g, function (m, disp, url) {
+  if (!escapedHtml) return escapedHtml;
+  var s = String(escapedHtml);
+  if (s.indexOf('](') < 0 && s.indexOf('］（') < 0 && s.indexOf('](') < 0) {
+    // よくある組み合わせ（半角のみ／全角のみ）に無ければ、他の混在も含めて対象外
+    if (!/[\[［][^\[\]［］]+[\]］]\s*[\(（]/.test(s)) return s;
+  }
+  // 表示名は [ ] か ［ ］、URL は ( ) か （ ） のどちらでも、混ぜて書いても認識する
+  return s.replace(/[\[［]([^\[\]［］]+)[\]］]\s*[\(（](https?:\/\/[^\s()（）]+)[\)）]/g, function (m, disp, url) {
     return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + disp + '</a>';
   });
 };
@@ -5191,7 +5270,7 @@ window.getFixedText = function (key) {
 };
 
 // ログ作成補助で、複数のボタンを選んだときの区切り線
-var LOG_SEPARATOR = '－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－';
+var LOG_SEPARATOR = '--------------------------------------------------';
 window.LOG_SEPARATOR = LOG_SEPARATOR;
 
 // ── お知らせ ────────────────────────────────────────
@@ -5406,7 +5485,11 @@ function _hrTemplateBar() {
         return '<span class="hr-tpl-wrap">'
           + '<button type="button" class="hr-tpl-btn' + (t.id === cur ? ' active' : '') + '"'
           + ' aria-pressed="' + (t.id === cur ? 'true' : 'false') + '"'
-          + ' title="' + (t.id === cur ? '選択中（もう一度押すと解除）' : '押すとこのテンプレートに切り替え') + '"'
+          // 名前が長いとボタンの中で省略されるため、ツールチップに全文＋案内を出す
+          + ' title="' + escHtml(t.name) + '　' + (t.id === cur ? '（選択中。もう一度押すと解除）' : '（押すとこのテンプレートに切り替え）') + '"'
+          // クリックでボタン自身にフォーカスが移ると、ブラウザが自動でそこまでスクロールし、
+          // 結果として画面が先頭（テンプレート欄）まで戻ってしまうため、フォーカスさせない
+          + ' onmousedown="event.preventDefault()"'
           + ' onclick="window.toggleHearingTemplate(\'' + t.id + '\')">' + escHtml(t.name) + '</button>'
           + (admin ? '<button type="button" class="hr-tpl-edit"'
               + ' onclick="window.renameHearingTemplate(\'' + t.id + '\')"'
@@ -5491,9 +5574,13 @@ function renderHearing() {
   h = _hrTemplateBar() + h;
   // 描き直しで入力欄が作り直されるため、打っていた場所を覚えて戻す
   var focused = _hrCaptureFocus();
+  // テンプレートの切り替えなどで描き直すと、スクロール位置が先頭に戻ってしまうため覚えて戻す
+  var scroller = _hrFindScroller(el);
+  var scrollTop = scroller ? scroller.scrollTop : 0;
   el.innerHTML = h;
   _hrAutoGrowAll();
   _hrRestoreFocus(focused);
+  if (scroller) scroller.scrollTop = scrollTop;
   renderHearingSummary();
   // 管理画面では「＋ 対応方針を追加」に、いま条件になる件数を出す
   if (typeof _hrUpdateAddPolicyBtn === 'function') _hrUpdateAddPolicyBtn();
@@ -5524,6 +5611,17 @@ function _hrAutoGrowAll() {
 }
 
 /** いま入力中の欄と、カーソルの位置を覚えておく */
+/** el を含む、実際にスクロールしている祖先要素を探す（無ければ null） */
+function _hrFindScroller(el) {
+  var n = el ? el.parentElement : null;
+  while (n && n !== document.body) {
+    var cs = window.getComputedStyle(n);
+    if ((cs.overflowY === 'auto' || cs.overflowY === 'scroll') && n.scrollHeight > n.clientHeight) return n;
+    n = n.parentElement;
+  }
+  return null;
+}
+
 function _hrCaptureFocus() {
   var el = document.activeElement;
   if (!el || !el.getAttribute || !el.getAttribute('data-hr-field')) return null;
@@ -5743,15 +5841,8 @@ function buildHearingLines(s) {
       return;
     }
 
-    // 画像：入力を持たない。挿入した画像を、結果文・コピー（HTML側）に出す。plain な文字は無い
-    if (q.type === 'image') {
-      if (!q.imageHtml) return;
-      out.push({
-        kind: 'row', label: q.label, outLabel: (q.outLabel || q.label),
-        value: '', htmlValue: q.imageHtml, type: '', outTpl: '', multiline: true, logOnly: true
-      });
-      return;
-    }
+    // 画像：入力を持たない。ツール画面には表示するが、結果文・コピーには出さない
+    if (q.type === 'image') { return; }
 
     var fld = q.field || q.id;
 
@@ -6052,7 +6143,7 @@ document.addEventListener('keydown', function (e) {
     '.hr-device-btn { display:inline-block; height:26px; padding:0 12px; margin-right:6px; border:1px solid var(--border,#dfe4ea); border-radius:14px; background:var(--surface2,#f1f2f6); color:var(--text2,#57606f); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit; transition:background .12s,border-color .12s,color .12s; }' +
     '.hr-device-btn.active { background:var(--accent,#3742fa); border-color:var(--accent,#3742fa); color:#fff; }' +
     '.hr-device-row { flex-direction:row !important; align-items:center; gap:6px; padding:1px 0; }' +
-    '.hr-device-row .hr-label { flex:0 0 74px; min-width:74px; font-size:12px; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }' +
+    '.hr-device-row .hr-label { flex:0 0 74px; min-width:74px; font-size:10px; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }' +
     '.hr-device-row .hr-btns { display:flex; flex:1; min-width:0; align-items:center; flex-wrap:wrap; gap:3px; }' +
     '.hr-device-row .hr-device-btn { height:22px; padding:0 8px; margin-right:0; font-size:10px; border-radius:4px; }' +
     '.hr-device-group { display:flex; flex-direction:column; gap:2px; padding:5px 7px; background:var(--surface2,#f1f2f6); border:1px solid var(--border,#dfe4ea); border-radius:6px; }' +
@@ -6076,7 +6167,7 @@ document.addEventListener('keydown', function (e) {
     '.hr-log-children > .hr-row, .hr-nested-children > .hr-row { padding:4px 0 !important; border:none !important; background:none !important; }' +
     // 空白行：枠も余白も持たない、ただの空き
     '.hr-spacer-row { padding:0 !important; border:none !important; background:none !important; min-height:0 !important; box-shadow:none !important; }' +
-    '.hr-spacer { height:10px; }' +
+    '.hr-spacer { height:14px; }' +
     // チェック＋数量
     '.hr-qtycheck-group { display:flex; flex-direction:column; gap:6px; align-items:stretch; }' +
     '.hr-qtycheck-row { display:flex; align-items:flex-start; gap:6px; font-size:13px; cursor:pointer; }' +

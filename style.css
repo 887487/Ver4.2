@@ -512,6 +512,9 @@ th { background:var(--bg); }
   border:1px solid var(--border);border-radius:6px;cursor:pointer;
   transition:background .12s,border-color .12s,color .12s;
   width:100%;text-align:left;
+  /* 名前が長いと、狭い枠（右側の折りたたみパネルなど）でボタンから文字がはみ出していたため、
+     ボタンの幅に収まらない分は「…」で省略する（全文はツールチップで見える） */
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 .hr-tpl-btn:hover{border-color:var(--accent);color:var(--accent-text);}
 /* 管理画面でテンプレートごとに出す削除ボタン */
@@ -555,7 +558,7 @@ body > .hearing-panel { top:var(--header-h); }
 .hearing-reset-btn:hover { background:var(--red);color:white;border-color:var(--red); }
 .hearing-content { flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:10px; }
 .hr-row { display:flex;flex-direction:column;gap:5px; }
-.hr-label { font-size:12px;font-weight:700;color:#555;line-height:1.4; }
+.hr-label { font-size:10px;font-weight:700;color:#555;line-height:1.4; }
 .hr-btns { display:flex;flex-wrap:wrap;gap:5px; }
 .hr-btn { min-height:28px;padding:4px 10px;border:1px solid var(--border);border-radius:5px;background:var(--surface);font-size:11px;cursor:pointer;color:var(--text);transition:border-color 0.15s,background 0.15s,color 0.15s;font-family:inherit;line-height:1.4;white-space:normal;text-align:left; }
 .hr-btn:hover { border-color:var(--accent);color:var(--accent-text);background:#f0f4ff; }
