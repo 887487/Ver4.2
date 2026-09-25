@@ -1911,16 +1911,13 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
     <div style="max-width:920px;margin:0 auto;display:flex;flex-direction:column;gap:20px;">
 
       <!-- ── ヒアリングタブ ヘッダーバー ── -->
-      <div style="display:flex;align-items:center;justify-content:space-between;">
-        <div style="font-size:14px;font-weight:700;color:var(--text);">📋 ヒアリング設定</div>
-      </div>
-      <div id="hrSaveStatus" style="display:none;padding:8px 12px;border-radius:6px;font-size:12px;"></div>
+
 
       <!-- ── プレビュー ── -->
       <div>
         <!-- ボタンは hearing.html と同じく見出しの右に置く -->
         <div class="hr-prev-head">
-          <span class="hr-prev-head-title">📋 ヒアリングシート（プレビュー）</span>
+          <span class="hr-prev-head-title">📋 ヒアリング設定（プレビュー）</span>
           <div class="hearing-header-btns">
             <button class="hearing-copy-btn" onclick="window.copyHearingText&&window.copyHearingText()" title="ヒアリング内容をコピー">📋 コピー</button>
             <button class="hearing-reset-btn" onclick="window.resetHearing&&window.resetHearing()" title="入力内容をすべて消去">🗑 リセット</button>
@@ -7409,9 +7406,9 @@ function smRender() {
         ? '<span class="sm-name-fixed" title="名称は common-utils.js で管理しています（変更できません）">' + escHtml(sec.label) + '</span>'
         : '<input class="sm-input" value="' + escHtml(sec.label) + '" placeholder="カテゴリ名（絵文字可）" oninput="smSetCat(' + si + ',\'label\',this.value)" style="flex:1;min-width:0;font-weight:700;font-size:13px;">') +
       (isCode
-        ? '<span class="sm-type-label sm-type-label-code" title="内容・名称は common-utils.js で管理。data.js には並び順だけ保存されます">' + (isFixed ? 'ショートカット一覧' : '表') + '・共通管理</span>'
+        ? '<span class="sm-type-label sm-type-label-code" title="内容・名称は common-utils.js で管理。data.js には並び順だけ保存されます">' + (isFixed ? '表（見出し付き）' : '表') + '・共通管理</span>'
         : isFixed
-        ? '<span class="sm-type-label">ショートカット一覧</span>'
+        ? '<span class="sm-type-label">表（見出し付き）</span>'
         : isTable
           ? '<span class="sm-type-label">表</span>'
           : '<select class="sm-select" onchange="smSetCat(' + si + ',\'type\',this.value)">' +
@@ -7550,14 +7547,14 @@ function smDelCat(si) {
  * 「編集 / 文字の書式 / …」のようにグループ分けしたい場合に使う。
  */
 function smAddGroupTable() {
-  var name = prompt('一覧の名前を入力してください\n（例：⌨️ 独自ショートカット）');
+  var name = prompt('一覧の名前を入力してください\n（例：○○一覧）');
   if (name === null) return;
   name = name.trim(); if (!name) return;
 
-  var cols = prompt('列の見出しを「,」区切りで入力してください\n（例：キー,説明）', 'キー,説明');
+  var cols = prompt('列の見出しを「,」区切りで入力してください\n（例：Ａ,Ｂ）', 'Ａ,Ｂ');
   if (cols === null) return;
   var headers = cols.split(',').map(function(t){ return t.trim(); }).filter(Boolean);
-  if (headers.length < 2) headers = ['キー', '説明'];
+  if (headers.length < 2) headers = ['Ａ列', 'Ｂ列'];
 
   if (!_smData) smLoad();
   var list = _smData;
@@ -7663,15 +7660,15 @@ function smRenderShortcut(sec, si) {
       + '</div>'
       + '<table style="width:100%;border-collapse:collapse;font-size:11px;">'
       + '<thead><tr>'
-      +   '<th style="width:40%;padding:2px;font-size:10px;color:var(--text3);text-align:left;">キー</th>'
-      +   '<th style="padding:2px;font-size:10px;color:var(--text3);text-align:left;">説明</th>'
+      +   '<th style="width:40%;padding:2px;font-size:10px;color:var(--text3);text-align:left;">Ａ列</th>'
+      +   '<th style="padding:2px;font-size:10px;color:var(--text3);text-align:left;">Ｂ列</th>'
       +   '<th style="width:34px;"></th></tr></thead><tbody>';
 
     (g.rows || []).forEach(function(r, ri) {
       h += '<tr>'
         + '<td style="padding:2px;"><input type="text" value="' + escHtml(r[0] || '') + '"'
         +   ' data-sc-key="1"'
-        +   ' placeholder="Ctrl + C"'
+        +   ' placeholder="この列に記載する内容を入力"'
         +   ' oninput="smScSet(' + si + ',' + gi + ',' + ri + ',0,this.value);smScCheckKey(this)"'
         +   ' onchange="smScNormalizeInput(this,' + si + ',' + gi + ',' + ri + ')"'
         +   ' style="' + inp + '"></td>'

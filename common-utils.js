@@ -1248,86 +1248,13 @@ var SHORTCUTS = [
 // ── 表のセクション（フォネティックコード／メールドメイン一覧）と、ショートカットの見出し ──
 window.SIDEMENU_DEFAULT_TABLES = [
   {
-    id: 'sm_shortcut', type: 'shortcut', label: '⌨️ ショートカットキー一覧',
-    note: 'このツール固有の操作は、各ページの「?」から見られる使い方マニュアルをご覧ください。',
-    groups: null   // 実際の内容は _defaultShortcutGroups()（SHORTCUTS）から入れる
+    id: 'sm_shortcut', type: 'shortcut', label: '⌨️ ショートカットキー',groups: null   // 実際の内容は _defaultShortcutGroups()（SHORTCUTS）から入れる
   },
   {
-    id: 'sm_phonetic', type: 'table', label: '📖 フォネティックコード',
-    headers: ['アルファベット', '読み方'],
-    rows: [
-      ['A','アメリカ'],['B','ブラジル'],['C','チャイナ'],['D','デンマーク'],
-      ['E','エジプト'],['F','フランス'],['G','ゴルフ'],['H','ホテル'],
-      ['I','イタリア'],['J','ジャパン'],['K','キログラム'],['L','ロンドン'],
-      ['M','メキシコ'],['N','ノルウェー'],['O','オーサカ'],['P','パリ'],
-      ['Q','クイーン'],['R','ローマ'],['S','スペイン'],['T','トウキョウ'],
-      ['U','ユニオン'],['V','ビクトリー'],['W','ワシントン'],['X','エックスレイ'],
-      ['Y','ヨコハマ'],['Z','ゼブラ'],
-      ['-','ハイフン'],['_','アンダーバー']
-    ]
+    id: 'sm_phonetic', type: 'table', label: '📖 フォネティックコード',headers: ['アルファベット', '読み方'],rows: [['Ａ','アメリカ'],['Ｂ','ブラジル'],['Ｃ','チャイナ'],['Ｄ','デンマーク'],['Ｅ','イングリッシュ'],['Ｆ','フランス'],['Ｇ','ゴルフ'],['Ｈ','ハワイ'],['Ｉ','イタリア'],['Ｊ','ジャパン'],['Ｋ','コリア'],['Ｌ','ロンドン'],['Ｍ','メキシコ'],['Ｎ','ニューヨーク'],['Ｏ','オーサカ'],['Ｐ','パリ'],['Ｑ','クイーン'],['Ｒ','ローマ'],['Ｓ','スペイン'],['Ｔ','トウキョウ'],['Ｕ','ユナイテッド'],['Ｖ','ビクトリー'],['Ｗ','ワールド'],['Ｘ','エックス線'],['Ｙ','ヨコハマ'],['Ｚ','ゼブラ'],['－','ハイフン'],['＿','アンダーバー']]
   },
 {
-    id: 'sm_domain', type: 'table', label: '📧 メールドメイン一覧',
-    note: 'サイドメニューに表示する参照用の一覧です。ヒアリングシートのメールドメイン候補とは別管理です。',
-    headers: ['ドメイン'],
-    rows: [
-      ['aol.com'],
-      ['asahinet.jp'],
-      ['au.com'],
-      ['auone-net.jp'],
-      ['bbiq.jp'],
-      ['biglobe.ne.jp'],
-      ['biz.ezweb.ne.jp'],
-      ['canet.ne.jp'],
-      ['commufa.jp'],
-      ['dion.ne.jp'],
-      ['docomo.ne.jp'],
-      ['dream.com'],
-      ['dti.ne.jp'],
-      ['eonet.ne.jp'],
-      ['excite.co.jp'],
-      ['ezweb.ne.jp'],
-      ['gmail.com'],
-      ['gmobb.jp'],
-      ['gol.com'],
-      ['goo.jp'],
-      ['googlemail.com'],
-      ['goomail.com'],
-      ['hotmail.co.jp'],
-      ['hotmail.com'],
-      ['i.softbank.jp'],
-      ['icloud.com'],
-      ['infoseek.co.jp'],
-      ['infoseek.jp'],
-      ['itscom.net'],
-      ['jcom.home.ne.jp'],
-      ['jcom.zaq.ne.jp'],
-      ['ktv.ne.jp'],
-      ['live.jp'],
-      ['mac.com'],
-      ['mail.bbexcite.jp'],
-      ['mail.goo.ne.jp'],
-      ['me.com'],
-      ['mineo.com'],
-      ['msn.com'],
-      ['mvt-net.com'],
-      ['nifty.com'],
-      ['ocn.ne.jp'],
-      ['odn.ne.jp'],
-      ['outlook.com'],
-      ['plala.or.jp'],
-      ['pobox.com'],
-      ['rakuten.jp'],
-      ['softbank.ne.jp'],
-      ['so-net.ne.jp'],
-      ['vodafone.ne.jp'],
-      ['wakwak.com'],
-      ['yahoo.co.jp'],
-      ['yahoo.ne.jp'],
-      ['ybb.ne.jp'],
-      ['ymobile.ne.jp'],
-      ['ztv.ne.jp']
-    ]
+    id: 'sm_domain', type: 'table', label: '📧 メールドメイン',headers: ['ドメイン'],rows: [['aol.com'],['asahinet.jp'],['au.com'],['auone-net.jp'],　['bbiq.jp'],['biglobe.ne.jp'],['biz.ezweb.ne.jp'],　['canet.ne.jp'],['commufa.jp'],　['dion.ne.jp'],['docomo.ne.jp'],['dream.com'],['dti.ne.jp'],　['eonet.ne.jp'],['excite.co.jp'],['ezweb.ne.jp'],　['gmail.com'],['gmobb.jp'],['gol.com'],['goo.jp'],['googlemail.com'],['goomail.com'],　['hotmail.co.jp'],['hotmail.com'],　['i.softbank.jp'],['icloud.com'],['infoseek.co.jp'],['infoseek.jp'],['itscom.net'],　['jcom.home.ne.jp'],['jcom.zaq.ne.jp'],　['ktv.ne.jp'],　['live.jp'],　['mac.com'],['mail.bbexcite.jp'],['mail.goo.ne.jp'],['me.com'],['mineo.com'],['msn.com'],['mvt-net.com'],　['nifty.com'],　['ocn.ne.jp'],['odn.ne.jp'],['outlook.com'],　['plala.or.jp'],['pobox.com'],　['rakuten.jp'],['rakumail.jp'],　['softbank.ne.jp'],['so-net.ne.jp'],　['vodafone.ne.jp'],　['wakwak.com'],　['yahoo.co.jp'],['yahoo.ne.jp'],['ybb.ne.jp'],['ymobile.ne.jp'],　['ztv.ne.jp']]
   }
 ];
 
@@ -1379,7 +1306,7 @@ window.stripFixedSideMenuSections = function (list) {
 // そのため data.js（hearingQuestions）には持たせず、ここで定義して必ず補う。
 // data.js や IndexedDB に古い q_memo が残っていても、読み込み時に取り除いてここの定義を使う。
 window.HEARING_MEMO_ITEM = {
-  id: 'q_memo', field: 'memo', label: 'メモ', type: 'text', multiline: true,
+  id: 'q_memo', field: 'memo', label: '📝Memo', type: 'text', multiline: true,
   placeholder: '自由記入欄…', common: true, enabled: true, builtin: true, showIf: []
 };
 function _hrIsMemoQ(q) { return !!q && (q.id === 'q_memo' || q.field === 'memo'); }
@@ -3364,7 +3291,7 @@ function _buildSideMenuHTML(isDark, sectionsOverride) {
 }
 
 // =============================================================================
-// ⑥ ヒアリングチェックシート（hearing.js 全機能）
+// ⑥ ヒアリングシート（hearing.js 全機能）
 // ※ 変更なし（省略せず全文維持）
 // =============================================================================
 
@@ -5264,7 +5191,7 @@ window.getFixedText = function (key) {
 };
 
 // ログ作成補助で、複数のボタンを選んだときの区切り線
-var LOG_SEPARATOR = '--------------------------------------------------';
+var LOG_SEPARATOR = '－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－';
 window.LOG_SEPARATOR = LOG_SEPARATOR;
 
 // ── お知らせ ────────────────────────────────────────
@@ -6149,7 +6076,7 @@ document.addEventListener('keydown', function (e) {
     '.hr-log-children > .hr-row, .hr-nested-children > .hr-row { padding:4px 0 !important; border:none !important; background:none !important; }' +
     // 空白行：枠も余白も持たない、ただの空き
     '.hr-spacer-row { padding:0 !important; border:none !important; background:none !important; min-height:0 !important; box-shadow:none !important; }' +
-    '.hr-spacer { height:14px; }' +
+    '.hr-spacer { height:10px; }' +
     // チェック＋数量
     '.hr-qtycheck-group { display:flex; flex-direction:column; gap:6px; align-items:stretch; }' +
     '.hr-qtycheck-row { display:flex; align-items:flex-start; gap:6px; font-size:13px; cursor:pointer; }' +

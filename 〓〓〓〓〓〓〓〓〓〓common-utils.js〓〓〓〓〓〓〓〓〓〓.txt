@@ -1,0 +1,99 @@
+〓〓〓〓〓〓〓〓〓〓common-utils.js〓〓〓〓〓〓〓〓〓〓
+// ── 表のセクション（フォネティックコード／メールドメイン一覧）と、ショートカットの見出し ──
+window.SIDEMENU_DEFAULT_TABLES = [
+  {
+    id: 'sm_shortcut', type: 'shortcut', label: '⌨️ ショートカットキー',groups: null   // 実際の内容は _defaultShortcutGroups()（SHORTCUTS）から入れる
+  },
+  {
+    id: 'sm_phonetic', type: 'table', label: '📖 フォネティックコード',headers: ['アルファベット', '読み方'],rows: [['Ａ','アメリカ'],['Ｂ','ブラジル'],['Ｃ','チャイナ'],['Ｄ','デンマーク'],['Ｅ','イングリッシュ'],['Ｆ','フランス'],['Ｇ','ゴルフ'],['Ｈ','ハワイ'],['Ｉ','イタリア'],['Ｊ','ジャパン'],['Ｋ','コリア'],['Ｌ','ロンドン'],['Ｍ','メキシコ'],['Ｎ','ニューヨーク'],['Ｏ','オーサカ'],['Ｐ','パリ'],['Ｑ','クイーン'],['Ｒ','ローマ'],['Ｓ','スペイン'],['Ｔ','トウキョウ'],['Ｕ','ユナイテッド'],['Ｖ','ビクトリー'],['Ｗ','ワールド'],['Ｘ','エックス線'],['Ｙ','ヨコハマ'],['Ｚ','ゼブラ'],['－','ハイフン'],['＿','アンダーバー']]
+  },
+{
+    id: 'sm_domain', type: 'table', label: '📧 メールドメイン',headers: ['ドメイン'],rows: [['aol.com'],['asahinet.jp'],['au.com'],['auone-net.jp'],　['bbiq.jp'],['biglobe.ne.jp'],['biz.ezweb.ne.jp'],　['canet.ne.jp'],['commufa.jp'],　['dion.ne.jp'],['docomo.ne.jp'],['dream.com'],['dti.ne.jp'],　['eonet.ne.jp'],['excite.co.jp'],['ezweb.ne.jp'],　['gmail.com'],['gmobb.jp'],['gol.com'],['goo.jp'],['googlemail.com'],['goomail.com'],　['hotmail.co.jp'],['hotmail.com'],　['i.softbank.jp'],['icloud.com'],['infoseek.co.jp'],['infoseek.jp'],['itscom.net'],　['jcom.home.ne.jp'],['jcom.zaq.ne.jp'],　['ktv.ne.jp'],　['live.jp'],　['mac.com'],['mail.bbexcite.jp'],['mail.goo.ne.jp'],['me.com'],['mineo.com'],['msn.com'],['mvt-net.com'],　['nifty.com'],　['ocn.ne.jp'],['odn.ne.jp'],['outlook.com'],　['plala.or.jp'],['pobox.com'],　['rakuten.jp'],['rakumail.jp'],　['softbank.ne.jp'],['so-net.ne.jp'],　['vodafone.ne.jp'],　['wakwak.com'],　['yahoo.co.jp'],['yahoo.ne.jp'],['ybb.ne.jp'],['ymobile.ne.jp'],　['ztv.ne.jp']]
+  }
+];
+--------------------------------------------------
+  id: 'q_memo', field: 'memo', label: '📝Memo', type: 'text', multiline: true,
+--------------------------------------------------
+var ADMIN_PW = 'admin1234';
+--------------------------------------------------
+var LOG_SEPARATOR = '－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－';
+--------------------------------------------------
+    '.hr-device-row .hr-label { flex:0 0 74px; min-width:74px; font-size:12px; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }' +
+--------------------------------------------------
+    '.hr-spacer { height:10px; }' +
+
+〓〓〓〓〓〓〓〓〓〓admin.html〓〓〓〓〓〓〓〓〓〓
+      <!-- ── ヒアリングタブ ヘッダーバー ── -->
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:14px;font-weight:700;color:var(--text);">📋 ヒアリング設定</div>
+      </div>
+      <div id="hrSaveStatus" style="display:none;padding:8px 12px;border-radius:6px;font-size:12px;"></div>
+
+      <!-- ── プレビュー ── -->
+      <div>
+        <!-- ボタンは hearing.html と同じく見出しの右に置く -->
+        <div class="hr-prev-head">
+          <span class="hr-prev-head-title">📋 ヒアリング設定（プレビュー）</span>
+
+--------------------------------------------------      ↑<!-- ── ヒアリングタブ ヘッダーバー ── -->は削除
+
+
+<!-- ===== 画像ライブラリ（画面遷移タブ内オーバーレイパネル） ===== -->
+  <!-- 旧・全画面の画像ライブラリは廃止（右パネルに統合） -->
+
+--------------------------------------------------↑削除
+
+        ? '<span class="sm-type-label sm-type-label-code" title="内容・名称は common-utils.js で管理。data.js には並び順だけ保存されます">' + (isFixed ? '表（見出し付き）' : '表') + '・共通管理</span>'
+        : isFixed
+        ? '<span class="sm-type-label">表（見出し付き）</span>'
+--------------------------------------------------
+// ── 回答方法 ──
+    var typeSel = document.createElement('select');
+    typeSel.style.cssText = SEL;
+    typeSel.innerHTML =
+      '<option value="heading">見出し</option>' +
+      '<option value="spacer">空白行</option>' +
+      '<option value="image">画像</option>';
+      '<option value="text">記述</option>' +
+      '<option value="select">プルダウン</option>' +
+      '<option value="radio">ラジオボタン</option>' +
+      '<option value="checkbox">チェックボックス</option>' +
+      '<option value="toggle">トグルボタン</option>' +
+      '<option value="log">ログ作成補助</option>' +
+      '<option value="qtycheck">チェック＋数量</option>' +
+    // 中には、空白行だけは置けない（見出し・ログ作成補助は中に置ける。ログ作成補助の中にログ作成補助も可）
+--------------------------------------------------
+
+〓〓〓〓〓〓〓〓〓〓index.html〓〓〓〓〓〓〓〓〓〓
+<img src="img/チケットルール2.png" width="650" height="595">
+
+
+
+
+ログは色付きでコピー
+hearing.html　ヘッダー右側に検索枠 → テンプレ名で検索可能にする
+カレンダーから日付を選ぶ
+カテゴリ　1個ずつコピー可能な形式で4つ紐付け
+--------------------------------------------------
+TOP2
+区切り位置
+--------------------------------------------------
+TOP3
+⦁	記述／プルダウン その他(手入力) に対して 日付or文字列 を選択可能にする。　”日付”が選択されている場合のみ、その他 を選択した時のテキストエリアにフォーカスしたタイミングでカレンダーを表示 → 選択した日付がテキストエリアに自動入力される
+⦁	日付 形式での出力が指定されている場合のみ、yyyy/mm/dd,yyyy/mm/dd（aaa）,mm/dd,mm/dd（aaa）,yyyy年ｍ月d日,yyyy年ｍ月d日（aaa）,ｍ月d日,ｍ月d日（aaa） から選択可能にする
+--------------------------------------------------
+TOP5
+・購入希望：パッキン／電源アダプター／ボトルキャップ　のチェックボックス と ログ作成補助を連動させる
+
+◆お問合せフォーム送信に不承の場合◆ の出力形式 
+・お客様のメールアドレス：
+
+お客様のメールアドレスをお伺いしURLをご連絡すると案内済。不備があった際は、登録した電話番号へ連絡すること了承済。
+--------------------------------------------------
+TOP6
+⦁	記述／プルダウン その他(手入力) に対して 日付or文字列 を選択可能にする。　”日付”が選択されている場合のみ、その他 を選択した時のテキストエリアにフォーカスしたタイミングでカレンダーを表示 → 選択した日付がテキストエリアに自動入力される
+⦁	日付 形式での出力が指定されている場合のみ、yyyy/mm/dd,yyyy/mm/dd（aaa）,mm/dd,mm/dd（aaa）,yyyy年ｍ月d日,yyyy年ｍ月d日（aaa）,ｍ月d日,ｍ月d日（aaa） から選択可能にする
+
+TOP8
+《上記以外のご申告内容》
+［入力］
