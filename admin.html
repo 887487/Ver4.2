@@ -575,6 +575,25 @@
 .hr-pat-name-text { font-size: 12px; font-weight: 700; color: var(--text); flex: 1; }
 .hr-pat-cond-summary { font-size: 10px; color: var(--text3); padding-left: 4px; line-height: 1.5; }
 
+/* ── コピーボタン設定 ── */
+.hr-cb-card { background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:6px; }
+.hr-cb-hd { display:flex;align-items:center;gap:6px; }
+.hr-cb-hd .hr-cb-no { font-size:11px;font-weight:700;color:var(--text3);flex-shrink:0;min-width:22px; }
+.hr-cb-field { display:flex;align-items:flex-start;gap:8px; }
+.hr-cb-field > span { font-size:11px;font-weight:700;color:var(--text2);width:92px;flex-shrink:0;padding-top:6px; }
+.hr-cb-tpl, .hr-cb-label, .hr-cb-text {
+  flex:1;min-width:0;font-size:12px;font-family:inherit;color:var(--text);background:var(--surface);
+  border:1px solid var(--border);border-radius:6px;padding:5px 8px;box-sizing:border-box;
+}
+.hr-cb-tpl { height:30px; }
+.hr-cb-label { height:30px; }
+.hr-cb-text { min-height:60px;resize:vertical;line-height:1.5; }
+.hr-cb-tpl:focus, .hr-cb-label:focus, .hr-cb-text:focus { outline:none;border-color:var(--accent); }
+.hr-cb-hd button { font-size:11px;padding:2px 7px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text);cursor:pointer;font-family:inherit; }
+.hr-cb-hd button:disabled { opacity:.35;cursor:default; }
+.hr-cb-hd .hr-cb-sp { flex:1; }
+.hr-cb-warn { font-size:10px;color:var(--red,#e63946); }
+
 /* ── 共通：アコーディオン矢印 ── */
 .hr-acc-arrow {
   font-size: 9px; color: var(--text4); transition: transform 0.18s;
@@ -1968,6 +1987,25 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
         </div>
       </details>
 
+      <!-- ── コピーボタン（アコーディオン） ── -->
+      <details class="hr-section-acc" id="hrCbSection">
+        <summary>
+          <span class="hr-acc-arrow">▶</span>
+          <span class="hr-section-acc-title">📎 コピーボタン</span>
+          <span class="hr-section-acc-count" id="hrCbCountBadge">0件</span>
+          <button class="hr-add-btn" id="hrCbAddBtn"
+                  title="プレビューで選択中のテンプレートに紐付けて追加します"
+                  onclick="event.stopPropagation();document.getElementById('hrCbSection').open=true;_hrCbAdd()">＋ コピーボタンを追加</button>
+        </summary>
+        <div class="hr-section-acc-body">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.7;">
+            紐付けたテンプレートを選んでいるときだけ、ヒアリングの結果文の下に別枠でボタンを表示します（「共通」はどのテンプレートでも表示）。<br>
+            ボタンを押すと、登録したテキストがそのままコピーされます（ツール画面では編集できません）。テキストが空のボタンは表示されません。
+          </div>
+          <div id="hrCbList" style="display:flex;flex-direction:column;gap:8px;"></div>
+        </div>
+      </details>
+
 
     </div>
   </div>
@@ -2643,6 +2681,7 @@ window.renameHearingTemplate = function (id) {
   if (window.idbSetAppData) window.idbSetAppData('hearingTemplates', next);
   if (typeof markDirty === 'function') markDirty();
   window.renderHearing();
+  _hrCbRender(true);
   toast('✅ テンプレート名を「' + nm + '」に変更しました');
 };
 
@@ -2659,9 +2698,11 @@ window.deleteHearingTemplate = function (id) {
   var uses  = qs.filter(function (q) { return window.getQuestionTplIds(q).indexOf(id) >= 0; });
   var owned = uses.filter(function (q) { return window.getQuestionTplIds(q).length === 1; });
   var shared = uses.length - owned.length;
+  var cbOwned = _hrCbList().filter(function (b) { return (b.tplId || '') === id; });
   var msg = '「' + t.name + '」を削除しますか？';
   if (owned.length) msg += '\nこのテンプレート専用の項目 ' + owned.length + ' 件も削除されます。';
   if (shared)       msg += '\n他のテンプレートと共用の項目 ' + shared + ' 件は残ります（このテンプレートの指定だけ外れます）。';
+  if (cbOwned.length) msg += '\nこのテンプレートのコピーボタン ' + cbOwned.length + ' 件も削除されます。';
   if (!window.confirm(msg)) return;
 
   var nextTpls = tpls.filter(function (x) { return x.id !== id; });
@@ -2677,11 +2718,156 @@ window.deleteHearingTemplate = function (id) {
     });
     _hrQuestionsSave(nextQs);
   }
+  // このテンプレートに紐付けたコピーボタンも一緒に消す（残すと二度と表示されない）
+  if (cbOwned.length) {
+    _hrCbSave(_hrCbList().filter(function (b) { return (b.tplId || '') !== id; }));
+  }
   if (window.getCurrentTemplate() === id) {
-    try { localStorage.removeItem('hearingTemplate'); } catch (e) {}
+    // 選択の保存先はプロファイルごとに分かれている（'hearingTemplate' 固定では消えなかった）
+    try { localStorage.removeItem(window.HEARING_TPL_KEY || 'hearingTemplate'); } catch (e) {}
   }
   window.renderHearing();
+  _hrCbRender(true);
 };
+
+// ===================================================================
+// コピーボタン（ヒアリングの結果文の下に別枠で出す、固定テキストのコピーボタン）
+// データ構造: window._appCache.hearingCopyButtons = [{id, tplId, label, text}]
+//   tplId … 紐付けるテンプレート（空なら共通：どのテンプレートでも表示）
+//   label … ボタンに出す名前
+//   text  … ボタンを押したときにコピーするテキスト（ツール画面では編集できない）
+// 表示は common-utils.js（renderHearingSummary）が行う。
+// ===================================================================
+function _hrCbList() {
+  return window.getHearingCopyButtons ? window.getHearingCopyButtons() : ((window._appCache && window._appCache.hearingCopyButtons) || []);
+}
+
+/** 保存（IndexedDB）＋未保存マーク＋プレビューの結果欄だけ描き直す */
+function _hrCbSave(list) {
+  window._appCache.hearingCopyButtons = list;
+  if (window.idbSetAppData) { try { window.idbSetAppData('hearingCopyButtons', list); } catch (e) {} }
+  if (typeof markDirty === 'function') markDirty();
+  if (typeof window.renderHearingSummary === 'function') window.renderHearingSummary();
+  var badge = document.getElementById('hrCbCountBadge');
+  if (badge) badge.textContent = list.length + '件';
+}
+
+function _hrCbUpdate(id, patch) {
+  _hrCbSave(_hrCbList().map(function (b) { return b.id === id ? Object.assign({}, b, patch) : b; }));
+}
+
+/** 追加：プレビューで選んでいるテンプレートに紐付ける（未選択なら共通） */
+function _hrCbAdd() {
+  var id = 'hcb_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 4);
+  var cur = window.getCurrentTemplate ? window.getCurrentTemplate() : '';
+  var list = _hrCbList();
+  list.push({ id: id, tplId: cur || '', label: '', text: '' });
+  _hrCbSave(list);
+  _hrCbRender(true);
+  var inp = document.querySelector('#hrCbList .hr-cb-card[data-id="' + id + '"] .hr-cb-label');
+  if (inp) { inp.focus(); if (inp.scrollIntoView) inp.scrollIntoView({ block: 'nearest' }); }
+}
+
+function _hrCbDelete(id) {
+  var b = _hrCbList().find(function (x) { return x.id === id; });
+  if (!b) return;
+  if (!window.confirm('コピーボタン「' + (window.hearingCopyButtonLabel(b) || '（名前なし）') + '」を削除しますか？')) return;
+  _hrCbSave(_hrCbList().filter(function (x) { return x.id !== id; }));
+  _hrCbRender(true);
+}
+
+function _hrCbMove(id, dir) {
+  var list = _hrCbList();
+  var i = list.findIndex(function (x) { return x.id === id; });
+  var j = i + dir;
+  if (i < 0 || j < 0 || j >= list.length) return;
+  var t = list[i]; list[i] = list[j]; list[j] = t;
+  _hrCbSave(list);
+  _hrCbRender(true);
+}
+
+/**
+ * 一覧を描く。
+ * テンプレートの追加・名前変更に追従させるため、プレビューを描き直すたびにも呼ぶ。
+ * ただし入力中（一覧の中にフォーカスがある）は、打っている欄が消えないよう作り直さない（force で強制）。
+ */
+function _hrCbRender(force) {
+  var el = document.getElementById('hrCbList'); if (!el) return;
+  var list = _hrCbList();
+  var badge = document.getElementById('hrCbCountBadge');
+  if (badge) badge.textContent = list.length + '件';
+  if (!force && document.activeElement && el.contains(document.activeElement)) return;
+  if (!list.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:12px;background:var(--surface);border:1px dashed var(--border);border-radius:8px;text-align:center;">コピーボタンがありません。「＋ コピーボタンを追加」から登録してください。</div>';
+    return;
+  }
+  var tpls = window.getHearingTemplates ? window.getHearingTemplates() : [];
+  el.innerHTML = '';
+  list.forEach(function (b, i) {
+    var card = document.createElement('div');
+    card.className = 'hr-cb-card';
+    card.setAttribute('data-id', b.id);
+
+    // 見出し行（番号・並べ替え・削除）
+    var hd = document.createElement('div'); hd.className = 'hr-cb-hd';
+    var no = document.createElement('span'); no.className = 'hr-cb-no'; no.textContent = (i + 1) + '.';
+    var sp = document.createElement('span'); sp.className = 'hr-cb-sp';
+    var warn = document.createElement('span'); warn.className = 'hr-cb-warn';
+    var up = document.createElement('button'); up.type = 'button'; up.textContent = '▲'; up.title = '上へ';
+    up.disabled = (i === 0);
+    up.addEventListener('click', function () { _hrCbMove(b.id, -1); });
+    var dn = document.createElement('button'); dn.type = 'button'; dn.textContent = '▼'; dn.title = '下へ';
+    dn.disabled = (i === list.length - 1);
+    dn.addEventListener('click', function () { _hrCbMove(b.id, 1); });
+    var del = document.createElement('button'); del.type = 'button'; del.textContent = '🗑'; del.title = '削除';
+    del.addEventListener('click', function () { _hrCbDelete(b.id); });
+    hd.appendChild(no); hd.appendChild(warn); hd.appendChild(sp);
+    hd.appendChild(up); hd.appendChild(dn); hd.appendChild(del);
+
+    var row = function (label, input) {
+      var f = document.createElement('label'); f.className = 'hr-cb-field';
+      var t = document.createElement('span'); t.textContent = label;
+      f.appendChild(t); f.appendChild(input);
+      return f;
+    };
+
+    // ① 紐付けるテンプレート
+    var sel = document.createElement('select'); sel.className = 'hr-cb-tpl';
+    var addOpt = function (v, txt) {
+      var o = document.createElement('option'); o.value = v; o.textContent = txt; sel.appendChild(o);
+    };
+    addOpt('', '（共通：全テンプレート）');
+    tpls.forEach(function (t) { addOpt(t.id, t.name); });
+    var cur = b.tplId || '';
+    if (cur && !tpls.some(function (t) { return t.id === cur; })) addOpt(cur, '（削除されたテンプレート）');
+    sel.value = cur;
+
+    // ② ボタンラベル名
+    var lab = document.createElement('input'); lab.type = 'text'; lab.className = 'hr-cb-label';
+    lab.placeholder = '例：折り返し案内'; lab.value = b.label || '';
+
+    // ③ コピーするテキスト
+    var txt = document.createElement('textarea'); txt.className = 'hr-cb-text';
+    txt.placeholder = 'ボタンを押したときにコピーするテキスト'; txt.value = b.text || '';
+
+    var paintWarn = function () {
+      var ws = [];
+      if (!txt.value) ws.push('テキストが空のため表示されません');
+      if (sel.value && !tpls.some(function (t) { return t.id === sel.value; })) ws.push('紐付け先のテンプレートがありません');
+      warn.textContent = ws.length ? '⚠ ' + ws.join(' / ') : '';
+    };
+    sel.addEventListener('change', function () { _hrCbUpdate(b.id, { tplId: sel.value }); paintWarn(); });
+    lab.addEventListener('input', function () { _hrCbUpdate(b.id, { label: lab.value }); });
+    txt.addEventListener('input', function () { _hrCbUpdate(b.id, { text: txt.value }); paintWarn(); });
+    paintWarn();
+
+    card.appendChild(hd);
+    card.appendChild(row('テンプレート', sel));
+    card.appendChild(row('ボタンラベル名', lab));
+    card.appendChild(row('コピーするテキスト', txt));
+    el.appendChild(card);
+  });
+}
 
 function _hrQuestionsGet() {
   // 空配列は「全部削除した」という意思表示。長さで判定して data.js から
@@ -2702,7 +2888,7 @@ function _hrLoadAndRender() {
     if (!Array.isArray(window._appCache.hearingPatterns) && Array.isArray(_sd.hearingPatterns)) {
       window._appCache.hearingPatterns = JSON.parse(JSON.stringify(_sd.hearingPatterns));
     }
-    _hrEditorRender(); _hrPatRender();
+    _hrEditorRender(); _hrPatRender(); _hrCbRender(true);
   };
   if (!window.idbGetAppData) { _draw(); return; }
   Promise.all([
@@ -3360,12 +3546,12 @@ let data = {};
       if (Array.isArray(results[0]) && results[0].length) window._appCache.hearingPolicies  = results[0];
       if (Array.isArray(results[1]) && results[1].length) window._appCache.hearingPatterns  = results[1];
       if (Array.isArray(results[2]) && results[2].length) window._appCache.hearingQuestions = results[2];
-      _hrEditorRender(); _hrPatRender();
+      _hrEditorRender(); _hrPatRender(); _hrCbRender(true);
     }).catch(function() {
-      _hrEditorRender(); _hrPatRender();
+      _hrEditorRender(); _hrPatRender(); _hrCbRender(true);
     });
   } else {
-    _hrEditorRender(); _hrPatRender();
+    _hrEditorRender(); _hrPatRender(); _hrCbRender(true);
   }
 });
 function ensureColors(){let ci=0;Object.values(data).forEach(cat=>{if(!cat.color)cat.color=CAT_COLORS[ci%CAT_COLORS.length];ci++;});}
@@ -6025,7 +6211,8 @@ function exportIndividual(type) {
       version: 1, exportedAt: new Date().toISOString(),
       hearingQuestions: window.stripHearingMemo(window._appCache.hearingQuestions || []),   // メモは common-utils.js の固定項目
       hearingPolicies:  window._appCache.hearingPolicies  || [],
-      hearingPatterns:  window._appCache.hearingPatterns  || []
+      hearingPatterns:  window._appCache.hearingPatterns  || [],
+      hearingCopyButtons: window._appCache.hearingCopyButtons || []
     };
     _dl(JSON.stringify(obj, null, 2), 'hearing_'+_ts+'.json');
     toast('📥 ヒアリングをエクスポートしました');
@@ -6093,6 +6280,7 @@ function importIndividual(type, input) {
         if (raw.hearingQuestions) { window._appCache.hearingQuestions = raw.hearingQuestions; window.idbSetAppData('hearingQuestions', raw.hearingQuestions); }
         if (raw.hearingPolicies)  { window._appCache.hearingPolicies  = raw.hearingPolicies;  window.idbSetAppData('hearingPolicies',  raw.hearingPolicies); }
         if (raw.hearingPatterns)  { window._appCache.hearingPatterns  = raw.hearingPatterns;  window.idbSetAppData('hearingPatterns',  raw.hearingPatterns); }
+        if (Array.isArray(raw.hearingCopyButtons)) { window._appCache.hearingCopyButtons = raw.hearingCopyButtons; window.idbSetAppData('hearingCopyButtons', raw.hearingCopyButtons); _hrCbRender(true); }
         toast('✅ ヒアリングをインポートしました'); closeSaveModal();
       } else if (type === 'sidemenu') {
         var smImport = raw.sideMenuData || (Array.isArray(raw) ? raw : null);
@@ -7097,6 +7285,7 @@ function exportDataJS(silent, screenPayload) {
       fixedTexts:       window._appCache.fixedTexts       || {},
       faqData:          window._appCache.faqData          || [],
       hearingTemplates: window._appCache.hearingTemplates || [],
+      hearingCopyButtons: window._appCache.hearingCopyButtons || [],   // 結果文の下に出すコピーボタン
       hearingLabelPrefix: window.getHearingDefaultPrefix(),   // 項目名の先頭記号
       hearingFixedReady: true,   // 組み込み項目は取り込み済み（足し直さない）
       notice:     (window.getNotice     ? window.getNotice()     : ''),   // お知らせ本文
@@ -16055,6 +16244,8 @@ window.addEventListener('resize',function(){
       h += '<div id="hearingSummaryArea"></div>';
 
       el.innerHTML = h;
+      // テンプレート欄の中のスクロール位置を戻す（描き直しで先頭に戻らないように）
+      if (typeof window._hrTplBarRestore === 'function') window._hrTplBarRestore(el);
 
       // サマリ描画
       if (typeof window.renderHearingSummary === 'function') window.renderHearingSummary();
@@ -16134,6 +16325,8 @@ window.addEventListener('resize',function(){
       addArea.style.cssText = 'margin:8px 0 4px;';
       el.insertBefore(addArea, memoRow);
       _renderInlineAddForm(addArea);
+      // コピーボタン一覧のテンプレート選択肢を、テンプレートの追加・名前変更に追従させる
+      if (typeof _hrCbRender === 'function') _hrCbRender();
     }; // end window.renderHearing
 
   } // end _installOverride

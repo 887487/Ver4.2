@@ -1402,6 +1402,7 @@ window._appCache = {
   faqData:          [],
   linkify:          {},
   hearingTemplates: [],
+  hearingCopyButtons: [],   // 結果文の下に出す「固定テキストのコピーボタン」（[{id, tplId, label, text}]）
   hearingLabelPrefix: '■',  // 項目名の先頭に付ける記号（'' なら付けない）
   hearingFixedReady: false, // 組み込み項目を取り込み済みか（true なら足し直さない）
   maintenance: {},          // メンテナンス中のページ（{'script.html': true} の形）
@@ -1443,6 +1444,7 @@ window.AppProfile.onDataReady(function _seedFromStaticData() {
   if (sd.faqData          != null) window._appCache.faqData          = sd.faqData;
   if (sd.linkify          != null) window._appCache.linkify          = sd.linkify;
   if (sd.hearingTemplates != null) window._appCache.hearingTemplates = sd.hearingTemplates;
+  if (sd.hearingCopyButtons != null) window._appCache.hearingCopyButtons = sd.hearingCopyButtons;
   if (sd.hearingLabelPrefix != null) window._appCache.hearingLabelPrefix = sd.hearingLabelPrefix;
   if (sd.hearingFixedReady != null) window._appCache.hearingFixedReady = sd.hearingFixedReady;
   if (sd.notice      != null) window._appCache.notice      = sd.notice;
@@ -1504,6 +1506,7 @@ window.initAppData = function() {
     if (sd.faqData          != null) window._appCache.faqData          = sd.faqData;
     if (sd.linkify          != null) window._appCache.linkify          = sd.linkify;
     if (sd.hearingTemplates != null) window._appCache.hearingTemplates = sd.hearingTemplates;
+    if (sd.hearingCopyButtons != null) window._appCache.hearingCopyButtons = sd.hearingCopyButtons;
     if (sd.hearingLabelPrefix != null) window._appCache.hearingLabelPrefix = sd.hearingLabelPrefix;
     if (sd.hearingFixedReady != null) window._appCache.hearingFixedReady = sd.hearingFixedReady;
     if (sd.notice      != null) window._appCache.notice      = sd.notice;
@@ -2281,6 +2284,7 @@ function _processImportText(text, noReload) {
               if (Array.isArray(raw.hearingQuestions)) { window._appCache.hearingQuestions = raw.hearingQuestions; window.idbSetAppData('hearingQuestions', raw.hearingQuestions); }
               if (Array.isArray(raw.hearingPolicies))  { window._appCache.hearingPolicies  = raw.hearingPolicies;  window.idbSetAppData('hearingPolicies',  raw.hearingPolicies); }
               if (Array.isArray(raw.hearingPatterns))  { window._appCache.hearingPatterns  = raw.hearingPatterns;  window.idbSetAppData('hearingPatterns',  raw.hearingPatterns); }
+              if (Array.isArray(raw.hearingCopyButtons)) { window._appCache.hearingCopyButtons = raw.hearingCopyButtons; window.idbSetAppData('hearingCopyButtons', raw.hearingCopyButtons); }
 
               // 画面遷移データを IDB に書き込んでから broadcast・applyImport を実行する。
               // idbSetScreenData の完了前に allDataUpdated を送ると、
@@ -3401,7 +3405,8 @@ window.loadHearingData = function() {
     window.idbGetAppData('hearingQuestions'),
     window.idbGetAppData('hearingPolicies'),
     window.idbGetAppData('hearingDataVersion'),
-    window.idbGetAppData('hearingFixedReady')
+    window.idbGetAppData('hearingFixedReady'),
+    window.idbGetAppData('hearingCopyButtons')
   ]).then(function(r) {
     if (r[4] != null) window._appCache.hearingFixedReady = !!r[4];
     // バージョンが合うときだけ保存データを使う（合わなければ data.js の内容）
@@ -3413,6 +3418,8 @@ window.loadHearingData = function() {
     }
     // テンプレートはバージョン管理の対象外（後から追加した機能のため）
     if (Array.isArray(r[0])) window._appCache.hearingTemplates = r[0];
+    // コピーボタンもテンプレートと同じ扱い（管理画面で編集した内容があればそれを使う）
+    if (Array.isArray(r[5])) window._appCache.hearingCopyButtons = r[5];
     if (typeof renderHearing === 'function') renderHearing();
   }).catch(function() {});
 };
@@ -4087,7 +4094,9 @@ function _orderHeader() {
                    if (b.id === 'adminJumpBtn' || b.id === 'quickCopyBtn') return false;
                    return !(quick && quick.contains(b));
                  });
-  var search = right.querySelector('.search-wrap');
+  // hearing.html はテンプレート名の検索欄（.hr-tpl-search-wrap）を検索欄として扱い、
+  // 他のページと同じく「定型文」の右に置く（以前は先頭に残って位置がずれていた）
+  var search = right.querySelector('.search-wrap') || right.querySelector('.hr-tpl-search-wrap');
   var gear   = document.getElementById('adminJumpBtn');
 
   navs.forEach(function (b) { right.appendChild(b); });
@@ -4210,7 +4219,8 @@ if (document.readyState === 'loading') {
 
 // 他のタブでヒアリング内容が変わったら追従する（同じ内容を見せるため）
 window.addEventListener('storage', function(e) {
-  if (e.key !== HEARING_KEY) return;
+  // テンプレートの選択（HEARING_TPL_KEY）だけが変わった場合も追従する（リセットでの解除など）
+  if (e.key !== HEARING_KEY && e.key !== HEARING_TPL_KEY) return;
   if (typeof loadHearingState === 'function') hearingState = loadHearingState();
   if (typeof renderHearing === 'function') renderHearing();
 });
@@ -5565,7 +5575,8 @@ function _hrTemplateBar() {
   var cur = window.getCurrentTemplate();
   // 管理画面では、テンプレートごとに名前変更・削除ボタンを出す
   var admin = document.body.classList.contains('page-admin');
-  return '<div class="hr-tpl-bar">'
+  // 枠の中だけでスクロールするため、描き直しで位置が先頭に戻らないよう位置を覚えておく
+  return '<div class="hr-tpl-bar" onscroll="window._hrTplBarOnScroll(this)">'
     + tpls.map(function(t) {
         return '<span class="hr-tpl-wrap">'
           + '<button type="button" class="hr-tpl-btn' + (t.id === cur ? ' active' : '') + '"'
@@ -5588,6 +5599,41 @@ function _hrTemplateBar() {
 }
 
 // テンプレートの名前変更・削除は管理画面だけの操作なので admin.html にある
+
+// ── テンプレート欄のスクロール位置の保持 ──
+// テンプレート欄（.hr-tpl-bar）は縦5件ぶんを超えると枠の中だけでスクロールする。
+// 選択や入力のたびに renderHearing() が欄ごと作り直すため、枠の中のスクロール位置が
+// 先頭に戻り、下の方で選んだテンプレートが見えなくなっていた。
+// 位置を覚えて描き直し後に戻し、選択中のテンプレートが変わったとき（ページを開いた直後・
+// 他のタブで切り替えた場合など）は、選択中のボタンが枠の中に見えるようにする。
+var _hrTplBarTop = null;        // 枠の中のスクロール位置
+var _hrTplBarShownCur = null;   // 前回、見える位置に合わせたときの選択テンプレート
+
+window._hrTplBarOnScroll = function (bar) {
+  if (bar && bar.isConnected && bar.clientHeight > 0) _hrTplBarTop = bar.scrollTop;
+};
+
+window._hrTplBarRestore = function (root) {
+  var scope = root || document.getElementById('hearingContent') || document;
+  var bar = scope.querySelector ? scope.querySelector('.hr-tpl-bar') : null;
+  if (!bar) return;
+  if (bar.clientHeight === 0) return;   // 非表示中は位置を扱えない（表示されてからの描き直しで合わせる）
+  if (_hrTplBarTop != null) bar.scrollTop = _hrTplBarTop;
+  var cur = window.getCurrentTemplate();
+  if (cur !== _hrTplBarShownCur) {
+    var btn = bar.querySelector('.hr-tpl-btn.active');
+    if (btn && btn.offsetParent !== null) {
+      var br = bar.getBoundingClientRect(), bt = btn.getBoundingClientRect();
+      var top = bt.top - br.top + bar.scrollTop;          // 枠の中での位置
+      var viewTop = bar.scrollTop, viewH = bar.clientHeight;
+      if (top < viewTop || top + bt.height > viewTop + viewH) {
+        bar.scrollTop = Math.max(0, top - (viewH - bt.height) / 2);   // 真ん中あたりに見せる
+      }
+    }
+    _hrTplBarShownCur = cur;
+  }
+  _hrTplBarTop = bar.scrollTop;
+};
 
 var _hrMemoHTML = '';   // メモは結果文の直前に固定するため一時的に保持する
 
@@ -5669,6 +5715,8 @@ function renderHearing() {
   // 再描画でテンプレートの絞り込みボタンが作り直されるため、検索欄に文字が入っていれば絞り込みを掛け直す
   var _tplSearchEl = document.getElementById('hrTplSearchBox') || document.getElementById('hrTplSearchBoxPanel');
   if (_tplSearchEl && _tplSearchEl.value) window.hearingFilterTemplates(_tplSearchEl.value);
+  // テンプレート欄の中のスクロール位置を戻す（絞り込みの後で行う）
+  window._hrTplBarRestore(el);
   renderHearingSummary();
   // 管理画面では「＋ 対応方針を追加」に、いま条件になる件数を出す
   if (typeof _hrUpdateAddPolicyBtn === 'function') _hrUpdateAddPolicyBtn();
@@ -5701,7 +5749,8 @@ function _hrAutoGrowAll() {
 /** いま入力中の欄と、カーソルの位置を覚えておく */
 /** el を含む、実際にスクロールしている祖先要素を探す（無ければ null） */
 function _hrFindScroller(el) {
-  var n = el ? el.parentElement : null;
+  // 右側の折りたたみパネルでは #hearingContent 自身がスクロールするため、自分から調べる
+  var n = el || null;
   while (n && n !== document.body) {
     var cs = window.getComputedStyle(n);
     if ((cs.overflowY === 'auto' || cs.overflowY === 'scroll') && n.scrollHeight > n.clientHeight) return n;
@@ -6065,11 +6114,83 @@ function _hrTrimBlanks(list) {
 }
 window.buildHearingLines = buildHearingLines;
 
+// =============================================================================
+// ヒアリング：固定テキストのコピーボタン
+//   管理画面で「紐付けるテンプレート・ボタン名・コピーするテキスト」を登録すると、
+//   そのテンプレートを選んでいるときだけ、結果文（hr-summary）の下に別枠でボタンを出す。
+//   ボタンは登録したテキストをそのままコピーするだけ（画面上で編集はできない）。
+//   データ：_appCache.hearingCopyButtons = [{ id, tplId, label, text }]
+//     tplId が空 … どのテンプレートでも表示（共通）
+// =============================================================================
+
+/** 登録されているコピーボタン（tplId を渡すと、そのテンプレートで表示するものだけ） */
+window.getHearingCopyButtons = function (tplId) {
+  var all = (window._appCache && window._appCache.hearingCopyButtons) ||
+            (window.APP_STATIC_DATA && window.APP_STATIC_DATA.hearingCopyButtons) || [];
+  if (!Array.isArray(all)) return [];
+  all = all.filter(function (b) { return b && typeof b === 'object'; });
+  if (tplId === undefined) return all.slice();
+  var cur = tplId || '';
+  return all.filter(function (b) {
+    var t = b.tplId || '';
+    return t === '' || (cur !== '' && t === cur);
+  });
+};
+
+/** ボタンに出す名前（未入力ならテキストの先頭を使う） */
+function _hrCopyBtnLabel(b) {
+  var l = String(b.label || '').trim();
+  if (l) return l;
+  var t = String(b.text || '').replace(/\s+/g, ' ').trim();
+  return t.length > 20 ? t.slice(0, 20) + '…' : t;
+}
+window.hearingCopyButtonLabel = _hrCopyBtnLabel;
+
+/** 結果文の下に出すコピーボタン枠の HTML（出すものが無ければ空文字） */
+function _hrCopyButtonsHTML() {
+  var list = window.getHearingCopyButtons(window.getCurrentTemplate()).filter(function (b) {
+    return String(b.text || '') !== '';   // コピーする中身が無いボタンは出さない
+  });
+  if (!list.length) return '';
+  return '<div class="hr-copybtns">' +
+           '<div class="hr-copybtns-title">📎 コピー用テキスト</div>' +
+           '<div class="hr-copybtns-list">' +
+           list.map(function (b) {
+             return '<button type="button" class="hr-copybtn" data-id="' + escHtml(b.id) + '"' +
+               ' title="' + escHtml(b.text) + '"' +
+               // フォーカスが移るとスクロール位置が動くことがあるため、フォーカスさせない
+               ' onmousedown="event.preventDefault()"' +
+               ' onclick="window.copyHearingFixedText(this.getAttribute(\'data-id\'))">📋 ' +
+               escHtml(_hrCopyBtnLabel(b)) + '</button>';
+           }).join('') +
+           '</div>' +
+         '</div>';
+}
+
+/** 登録されたテキストをそのままクリップボードへコピーする */
+window.copyHearingFixedText = function (id) {
+  var b = window.getHearingCopyButtons().find(function (x) { return x.id === id; });
+  if (!b || String(b.text || '') === '') { _showHearingToast('コピーする内容がありません', true); return; }
+  var text = String(b.text);
+  var name = _hrCopyBtnLabel(b);
+  var done = function () { _showHearingToast('「' + name + '」をコピーしました', false); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    try {
+      navigator.clipboard.writeText(text).then(done, function () { _fallbackCopy(text); done(); });
+    } catch (e) { _fallbackCopy(text); done(); }
+  } else {
+    _fallbackCopy(text);
+    done();
+  }
+};
+
 function renderHearingSummary() {
   var area = document.getElementById('hearingSummaryArea');
   if (!area) return;
   var items = buildHearingLines(hearingState);
-  if (!items.length) { area.innerHTML = ''; return; }
+  // コピーボタンは結果文が空でも出す（テンプレートを選んだ直後から使えるように）
+  var copyHtml = _hrCopyButtonsHTML();
+  if (!items.length) { area.innerHTML = copyHtml; return; }
 
   var hasPolicy = items.some(function (it) { return it.kind === 'policy'; });
   var h = '<div class="hr-summary"><div class="hr-summary-title">📋 ヒアリング内容</div><div class="hr-summary-rows">';
@@ -6120,6 +6241,7 @@ function renderHearingSummary() {
     h += '</div>';
   }
   h += '</div>';
+  h += copyHtml;   // 結果文の下段に別枠で出す
   area.innerHTML = h;
   if (hasPolicy) {
     setTimeout(function () {
@@ -6512,7 +6634,7 @@ window.refreshAppCacheFromIDB = function (keys) {
   // 管理画面が保存した内容は IndexedDB に入っている。このページのキャッシュ（_appCache）は
   // 読み込み時のままで古いので、通知を受けたら IndexedDB から読み直してから描き直す。
   // （以前はキャッシュをそのまま使っていて、保存しても開いているページの表示が変わらなかった）
-  var HEARING_KEYS = ['hearingQuestions', 'hearingPolicies', 'hearingPatterns', 'hearingTemplates', 'hearingLabelPrefix'];
+  var HEARING_KEYS = ['hearingQuestions', 'hearingPolicies', 'hearingPatterns', 'hearingTemplates', 'hearingCopyButtons', 'hearingLabelPrefix'];
   var call = function (name) { if (typeof window[name] === 'function') { try { window[name](); } catch (e) {} } };
 
   /** 通知の種類ごとの「読み直し＋描き直し」 */
