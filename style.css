@@ -632,6 +632,25 @@ body > .hearing-panel { top:var(--header-h); }
 .hr-text-input:focus { outline:none;border-color:var(--accent); }
 /* 「日付」入力欄の裏にある、カレンダーを開くためだけの隠し input（見た目には出さない） */
 .hr-date-hidden { position:absolute;width:0;height:0;padding:0;border:0;opacity:0;pointer-events:none; }
+/* 日付入力のカレンダー（入力欄のすぐ右横に出す。位置は common-utils.js の _hrDatePlace） */
+.hr-date-pop { position:fixed;z-index:10050;width:224px;box-sizing:border-box;padding:8px;background:var(--surface);color:var(--text);
+  border:1px solid var(--border);border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.18);font-size:12px;user-select:none; }
+.hr-date-pop button { font-family:inherit;cursor:pointer; }
+.hr-date-pop-hd { display:flex;align-items:center;justify-content:space-between;margin-bottom:6px; }
+.hr-date-pop-hd button { width:26px;height:24px;border:1px solid var(--border);border-radius:5px;background:var(--surface2);color:var(--text);font-size:14px;line-height:1; }
+.hr-date-pop-hd button:hover { border-color:var(--accent);color:var(--accent-text); }
+.hr-date-pop-ym { font-weight:700;font-size:12px; }
+.hr-date-pop-grid { display:grid;grid-template-columns:repeat(7,1fr);gap:2px; }
+.hr-date-pop-dow { text-align:center;font-size:10px;font-weight:700;color:var(--text3);padding:2px 0; }
+.hr-date-pop-day { height:26px;border:1px solid transparent;border-radius:5px;background:transparent;color:var(--text);font-size:12px;padding:0; }
+.hr-date-pop-day:hover { background:var(--accent-lt);border-color:var(--accent); }
+.hr-date-pop .is-sun { color:#e63946; }
+.hr-date-pop .is-sat { color:#2f6df6; }
+.hr-date-pop-day.is-today { border-color:var(--accent);font-weight:700; }
+.hr-date-pop-day.is-sel { background:var(--accent);border-color:var(--accent);color:#fff; }
+.hr-date-pop-ft { display:flex;justify-content:space-between;margin-top:6px; }
+.hr-date-pop-ft button { height:24px;padding:0 10px;border:1px solid var(--border);border-radius:5px;background:var(--surface2);color:var(--text);font-size:11px; }
+.hr-date-pop-ft button:hover { border-color:var(--accent);color:var(--accent-text); }
 .hr-check-label { display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text);cursor:pointer;padding:3px 0; }
 .hr-check-label input[type="checkbox"] { width:14px;height:14px;cursor:pointer;accent-color:var(--accent-text);flex-shrink:0; }
 .hr-summary { background:#f0f4ff;border:1px solid #c5cee8;border-radius:8px;padding:10px 12px;margin-top:6px; }

@@ -4659,13 +4659,176 @@ window._hrDateCalendarHTML = function (fieldName, fmt) {
     + ' data-for-field="' + escHtml(fieldName) + '" data-date-fmt="' + escHtml(fmt || 'ymd_slash') + '"'
     + ' onchange="window.hrDateChanged(this)">';
 };
-/** 日付入力欄にフォーカスしたら、隠しカレンダーを開く */
-window.hrDateFocus = function (el) {
-  var fld = el.getAttribute('data-hr-field');
-  var cal = document.querySelector('.hr-date-hidden[data-for-field="' + CSS.escape(fld) + '"]');
-  if (!cal) return;
-  try { if (cal.showPicker) cal.showPicker(); else cal.click(); } catch (e) { try { cal.click(); } catch (e2) {} }
+// ── 日付入力のカレンダー ──
+// 以前はブラウザ標準のカレンダー（<input type=date> の showPicker）を開いていたが、
+// 表示位置をこちらで決められず、欄の下に固定されて画面の下端で見切れていた。
+// いまは自前のカレンダーを、入力欄のすぐ右横に出す（右に入らなければ左横、上下は画面内に収める）。
+var _hrDatePop = null;        // カレンダーの要素（body 直下に1つだけ）
+var _hrDateAnchor = null;     // いま開いている入力欄
+var _hrDateView = null;       // 表示中の年月 { y, m }（m は 0〜11）
+var _hrDateSuppress = 0;      // 日付を選んだ直後は、描き直しでフォーカスが戻っても開き直さない
+
+function _hrDateFieldOf(el) { return el ? el.getAttribute('data-hr-field') : ''; }
+function _hrDateFmtOf(el) {
+  var fld = _hrDateFieldOf(el);
+  var cal = fld ? document.querySelector('.hr-date-hidden[data-for-field="' + CSS.escape(fld) + '"]') : null;
+  return (cal && cal.getAttribute('data-date-fmt')) || 'ymd_slash';
+}
+/** 入力欄の文字から日付を読み取る（書式はいろいろ。読めなければ null） */
+function _hrDateParse(text) {
+  var t = String(text || '').replace(/[０-９]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); });
+  var m = /(\d{4})\s*[\/\-年.]\s*(\d{1,2})\s*[\/\-月.]\s*(\d{1,2})/.exec(t);
+  if (m) return { y: +m[1], m: +m[2] - 1, d: +m[3] };
+  m = /(\d{1,2})\s*[\/月]\s*(\d{1,2})/.exec(t);
+  if (m) return { y: new Date().getFullYear(), m: +m[1] - 1, d: +m[2] };
+  return null;
+}
+function _hrDateIso(y, m, d) { return y + '-' + _hrPad2(m + 1) + '-' + _hrPad2(d); }
+
+function _hrDateEnsurePop() {
+  if (_hrDatePop && document.body.contains(_hrDatePop)) return _hrDatePop;
+  _hrDatePop = document.createElement('div');
+  _hrDatePop.id = 'hrDatePop';
+  _hrDatePop.className = 'hr-date-pop';
+  _hrDatePop.style.display = 'none';
+  // 押してもフォーカスを入力欄から外さない（外れると閉じてしまうため）
+  _hrDatePop.addEventListener('mousedown', function (e) { e.preventDefault(); });
+  _hrDatePop.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-act]');
+    if (!b) return;
+    var act = b.getAttribute('data-act');
+    if (act === 'prev' || act === 'next') {
+      var d = new Date(_hrDateView.y, _hrDateView.m + (act === 'prev' ? -1 : 1), 1);
+      _hrDateView = { y: d.getFullYear(), m: d.getMonth() };
+      _hrDateRender(); _hrDatePlace();
+    } else if (act === 'day') {
+      _hrDatePick(b.getAttribute('data-iso'));
+    } else if (act === 'today') {
+      var n = new Date();
+      _hrDatePick(_hrDateIso(n.getFullYear(), n.getMonth(), n.getDate()));
+    } else if (act === 'close') {
+      window.hrDateClose();
+    }
+  });
+  document.body.appendChild(_hrDatePop);
+  return _hrDatePop;
+}
+
+function _hrDateRender() {
+  var pop = _hrDateEnsurePop();
+  var y = _hrDateView.y, m = _hrDateView.m;
+  var sel = _hrDateAnchor ? _hrDateParse(_hrDateAnchor.value) : null;
+  var now = new Date();
+  var first = new Date(y, m, 1).getDay();
+  var days = new Date(y, m + 1, 0).getDate();
+  var h = '<div class="hr-date-pop-hd">'
+    + '<button type="button" data-act="prev" title="前の月">‹</button>'
+    + '<span class="hr-date-pop-ym">' + y + '年' + (m + 1) + '月</span>'
+    + '<button type="button" data-act="next" title="次の月">›</button></div>'
+    + '<div class="hr-date-pop-grid">';
+  HR_DOW.forEach(function (w, i) { h += '<span class="hr-date-pop-dow' + (i === 0 ? ' is-sun' : i === 6 ? ' is-sat' : '') + '">' + w + '</span>'; });
+  for (var i = 0; i < first; i++) h += '<span></span>';
+  for (var d = 1; d <= days; d++) {
+    var dow = (first + d - 1) % 7;
+    var cls = 'hr-date-pop-day' + (dow === 0 ? ' is-sun' : dow === 6 ? ' is-sat' : '')
+      + (now.getFullYear() === y && now.getMonth() === m && now.getDate() === d ? ' is-today' : '')
+      + (sel && sel.y === y && sel.m === m && sel.d === d ? ' is-sel' : '');
+    h += '<button type="button" class="' + cls + '" data-act="day" data-iso="' + _hrDateIso(y, m, d) + '">' + d + '</button>';
+  }
+  h += '</div><div class="hr-date-pop-ft">'
+    + '<button type="button" data-act="today">今日</button>'
+    + '<button type="button" data-act="close">閉じる</button></div>';
+  pop.innerHTML = h;
+}
+
+/** 入力欄のすぐ右横に置く。右に入らなければ左横、どちらも入らなければ欄の下。上下は画面内に収める */
+function _hrDatePlace() {
+  var pop = _hrDatePop, el = _hrDateAnchor;
+  if (!pop || !el) return;
+  if (!el.isConnected) {
+    // 描き直しで欄が作り直された場合は、同じ項目の新しい欄に付け替える
+    var fld = pop.getAttribute('data-field');
+    var nx = fld ? document.querySelector('[data-hr-field="' + CSS.escape(fld) + '"]') : null;
+    if (!nx) { window.hrDateClose(); return; }
+    _hrDateAnchor = el = nx;
+  }
+  var r = el.getBoundingClientRect();
+  if (!r.width && !r.height) { window.hrDateClose(); return; }   // 画面から見えなくなった
+  var vw = window.innerWidth, vh = window.innerHeight, GAP = 6, M = 4;
+  var w = pop.offsetWidth, h = pop.offsetHeight;
+  var left = r.right + GAP, top = r.top;
+  if (left + w > vw - M) {
+    left = r.left - GAP - w;                         // 右に入らない → 左横
+    if (left < M) {                                  // 左にも入らない → 欄の下
+      left = Math.min(Math.max(M, r.left), vw - w - M);
+      top = r.bottom + GAP;
+      if (top + h > vh - M) top = r.top - GAP - h;   // 下に入らなければ上
+    }
+  }
+  if (top + h > vh - M) top = vh - h - M;            // 下端で見切れないように上へずらす
+  if (top < M) top = M;
+  pop.style.left = Math.round(left) + 'px';
+  pop.style.top = Math.round(top) + 'px';
+}
+
+function _hrDatePick(iso) {
+  var el = _hrDateAnchor;
+  if (!el) return;
+  var fld = _hrDateFieldOf(el);
+  var text = window.hrFormatDate(iso, _hrDateFmtOf(el));
+  el.value = text;
+  _hrDateSuppress = Date.now() + 600;
+  window.hrDateClose();
+  window.setHearingInput(fld, text);
+  if (typeof window.hrAutoGrow === 'function' && el.tagName === 'TEXTAREA') { try { window.hrAutoGrow(el); } catch (e) {} }
+}
+
+window.hrDateClose = function () {
+  if (_hrDatePop) _hrDatePop.style.display = 'none';
+  _hrDateAnchor = null;
 };
+
+/** 日付入力欄にフォーカスした（クリックした）ら、欄のすぐ右横にカレンダーを開く */
+window.hrDateFocus = function (el, ev) {
+  if (!el) return;
+  // 選んだ直後の描き直しでフォーカスが戻っただけなら開かない（クリックしたときは開く）
+  if (Date.now() < _hrDateSuppress && !(ev && ev.type === 'click')) return;
+  var pop = _hrDateEnsurePop();
+  var same = _hrDateAnchor && _hrDateFieldOf(_hrDateAnchor) === _hrDateFieldOf(el) && pop.style.display !== 'none';
+  _hrDateAnchor = el;
+  pop.setAttribute('data-field', _hrDateFieldOf(el));
+  if (!same) {
+    var p = _hrDateParse(el.value), n = new Date();
+    _hrDateView = p ? { y: p.y, m: p.m } : { y: n.getFullYear(), m: n.getMonth() };
+  }
+  _hrDateRender();
+  pop.style.display = 'block';
+  _hrDatePlace();
+  if (!el._hrDateBound) {
+    el._hrDateBound = true;
+    // フォーカスが外れたら閉じる（カレンダーの中を押したときはフォーカスが外れない）
+    el.addEventListener('blur', function () { setTimeout(function () {
+      if (_hrDateAnchor === el && document.activeElement !== el) window.hrDateClose();
+    }, 0); });
+    el.addEventListener('keydown', function (e) { if (e.key === 'Escape' || e.key === 'Tab') window.hrDateClose(); });
+    // 手で入力したら、読み取れた日付の月を表示し直す（位置も合わせる）
+    el.addEventListener('input', function () {
+      if (_hrDateAnchor !== el) return;
+      var p = _hrDateParse(el.value);
+      if (p) _hrDateView = { y: p.y, m: p.m };
+      _hrDateRender(); _hrDatePlace();
+    });
+  }
+};
+
+// 画面のスクロール・大きさの変更に合わせて、カレンダーを入力欄の横に付いていかせる
+window.addEventListener('scroll', function () { if (_hrDateAnchor) _hrDatePlace(); }, true);
+window.addEventListener('resize', function () { if (_hrDateAnchor) _hrDatePlace(); });
+document.addEventListener('mousedown', function (e) {
+  if (!_hrDateAnchor || !_hrDatePop) return;
+  if (_hrDatePop.contains(e.target) || e.target === _hrDateAnchor) return;
+  window.hrDateClose();
+}, true);
 /** カレンダーで日付を選んだら、指定の書式にして本来の入力欄へ入れる */
 window.hrDateChanged = function (cal) {
   var fld = cal.getAttribute('data-for-field');
@@ -5018,7 +5181,7 @@ function _hrSelectManualHTML(q, s) {
   h += '<div style="display:' + (showManual ? 'block' : 'none') + ';margin-top:6px;">' +
     '<input type="text" class="hr-text-input" placeholder="' + escHtml(q.manualPlaceholder || '') + '"' +
     ' data-hr-field="' + escHtml(mfld) + '" value="' + escHtml(s[mfld] || '') + '" oninput="setHearingInput(\'' + mfld + '\',this.value)"' +
-    (isDate ? ' onfocus="window.hrDateFocus(this)" autocomplete="off"' : '') + '>' +
+    (isDate ? ' onfocus="window.hrDateFocus(this,event)" onclick="window.hrDateFocus(this,event)" autocomplete="off"' : '') + '>' +
     (isDate ? window._hrDateCalendarHTML(mfld, q.manualDateFormat) : '') +
     '</div>';
   return h;
@@ -5164,7 +5327,7 @@ function _hearingItemHTMLRaw(q, s) {
     }
     var clearBtn = '';
     var isDateQ = q.inputKind === 'date';
-    var dateAttrs = isDateQ ? ' onfocus="window.hrDateFocus(this)" autocomplete="off"' : '';
+    var dateAttrs = isDateQ ? ' onfocus="window.hrDateFocus(this,event)" onclick="window.hrDateFocus(this,event)" autocomplete="off"' : '';
     var dateCal = isDateQ ? window._hrDateCalendarHTML(fld, q.dateFormat) : '';
     return _hrRow(window.hrLabelHtml(q), (q.multiline
       ? '<textarea class="hr-text-input hr-autogrow" data-hr-field="' + escHtml(fld) + '" rows="1" placeholder="' + ph + '" style="font-family:inherit;"' + dateAttrs + ' oninput="setHearingInput(\'' + fld + '\',this.value);window.hrAutoGrow(this)">' + escHtml(s[fld] || '') + '</textarea>'
