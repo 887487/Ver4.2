@@ -388,7 +388,7 @@
 .hr-row-child{border-left:3px solid var(--accent-lt,#dfe3ff);background:var(--surface2);}   /* margin-left は深さに応じて行ごとに指定 */
 .hr-child-tag{display:inline-block;margin-right:6px;padding:0 6px;border-radius:8px;font-size:9px;font-weight:700;background:var(--accent-lt);color:var(--accent-text);vertical-align:middle;}
 /* ログ作成補助：ボタンごとの中の項目の区切り（本物の質問ではなく、見出し＋その場で追加できるボタン） */
-.hr-log-opt-divider{display:flex;align-items:center;gap:6px;padding:6px 14px 4px;margin:0 -14px;}
+.hr-log-opt-divider{display:flex;align-items:center;gap:6px;padding:6px 0 4px;}
 /* ログ作成補助の区切り線：
    ボタン → ↳ ボタン名 ＋ 項目 の間には線を引かない。ボタンの中身どうし（↳ Test1 … と Test2 の間）は点線、
    ログ作成補助のいちばん最後（↳ 最後のボタン ＋ 項目、または中の項目の下）は実線。
@@ -396,10 +396,16 @@
 .page-admin .hr-row:has(+ .hr-log-opt-divider),
 .page-admin .hr-row:has(+ .hr-log-btn-row),
 .page-admin .hr-row:has(+ .hr-log-end){ border-bottom:none; }
-.hr-log-end{ margin:0 -14px; border-top:1px solid var(--border); }
+/* 区切りの線は、行の実線（border-bottom）と始点・終点をそろえる（左右にはみ出させない）。
+   中の段にあるログ作成補助は、その行と同じだけ左を空ける（margin-left は行ごとに指定） */
+.hr-log-end{ border-top:1px solid var(--border); }
+/* 最初のボタン（ログ作成補助の行の中）と「↳ ボタン名 ＋ 項目」の間も、2つ目以降のボタンの行と同じ間隔にそろえる
+   （2つ目以降のボタンの行は下の余白 2px。行の下の余白 10px のままだと、1つ目だけ間が広く見えていた） */
+.tab-panel-hearing .hr-row:has(+ .hr-log-opt-divider){ padding-bottom:2px; }
 .hr-log-opt-divider-label{font-size:9px;font-weight:700;color:var(--text3);white-space:nowrap;opacity:.8;}
 /* ログ作成補助の2つ目以降のボタン（そのボタンの中身のすぐ上に出す） */
-.hr-log-btn-row{padding:8px 14px 2px 32px;margin:0 -14px;border-top:1px dashed var(--border);}
+.hr-log-btn-row{padding:8px 14px 2px 18px;border-top:1px dashed var(--border);}
+.hr-log-btn-row-child{border-left:3px solid var(--accent-lt,#dfe3ff);background:var(--surface2);}
 .hr-log-opt-add{height:18px;padding:0 7px;border-radius:3px;border:1px solid var(--border);background:var(--surface);color:var(--text3);font-size:10px;font-family:inherit;cursor:pointer;}
 .hr-log-opt-add:hover{border-color:var(--accent);color:var(--accent-text);}
 .hr-tpl-edit{
@@ -17463,7 +17469,11 @@ window.addEventListener('resize',function(){
       var logBtnHtml = {};   // ログ作成補助のボタン（区切りの直前に1つずつ出す）
 
       ordered.forEach(function(q) {
-        if (q.__logEnd) { h += '<div class="hr-log-end" data-log-id="' + escHtml(q.parentLogId) + '"></div>'; return; }
+        if (q.__logEnd) {
+          h += '<div class="hr-log-end" data-log-id="' + escHtml(q.parentLogId) + '"'
+            + ((depthOf[q.parentLogId] || 0) ? ' style="margin-left:' + (24 * depthOf[q.parentLogId]) + 'px"' : '') + '></div>';
+          return;
+        }
         if (q.__divider) {
           // 本物の質問ではなく、ボタンごとの中の項目をまとめる見出し（＋その場で追加できる小さなボタン）
           var divDepth = (depthOf[q.parentLogId] || 0) + 1;
@@ -17473,7 +17483,8 @@ window.addEventListener('resize',function(){
           var opts0 = (window.getHearingOptions(qsAll.find(function(x) { return x.id === q.parentLogId; }) || {}) || []);
           var oi = opts0.findIndex(function(o) { return (o.v || o.l) === q.optV; });
           if (oi > 0 && btnList[oi]) {
-            h += '<div class="hr-log-btn-row" style="padding-left:' + (24 * logDepth + 32) + 'px">'
+            // 中の段にあるログ作成補助は、その行（中の項目の見た目：左の線と背景）と同じ見た目・位置にする
+            h += '<div class="hr-log-btn-row' + (logDepth ? ' hr-log-btn-row-child' : '') + '"' + (logDepth ? ' style="margin-left:' + (24 * logDepth) + 'px"' : '') + '>'
               + '<div class="hr-log-group">' + btnList[oi] + '</div></div>';
           }
           // 区切りは、ボタンより一段インデントして、ボタンのすぐ下に出す
