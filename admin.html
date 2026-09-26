@@ -14877,7 +14877,7 @@ window.addEventListener('resize',function(){
       'background:var(--surface2);border-radius:6px;';
     container.appendChild(extra);
 
-    var multiline = null, multi = null, optsArea = null, qtyPhInput = null, includeOutputChk = null, textPhInput = null, imgBody = null, qtyToggleChk = null;
+    var multiline = null, multi = null, optsArea = null, qtyPhInput = null, includeOutputChk = null, textPhInput = null, imgBody = null, qtyToggleChk = null, dateKindSel = null, dateFmtSel = null;
     var _qtyMode = (isEdit && editQ.type === 'qtycheck');   // 「数量も選べるようにする」の状態。チェックボックスの操作だけで変わる
     var _syncOtherBtn = null;   // 「その他（手入力）」ボタンの出し分け
 
@@ -15024,6 +15024,41 @@ window.addEventListener('resize',function(){
       return inp;
     };
 
+    // 「文字列／日付」の切り替えと、日付を選んだときだけ出す書式の選択。
+    // 記述（この項目自体の入力欄）と、プルダウン等の「その他（手入力）」の両方から呼ぶ。
+    var _hrDateKindUI = function(initialIsDate, initialFmt) {
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin-top:8px;';
+      var row = document.createElement('label');
+      row.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);cursor:pointer;';
+      dateKindSel = document.createElement('input');
+      dateKindSel.type = 'checkbox';
+      dateKindSel.checked = !!initialIsDate;
+      var txt = document.createElement('span');
+      txt.textContent = '日付にする（フォーカスするとカレンダーが出ます）';
+      row.appendChild(dateKindSel); row.appendChild(txt);
+      wrap.appendChild(row);
+
+      var fmtRow = document.createElement('div');
+      fmtRow.style.cssText = 'display:flex;align-items:center;gap:8px;' + (initialIsDate ? '' : 'display:none;');
+      var fmtLbl = document.createElement('span');
+      fmtLbl.style.cssText = 'font-size:11px;color:var(--text2);flex:0 0 auto;white-space:nowrap;';
+      fmtLbl.textContent = '出力の書式';
+      dateFmtSel = document.createElement('select');
+      dateFmtSel.style.cssText = SEL;
+      dateFmtSel.innerHTML = window.HR_DATE_FORMATS.map(function(f) {
+        return '<option value="' + f.key + '">' + f.label + '</option>';
+      }).join('');
+      dateFmtSel.value = initialFmt || 'ymd_slash';
+      fmtRow.appendChild(fmtLbl); fmtRow.appendChild(dateFmtSel);
+      wrap.appendChild(fmtRow);
+
+      dateKindSel.addEventListener('change', function() {
+        fmtRow.style.display = dateKindSel.checked ? '' : 'none';
+      });
+      return wrap;
+    };
+
     var renderExtra = function() {
       extra.innerHTML = '';
       extra.style.display = '';
@@ -15099,6 +15134,10 @@ window.addEventListener('resize',function(){
         textPhInput.value = (isEdit && editQ.type === 'text' && editQ.placeholder) || '';
         tPhRow.appendChild(tPhLbl); tPhRow.appendChild(textPhInput);
         extra.appendChild(tPhRow);
+        extra.appendChild(_hrDateKindUI(
+          (isEdit && editQ.type === 'text' && editQ.inputKind === 'date'),
+          (isEdit && editQ.type === 'text' && editQ.dateFormat) || ''
+        ));
         return;
       }
 
@@ -15201,6 +15240,10 @@ window.addEventListener('resize',function(){
           _syncOtherBtn();
         });
         hd.appendChild(otherBtn2);
+        extra.appendChild(_hrDateKindUI(
+          (isEdit && editQ.type === 'select' && editQ.manualInputKind === 'date'),
+          (isEdit && editQ.manualDateFormat) || ''
+        ));
       }
       extra.appendChild(optsArea);
       if (!(isEdit && Array.isArray(editQ.options) && editQ.options.length)) {
@@ -15383,12 +15426,20 @@ window.addEventListener('resize',function(){
       } else if (t === 'text') {
         newQ.multiline = !!(multiline && multiline.checked);
         if (textPhInput && textPhInput.value.trim()) newQ.placeholder = textPhInput.value.trim();
+        if (dateKindSel && dateKindSel.checked) {
+          newQ.inputKind = 'date';
+          newQ.dateFormat = dateFmtSel ? dateFmtSel.value : 'ymd_slash';
+        }
       } else if (t === 'image') {
         var imgHtml = imgBody ? window.hearingSanitizeHtml(imgBody.innerHTML) : '';
         if (!/<img\b/i.test(imgHtml)) { toast('⚠️ 画像を挿入してください'); return; }
         newQ.imageHtml = imgHtml;
       } else {
         if (t === 'qtycheck' && qtyPhInput) newQ.placeholder = qtyPhInput.value.trim();
+        if (t === 'select' && dateKindSel && dateKindSel.checked) {
+          newQ.manualInputKind = 'date';
+          newQ.manualDateFormat = dateFmtSel ? dateFmtSel.value : 'ymd_slash';
+        }
         newQ.options = [];
         optsArea.querySelectorAll('[data-role="opt"]').forEach(function(inp) {
           var v = inp.value.trim();

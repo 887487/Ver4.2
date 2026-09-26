@@ -4609,6 +4609,61 @@ window.hearingFillSlotHtml = function (tplHtml, valHtml) {
   return String(tplHtml || '').replace(new RegExp(HEARING_SLOT_RE.source, 'g'), function () { return valHtml; });
 };
 
+// ── 日付入力（記述／プルダウンその他手入力で「日付」を選んだときの、出力の書式） ──
+window.HR_DATE_FORMATS = [
+  { key: 'ymd_slash',     label: 'yyyy/mm/dd' },
+  { key: 'ymd_slash_dow', label: 'yyyy/mm/dd（aaa）' },
+  { key: 'md_slash',      label: 'mm/dd' },
+  { key: 'md_slash_dow',  label: 'mm/dd（aaa）' },
+  { key: 'ymd_kanji',     label: 'yyyy年ｍ月ｄ日' },
+  { key: 'ymd_kanji_dow', label: 'yyyy年ｍ月ｄ日（aaa）' },
+  { key: 'md_kanji',      label: 'ｍ月ｄ日' },
+  { key: 'md_kanji_dow',  label: 'ｍ月ｄ日（aaa）' }
+];
+var HR_DOW = ['日', '月', '火', '水', '木', '金', '土'];
+function _hrPad2(n) { n = String(n); return n.length < 2 ? '0' + n : n; }
+/** isoStr（<input type=date> の yyyy-mm-dd）を、指定の書式の文字列にする */
+window.hrFormatDate = function (isoStr, formatKey) {
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(isoStr || ''));
+  if (!m) return '';
+  var y = parseInt(m[1], 10), mo = parseInt(m[2], 10), d = parseInt(m[3], 10);
+  var dow = HR_DOW[new Date(y, mo - 1, d).getDay()];
+  switch (formatKey) {
+    case 'ymd_slash':     return y + '/' + _hrPad2(mo) + '/' + _hrPad2(d);
+    case 'ymd_slash_dow': return y + '/' + _hrPad2(mo) + '/' + _hrPad2(d) + '（' + dow + '）';
+    case 'md_slash':      return _hrPad2(mo) + '/' + _hrPad2(d);
+    case 'md_slash_dow':  return _hrPad2(mo) + '/' + _hrPad2(d) + '（' + dow + '）';
+    case 'ymd_kanji':     return y + '年' + mo + '月' + d + '日';
+    case 'ymd_kanji_dow': return y + '年' + mo + '月' + d + '日（' + dow + '）';
+    case 'md_kanji':      return mo + '月' + d + '日';
+    case 'md_kanji_dow':  return mo + '月' + d + '日（' + dow + '）';
+    default:              return y + '/' + _hrPad2(mo) + '/' + _hrPad2(d);
+  }
+};
+/** 「日付」入力欄のすぐ後ろに置く、隠しカレンダー（<input type=date>）のHTML */
+window._hrDateCalendarHTML = function (fieldName, fmt) {
+  return '<input type="date" class="hr-date-hidden" tabindex="-1" aria-hidden="true"'
+    + ' data-for-field="' + escHtml(fieldName) + '" data-date-fmt="' + escHtml(fmt || 'ymd_slash') + '"'
+    + ' onchange="window.hrDateChanged(this)">';
+};
+/** 日付入力欄にフォーカスしたら、隠しカレンダーを開く */
+window.hrDateFocus = function (el) {
+  var fld = el.getAttribute('data-hr-field');
+  var cal = document.querySelector('.hr-date-hidden[data-for-field="' + CSS.escape(fld) + '"]');
+  if (!cal) return;
+  try { if (cal.showPicker) cal.showPicker(); else cal.click(); } catch (e) { try { cal.click(); } catch (e2) {} }
+};
+/** カレンダーで日付を選んだら、指定の書式にして本来の入力欄へ入れる */
+window.hrDateChanged = function (cal) {
+  var fld = cal.getAttribute('data-for-field');
+  var fmt = cal.getAttribute('data-date-fmt');
+  var text = window.hrFormatDate(cal.value, fmt);
+  var el = document.querySelector('[data-hr-field="' + CSS.escape(fld) + '"]');
+  if (!el) return;
+  el.value = text;
+  window.setHearingInput(fld, text);
+};
+
 function _hrRow(label, content, extraClass, prefix) {
   var pf = (typeof prefix === 'string') ? prefix : window.getHearingDefaultPrefix();
   return '<div class="hr-row' + (extraClass ? ' ' + extraClass : '') + '">' +
@@ -4946,9 +5001,13 @@ function _hrSelectManualHTML(q, s) {
     ((window.hearingNeedsManual(q) && !opts.some(function (o) { return o.manual; }))
       ? '<option value="__manual__"' + (v === '__manual__' ? ' selected' : '') + '>その他（手入力）</option>' : '') +
     '</select>';
+  var isDate = q.manualInputKind === 'date';
   h += '<div style="display:' + (showManual ? 'block' : 'none') + ';margin-top:6px;">' +
     '<input type="text" class="hr-text-input" placeholder="' + escHtml(q.manualPlaceholder || '') + '"' +
-    ' data-hr-field="' + escHtml(mfld) + '" value="' + escHtml(s[mfld] || '') + '" oninput="setHearingInput(\'' + mfld + '\',this.value)"></div>';
+    ' data-hr-field="' + escHtml(mfld) + '" value="' + escHtml(s[mfld] || '') + '" oninput="setHearingInput(\'' + mfld + '\',this.value)"' +
+    (isDate ? ' onfocus="window.hrDateFocus(this)" autocomplete="off"' : '') + '>' +
+    (isDate ? window._hrDateCalendarHTML(mfld, q.manualDateFormat) : '') +
+    '</div>';
   return h;
 }
 window._hrSelectManualHTML = _hrSelectManualHTML;
@@ -5091,9 +5150,12 @@ function _hearingItemHTMLRaw(q, s) {
         + '</div></div>';
     }
     var clearBtn = '';
+    var isDateQ = q.inputKind === 'date';
+    var dateAttrs = isDateQ ? ' onfocus="window.hrDateFocus(this)" autocomplete="off"' : '';
+    var dateCal = isDateQ ? window._hrDateCalendarHTML(fld, q.dateFormat) : '';
     return _hrRow(window.hrLabelHtml(q), (q.multiline
-      ? '<textarea class="hr-text-input hr-autogrow" data-hr-field="' + escHtml(fld) + '" rows="1" placeholder="' + ph + '" style="font-family:inherit;" oninput="setHearingInput(\'' + fld + '\',this.value);window.hrAutoGrow(this)">' + escHtml(s[fld] || '') + '</textarea>'
-      : '<input type="text" class="hr-text-input" data-hr-field="' + escHtml(fld) + '" placeholder="' + ph + '" value="' + escHtml(s[fld] || '') + '" oninput="setHearingInput(\'' + fld + '\',this.value)">') + clearBtn, '', pf);
+      ? '<textarea class="hr-text-input hr-autogrow" data-hr-field="' + escHtml(fld) + '" rows="1" placeholder="' + ph + '" style="font-family:inherit;"' + dateAttrs + ' oninput="setHearingInput(\'' + fld + '\',this.value);window.hrAutoGrow(this)">' + escHtml(s[fld] || '') + '</textarea>'
+      : '<input type="text" class="hr-text-input" data-hr-field="' + escHtml(fld) + '" placeholder="' + ph + '" value="' + escHtml(s[fld] || '') + '"' + dateAttrs + ' oninput="setHearingInput(\'' + fld + '\',this.value)">') + dateCal + clearBtn, '', pf);
   }
   return '';
 }
