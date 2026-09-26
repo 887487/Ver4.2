@@ -140,6 +140,9 @@
       overflow-y: auto;
     }
     .home-notice-body a { color: var(--accent-text); }
+    /* 書式つき（画像を含む）のお知らせ。改行は HTML 側で持つので pre-wrap にしない */
+    .home-notice-body.is-rich { white-space: normal; max-height: 480px; }
+    .home-notice-body.is-rich img { max-width: 100%; height: auto; display: inline-block; vertical-align: top; }
     .home-notice.is-empty { display: none; }
     /* file:// では中身を読めないため <object> で表示する */
     .home-notice-embed {
@@ -398,8 +401,25 @@
     function showText(text, headerLastMod) {
       var t = String(text || '').replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n').trim();
       if (!t) return false;
+      body.classList.remove('is-rich');
       body.textContent = t;
       setDate(t, headerLastMod);
+      box.classList.remove('is-empty');
+      return true;
+    }
+
+    /**
+     * 書式つき（画像を含む）のお知らせを表示する。
+     * 管理画面で作った HTML は、許可したタグ・data: 画像だけを残してから出す。
+     * 画像だけで文字の無いお知らせも表示する（更新日は手動指定があればそれを使う）。
+     */
+    function showHtml(html, text) {
+      if (!window.noticeHtmlHasContent || !window.noticeHtmlHasContent(html)) return false;
+      var safe = window.hearingSanitizeHtml ? window.hearingSanitizeHtml(html) : '';
+      if (!safe) return false;
+      body.classList.add('is-rich');
+      body.innerHTML = safe;
+      setDate(String(text || ''), null);
       box.classList.remove('is-empty');
       return true;
     }
@@ -412,7 +432,11 @@
     if (typeof window.getNotice === 'function') {
       var manualDate = (typeof window.getNoticeDate === 'function') ? window.getNoticeDate() : '';
       if (manualDate) window.APP_NOTICE_DATE = manualDate;
-      if (showText(window.getNotice())) return;
+      // 書式つき本文（画像あり）があればそれを、無ければ文字だけの本文を出す
+      var noticeHtml = (typeof window.getNoticeHtml === 'function') ? window.getNoticeHtml() : null;
+      if (typeof noticeHtml === 'string') {
+        if (showHtml(noticeHtml, window.getNotice())) return;
+      } else if (showText(window.getNotice())) return;
     } else if (typeof window.APP_NOTICE === 'string' && window.APP_NOTICE.trim()) {
       if (showText(window.APP_NOTICE)) return;
     }

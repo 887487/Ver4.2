@@ -417,7 +417,12 @@
   position:absolute; top:4px; right:6px;
   display:inline-flex; align-items:center; gap:4px;
 }
-.tab-panel-hearing .hr-row{ position:relative; padding-right:78px; padding-left:18px; }
+.tab-panel-hearing .hr-row{ position:relative; padding-right:126px; padding-left:18px; }
+.hr-row-indent{ height:18px; min-width:20px; padding:0 4px; border-radius:3px; border:1px solid var(--border); background:var(--surface); color:var(--text3); font-size:11px; line-height:1; font-family:inherit; cursor:pointer; }
+.hr-row-indent:hover{ border-color:var(--accent); color:var(--accent-text); }
+/* 編集フォームの「段」の案内 */
+.hr-indent-info{ font-size:11px; color:var(--text2); padding:2px 2px 0; }
+.hr-indent-info b{ color:var(--accent-text); }
 .tab-panel-hearing .hr-row .hr-drag-handle{ position:absolute; top:2px; left:-2px; margin-right:0; }
 .hr-row-edit{
   height:18px; padding:0 7px; border-radius:3px;
@@ -845,6 +850,10 @@ details[open] > summary .hr-acc-arrow { transform: rotate(90deg); }
   font-size:11px;color:var(--text2);white-space:nowrap;cursor:pointer;
 }
 .rt-link input{width:14px;height:14px;cursor:pointer;accent-color:var(--accent-text);}
+
+/* お知らせの編集欄（書式つき。画像を挿入できる） */
+.notice-edit{ min-height:170px; max-height:520px; overflow-y:auto; font-size:12px; line-height:1.7; }
+.notice-edit img{ max-width:100%; height:auto; }
 
 /* 書式バーとつながる編集欄 */
 .rt-edit{
@@ -2402,9 +2411,10 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
           <span style="font-size:10px;color:var(--text3);">ホーム画面の上部に出ます。空にすると枠ごと表示されません。</span>
         </div>
         <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;">
-          <textarea id="noticeText" rows="8" placeholder="お知らせの本文を入力してください。&#10;本文に 2026/08/07 のような日付を書くと、いちばん新しい日付が更新日として表示されます。"
-            style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--border);border-radius:6px;
-                   font-size:12px;font-family:inherit;line-height:1.7;background:var(--bg);color:var(--text);resize:vertical;"></textarea>
+          <!-- 書式バー（太字・色・インデント・表・🖼 画像）。画像は「🖼 画像」から本文に挿入する -->
+          <div class="rt-bar-row" style="border:1px solid var(--border);border-bottom:none;border-radius:6px 6px 0 0;"><div id="rtFixedBarNotice"></div></div>
+          <div id="noticeText" class="rt-edit notice-edit" contenteditable="true"
+            data-ph="お知らせの本文を入力してください。本文に 2026/08/07 のような日付を書くと、いちばん新しい日付が更新日として表示されます。画像は上の「🖼 画像」から挿入できます。"></div>
           <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;">
             <label style="font-size:11px;color:var(--text2);white-space:nowrap;">更新日（任意）</label>
             <input type="date" id="noticeDate"
@@ -5491,7 +5501,13 @@ if (document.readyState === 'loading') {
 function noticeRender() {
   var t = document.getElementById('noticeText');
   var d = document.getElementById('noticeDate');
-  if (t) t.value = (window.getNotice ? window.getNotice() : '');
+  if (t) {
+    // 書式つき本文（画像あり）があればそれを、無ければ文字だけの本文を改行つきで出す
+    var html = (window.getNoticeHtml ? window.getNoticeHtml() : null);
+    t.innerHTML = (typeof html === 'string')
+      ? html
+      : escHtml(window.getNotice ? window.getNotice() : '').replace(/\n/g, '<br>');
+  }
   if (d) {
     var v = (window.getNoticeDate ? window.getNoticeDate() : '');
     // input[type=date] は YYYY-MM-DD 形式しか受け付けない
@@ -5500,18 +5516,28 @@ function noticeRender() {
   }
 }
 
+/** お知らせの編集欄から、文字だけの本文（更新日の判定・空かどうかに使う）を取り出す */
+function _noticePlain(el) {
+  if (!el) return '';
+  return String(el.innerText || el.textContent || '').replace(/\u00a0/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+}
+
 function noticeSave() {
   var t = document.getElementById('noticeText');
   var d = document.getElementById('noticeDate');
-  window.setNotice(t ? t.value : '', d ? d.value : '');
+  var html = t ? t.innerHTML : '';
+  // 文字も画像も無ければ空として保存する（ホームで枠ごと消える）
+  if (!(window.noticeHtmlHasContent && window.noticeHtmlHasContent(html))) html = '';
+  window.setNotice(_noticePlain(t), d ? d.value : '', html);
   exportDataJS(true).catch(function() {});
   toast('✅ お知らせを保存しました');
 }
 
 function noticeClear() {
   var t = document.getElementById('noticeText');
-  if (t && t.value.trim() && !confirm('お知らせの本文を消しますか？\nホーム画面から枠ごと消えます。')) return;
-  if (t) t.value = '';
+  var hasBody = t && window.noticeHtmlHasContent && window.noticeHtmlHasContent(t.innerHTML);
+  if (hasBody && !confirm('お知らせの本文を消しますか？\nホーム画面から枠ごと消えます。')) return;
+  if (t) t.innerHTML = '';
   var d = document.getElementById('noticeDate');
   if (d) d.value = '';
   noticeSave();
@@ -6485,6 +6511,11 @@ function rtBar(onLink, linked) {
     + b('justifyCenter', _rtAlignIcon('center'), '中央揃え')
     + b('justifyRight',  _rtAlignIcon('right'),  '右揃え')
     + '<span class="rt-sep"></span>'
+    // インデント：本文では行頭に全角スペースを足す／減らす。
+    // ヒアリング項目の編集フォームでは、項目の段（親子関係）を変える（rtExec 参照）。
+    + b('outdent', _rtIndentIcon(-1), 'インデントを戻す')
+    + b('indent',  _rtIndentIcon(1),  'インデント')
+    + '<span class="rt-sep"></span>'
     + b('table', '⊞ 表', '表を挿入')
     + b('image', '🖼 画像', '画像を挿入')
     // 表のセルを範囲選択したときだけ現れる
@@ -6500,6 +6531,17 @@ function rtBar(onLink, linked) {
       + ' onchange="' + onLink + '(this.checked)">🔗 URLをリンクにする</label>';
   }
   return h + '</div>';
+}
+
+/** インデントのアイコン（右向き＝インデント、左向き＝戻す）。整列アイコンと同じく SVG で描く */
+function _rtIndentIcon(dir) {
+  var arrow = dir > 0 ? '<path d="M1 4.2 L4 6.4 L1 8.6 Z"/>' : '<path d="M4 4.2 L1 6.4 L4 8.6 Z"/>';
+  return '<svg viewBox="0 0 14 14" width="13" height="13" fill="currentColor" style="display:block;">'
+       + '<rect x="1" y="1.4" width="12" height="1.6" rx="0.8"/>'
+       + '<rect x="6" y="4.6" width="7" height="1.6" rx="0.8"/>'
+       + '<rect x="6" y="7.8" width="7" height="1.6" rx="0.8"/>'
+       + '<rect x="1" y="11" width="12" height="1.6" rx="0.8"/>'
+       + arrow + '</svg>';
 }
 
 /**
@@ -6561,8 +6603,8 @@ function _rtUpdateActiveStates() {
   _rtUpdateMergeBtn();
 }
 
-// タブごとに書式バーを置く場所
-var RT_BAR_HOSTS = ['rtFixedBar', 'rtFixedBarMail', 'rtFixedBarScript', 'rtFixedBarScreen'];
+// タブごとに書式バーを置く場所（お知らせの編集欄にも置く）
+var RT_BAR_HOSTS = ['rtFixedBar', 'rtFixedBarMail', 'rtFixedBarScript', 'rtFixedBarScreen', 'rtFixedBarNotice'];
 
 /** 書式バーを組み立てる（各タブに1つずつ・初回のみ） */
 function _rtInitFixedBar() {
@@ -6595,6 +6637,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /** 書式を適用する（直前にフォーカスしていた編集欄が対象） */
 function rtExec(cmd, btn) {
+  if (cmd === 'indent' || cmd === 'outdent') {
+    var dir = (cmd === 'indent') ? 1 : -1;
+    // ヒアリング項目の編集フォームの書式バーでは、項目そのものの段（親子関係）を変える
+    var outlineForm = btn && btn.closest ? btn.closest('[data-hr-outline-form]') : null;
+    if (outlineForm && typeof outlineForm._hrOutline === 'function') { outlineForm._hrOutline(dir); return; }
+    rtIndentText(dir);
+    return;
+  }
   if (cmd === 'table' && btn) _rtLastTableBtn = btn;
   if (cmd === 'red' || cmd === 'blue' || cmd === 'green') {
     // 同じ色なら黒へ戻す（押すたびに切り替わる）
@@ -6612,6 +6662,100 @@ function rtExec(cmd, btn) {
   if (cmd === 'image') { rtInsertImage(); return; }
   document.execCommand(cmd, false, null);
   if (_rtActive) _rtActive.dispatchEvent(new Event('input'));
+  _rtUpdateActiveStates();
+}
+
+// ── 本文のインデント ──
+// 選んだ行（カーソルのある行）の行頭に全角スペースを1つ足す／1つ減らす。
+// 余白（margin）ではなく文字で字下げするのは、各ページの表示（許可するタグ・属性を絞っている）や
+// メール・ヒアリングの文字だけのコピーでも、同じ字下げがそのまま残るようにするため。
+var RT_INDENT_CHAR = '\u3000';
+var _RT_BLOCK_TAGS = { DIV:1, P:1, LI:1, TD:1, TH:1, TR:1, TABLE:1, UL:1, OL:1, BLOCKQUOTE:1, H1:1, H2:1, H3:1, H4:1, H5:1, H6:1, PRE:1 };
+
+/** 編集欄の中の「行頭」の位置を、並び順に返す（{node, before}：node のテキスト先頭、または node 要素の直前） */
+function _rtLineStarts(root) {
+  var out = [], fresh = true;
+  (function walk(n) {
+    Array.prototype.slice.call(n.childNodes).forEach(function (c) {
+      if (c.nodeType === 3) {
+        if (!c.data.length) return;
+        if (fresh) { out.push({ node: c, text: true }); fresh = false; }
+        return;
+      }
+      if (c.nodeType !== 1) return;
+      if (c.tagName === 'BR') {
+        if (fresh) out.push({ node: c, text: false });   // 空の行
+        fresh = true;
+        return;
+      }
+      if (c.tagName === 'IMG') {
+        if (fresh) { out.push({ node: c, text: false }); fresh = false; }
+        return;
+      }
+      var block = !!_RT_BLOCK_TAGS[c.tagName];
+      if (block) fresh = true;
+      walk(c);
+      if (block) fresh = true;
+    });
+  })(root);
+  return out;
+}
+
+function rtIndentText(dir) {
+  var ed = _rtActive;
+  if (!ed || !document.contains(ed)) { toast('⚠️ インデントする欄をクリックしてから押してください'); return; }
+  var sel = window.getSelection();
+  var range = (sel && sel.rangeCount) ? sel.getRangeAt(0) : null;
+  if (!range || !ed.contains(range.commonAncestorContainer)) {
+    range = document.createRange(); range.selectNodeContents(ed); range.collapse(false);
+  }
+  var starts = _rtLineStarts(ed);
+  if (!starts.length) {                            // 空の欄：文字として1つ入れるだけ
+    if (dir > 0) { ed.appendChild(document.createTextNode(RT_INDENT_CHAR)); ed.dispatchEvent(new Event('input')); }
+    return;
+  }
+  var head = document.createRange(); head.setStart(range.startContainer, range.startOffset);
+  var pos = function (st) {                        // 行頭の位置（node, offset）
+    if (st.text) return [st.node, 0];
+    var par = st.node.parentNode;
+    return [par, Array.prototype.indexOf.call(par.childNodes, st.node)];
+  };
+  // 選択範囲にかかる行だけを対象にする（カーソルだけならその行）
+  var tail = document.createRange(); tail.setStart(range.endContainer, range.endOffset);
+  var target = starts.filter(function (st, i) {
+    var p = pos(st);
+    var c = range.comparePoint(p[0], p[1]);
+    if (c > 0) return false;                                          // 選択の終わりより後から始まる行
+    // 範囲選択の終わりがちょうど次の行の頭（行全体を選んだとき）は、その次の行は含めない
+    if (!range.collapsed && c === 0 && tail.comparePoint(p[0], p[1]) === 0) return false;
+    var nx = starts[i + 1];
+    if (!nx) return true;
+    var q = pos(nx);
+    return head.comparePoint(q[0], q[1]) > 0;                         // 次の行が選択の始まりより後なら範囲内
+  });
+  var changed = 0;
+  target.slice().reverse().forEach(function (st) {
+    if (dir > 0) {
+      if (st.text) st.node.insertData(0, RT_INDENT_CHAR);
+      else st.node.parentNode.insertBefore(document.createTextNode(RT_INDENT_CHAR), st.node);
+      changed++;
+      return;
+    }
+    if (!st.text) return;
+    var d = st.node.data;
+    if (d.charAt(0) === RT_INDENT_CHAR || d.charAt(0) === '\t') { st.node.deleteData(0, 1); changed++; }
+    else if (d.slice(0, 2) === '  ') { st.node.deleteData(0, 2); changed++; }
+  });
+  if (!changed) { if (dir < 0) toast('⚠️ 行頭に戻せるインデントがありません'); return; }
+  // カーソルが行頭にあった場合は、足した字下げの後ろへ動かす（字下げの前に文字が入らないように）
+  if (dir > 0 && range.collapsed && sel) {
+    var sc = range.startContainer;
+    if (sc.nodeType === 3 && range.startOffset === 0 && sc.data.charAt(0) === RT_INDENT_CHAR) {
+      var r2 = document.createRange(); r2.setStart(sc, 1); r2.collapse(true);
+      sel.removeAllRanges(); sel.addRange(r2);
+    }
+  }
+  ed.dispatchEvent(new Event('input'));
   _rtUpdateActiveStates();
 }
 
@@ -7034,13 +7178,44 @@ function rtImageChosen(input) {
   if (!/^image\//.test(f.type)) { toast('⚠️ 画像ファイルを選んでください'); return; }
 
   var reader = new FileReader();
-  reader.onload = function(ev) {
+  var insert = function(src) {
     if (_rtActive) _rtActive.focus();
     document.execCommand('insertHTML', false,
-      '<img src="' + ev.target.result + '" alt="" style="max-width:100%;height:auto;">');
+      '<img src="' + src + '" alt="" style="max-width:100%;height:auto;">');
     if (_rtActive) _rtActive.dispatchEvent(new Event('input'));
   };
+  reader.onload = function(ev) {
+    // お知らせは data.js に入り全ページで読み込まれるため、大きな画像は縮小してから入れる
+    if (_rtActive && _rtActive.id === 'noticeText') _noticeShrinkImage(ev.target.result, f.type, insert);
+    else insert(ev.target.result);
+  };
   reader.readAsDataURL(f);
+}
+
+/**
+ * お知らせ用に画像を縮小する（長い辺を 1280px まで）。
+ * GIF（動く画像）と、もともと小さい画像はそのまま使う。
+ */
+function _noticeShrinkImage(dataUrl, type, done) {
+  var MAX = 1280;
+  if (/gif/i.test(type || '') || dataUrl.length < 300000) { done(dataUrl); return; }
+  var img = new Image();
+  img.onload = function() {
+    var w = img.naturalWidth, h = img.naturalHeight;
+    var k = Math.min(1, MAX / Math.max(w, h));
+    var cw = Math.max(1, Math.round(w * k)), ch = Math.max(1, Math.round(h * k));
+    try {
+      var cv = document.createElement('canvas');
+      cv.width = cw; cv.height = ch;
+      var cx = cv.getContext('2d');
+      cx.fillStyle = '#ffffff'; cx.fillRect(0, 0, cw, ch);   // 透明部分は白にする（JPEG は透明を持てない）
+      cx.drawImage(img, 0, 0, cw, ch);
+      var out = cv.toDataURL('image/jpeg', 0.85);
+      done(out.length < dataUrl.length ? out : dataUrl);
+    } catch (e) { done(dataUrl); }
+  };
+  img.onerror = function() { done(dataUrl); };
+  img.src = dataUrl;
 }
 
 /** この FAQ の URL をリンクとして扱うかを切り替える */
@@ -7290,6 +7465,7 @@ function exportDataJS(silent, screenPayload) {
       hearingFixedReady: true,   // 組み込み項目は取り込み済み（足し直さない）
       notice:     (window.getNotice     ? window.getNotice()     : ''),   // お知らせ本文
       noticeDate: (window.getNoticeDate ? window.getNoticeDate() : ''),   // 更新日の手動指定
+      noticeHtml: (window.getNoticeHtml ? window.getNoticeHtml() : null), // 書式つき本文（画像を含む）
       maintenance: (window._appCache.maintenance || {}),                  // メンテナンス中のページ
       // スクリプト・メールも構成ファイルに含める
       talkScripts:      window._appCache.scripts          || (typeof data     !== 'undefined' ? data     : {}),
@@ -14858,6 +15034,47 @@ window.addEventListener('resize',function(){
     rtRow.appendChild(rtHost);
     container.appendChild(rtRow);
 
+    // ── 段（インデント）──
+    // このフォームの書式バーの ⇤ ⇥ は、文字ではなく「この項目の段」を変える。保存したときに反映する。
+    // 段を上げると、直上にある段の少ない項目の中に入る（親子になる）。
+    var _pendIndent = 0;
+    var indentInfo = document.createElement('div');
+    indentInfo.className = 'hr-indent-info';
+    container.appendChild(indentInfo);
+    container.setAttribute('data-hr-outline-form', '1');
+    var _paintIndent = function() {
+      var cur = null;
+      if (isEdit && window._hrOutlineSimulate) cur = window._hrOutlineSimulate(formId, _pendIndent);
+      var txt;
+      if (cur) {
+        var pname = cur.parent ? (cur.parent.type === 'log'
+            ? 'ログ作成補助' + (cur.parentOpt ? '「' + cur.parentOpt + '」' : '')
+            : '「' + (cur.parent.label || '(名前なし)') + '」') : '';
+        txt = '段：<b>' + cur.indent + '</b>' + (pname ? '（' + escHtml(pname) + ' の中）' : '（いちばん外側）');
+      } else {
+        txt = '段：' + (parentId ? '中の項目' : 'いちばん外側');
+      }
+      if (_pendIndent) txt += '　→ 保存すると <b>' + (_pendIndent > 0 ? _pendIndent + ' 段インデント' : (-_pendIndent) + ' 段戻す') + '</b>';
+      txt += '　<span style="color:var(--text3);">（書式バーの ⇤ ⇥ で変更）</span>';
+      indentInfo.innerHTML = txt;
+    };
+    container._hrOutline = function(dir) {
+      var tNow = (typeof typeSel !== 'undefined' && typeSel) ? typeSel.value : (editQ && editQ.type);
+      if (tNow === 'spacer') { toast('⚠️ 空白行は中に置けないため、段は変えられません'); return; }
+      if (isEdit && (editQ.field === 'memo' || editQ.id === 'q_memo')) { toast('⚠️ メモの段は変えられません'); return; }
+      var next = _pendIndent + dir;
+      if (isEdit && window._hrOutlineSimulate) {
+        var a = window._hrOutlineSimulate(formId, _pendIndent), b = window._hrOutlineSimulate(formId, next);
+        if (a && b && a.indent === b.indent && (a.parent && a.parent.id) === (b.parent && b.parent.id)) {
+          toast(dir > 0 ? '⚠️ これ以上インデントできません（直上に、中に入れられる項目がありません）' : '⚠️ これ以上インデントを戻せません');
+          return;
+        }
+      } else if (Math.abs(next) > 10) return;
+      _pendIndent = next;
+      _paintIndent();
+    };
+    _paintIndent();
+
     // ── テンプレート名（複数選べるプルダウン）＋ 新しい名前 ──
     // 1つの項目を複数のテンプレートで使い回せる。何も選ばなければ共通（どのテンプレートでも表示）。
     // 新しいテンプレートは、右の「新しい名前」を入力すると保存時に作られる。
@@ -15707,6 +15924,8 @@ window.addEventListener('resize',function(){
       Promise.resolve(_hrQuestionsSave(qs)).then(function() {
         if (!(opts && opts.onSaved)) {
           window.renderHearing();
+          // 書式バーの ⇤ ⇥ で決めた段を反映する（描き直した後の並びで親を決める）
+          if (_pendIndent && window._hrIndentQuestion) window._hrIndentQuestion(newQ.id, _pendIndent);
           if (typeof _hrLoadAndRender === 'function') _hrLoadAndRender();
         }
         if (opts && opts.onSaved) opts.onSaved(newQ);
@@ -15791,6 +16010,15 @@ window.addEventListener('resize',function(){
     if (!defaultVal) setTimeout(function() { inp.focus(); }, 20);
   }
 
+  /** 中の項目の目印（ログ作成補助の中なら「ログ内」、それ以外の項目の中なら「子項目」） */
+  function _hrChildTagHtml(q, list) {
+    if (!q || !q.parentId) return '';
+    var p = (list || []).find(function(x) { return x.id === q.parentId; });
+    var isLog = !p || p.type === 'log';
+    return '<span class="hr-child-tag" title="' + (isLog ? 'ログ作成補助の中の項目' : '「' + escHtml(p.label || '') + '」の中の項目（親が表示されるときだけ表示）') + '">'
+      + (isLog ? 'ログ内' : '子項目') + '</span>';
+  }
+
   // ── 行の編集機能を付加（ID指定） ──
   function _attachRowEditing(rowEl, qId) {
     var qs = _hrQuestionsGet();
@@ -15808,7 +16036,7 @@ window.addEventListener('resize',function(){
       // 追加フォームと同じ画面でまとめて設定する形にしている。
       labelEl.innerHTML = (q.type === 'log' || q.type === 'spacer')
         ? '<span class="hr-label-text" style="opacity:.7;font-size:11px;">' + (q.type === 'spacer' ? '空白行' : 'ログ作成補助') + '</span>'
-        : (q.parentId ? '<span class="hr-child-tag">ログ内</span>' : '') + '<span class="hr-label-prefix">' + escHtml(window.getHearingPrefix(q)) +
+        : _hrChildTagHtml(q, qs) + '<span class="hr-label-prefix">' + escHtml(window.getHearingPrefix(q)) +
           '</span><span class="hr-label-text">' + _hrLabelAdmin(q) + '</span>';
       var labelTextEl = labelEl.querySelector('.hr-label-text');
 
@@ -15871,6 +16099,18 @@ window.addEventListener('resize',function(){
           if (area.scrollIntoView) area.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         });
         actions.appendChild(addKid);
+      }
+      // 段（インデント）の変更。空白行・メモは中に置けないので出さない
+      if (!undeletable && q.type !== 'spacer') {
+        var mkIndent = function(delta, label, tip) {
+          var b = document.createElement('button');
+          b.type = 'button'; b.className = 'hr-row-indent'; b.textContent = label; b.title = tip;
+          b.setAttribute('data-indent', String(delta));
+          b.addEventListener('click', function(e) { e.stopPropagation(); _hrIndentQuestion(qId, delta); });
+          return b;
+        };
+        actions.appendChild(mkIndent(-1, '⇤', 'インデントを戻す（親から出す）'));
+        actions.appendChild(mkIndent(1, '⇥', 'インデント（直上の項目の中に入れる）'));
       }
       if (!undeletable) actions.appendChild(editQ);
 
@@ -15998,22 +16238,249 @@ window.addEventListener('resize',function(){
     return escHtml(head + (hiddenCount > 0 ? '／非表示 ' + hiddenCount + ' 件' : ''));
   }
 
-  // ── 項目の並べ替え（左端のつまみをドラッグ）──
-  var _hrDragId = null, _hrDragParent = '', _hrDragOpt = '';
+  // ── インデント（段）と親子関係 ──
+  // ヒアリング項目は、インデントの数（段）で親子を表す。
+  // 並べ替え・インデントのたびに、プレビューに並んでいる順で見て
+  // 「直上にある項目のうち、自分よりインデントの少ない項目」を親として付け直す。
+  //   ・見出し・空白行・メモは親になれない（見出しの中の項目はツール画面に出せないため）
+  //   ・空白行は中に置けない（常に 0 段）
+  //   ・1つ上の項目より2段以上深くはできない（親にできる項目が無い段は付けられない）
+  //   ・ログ作成補助の中に入るときは、直上に見えている「↳ ボタン名」の区切りのボタンの中に入る
+  // 保存データは従来どおり parentId / parentOpt（段は親をたどった深さ）なので、ツール画面の表示はそのまま使える。
+  function _hrIsMemoQ(q) { return !!q && (q.field === 'memo' || q.id === 'q_memo'); }
+  function _hrCanBeParent(q) { return !!q && q.type !== 'spacer' && q.type !== 'heading' && !_hrIsMemoQ(q); }
 
-  /** srcId の質問を dstId の前（または後）へ移す。並び順はそのまま質問の並びとして保存される */
-  function _hrMoveQuestion(srcId, dstId, after) {
-    var qs = _hrQuestionsGet().slice();
-    var si = qs.findIndex(function(x) { return x.id === srcId; });
-    if (si < 0 || srcId === dstId) return;
-    var item = qs.splice(si, 1)[0];
-    var di = qs.findIndex(function(x) { return x.id === dstId; });
-    if (di < 0) return;
-    qs.splice(after ? di + 1 : di, 0, item);
-    Promise.resolve(_hrQuestionsSave(qs)).then(function() {
-      window.renderHearing();
-      toast('↕ 並べ替えました');
+  /** 親→子→孫…の順（親のすぐ後に子孫が続く順）に並べ直す。画面の見え方は変わらない */
+  function _hrDfsOrder(qs) {
+    var byId = {}; qs.forEach(function(q) { byId[q.id] = q; });
+    var kids = {}, roots = [];
+    qs.forEach(function(q) {
+      if (q.parentId && byId[q.parentId] && q.parentId !== q.id) (kids[q.parentId] = kids[q.parentId] || []).push(q);
+      else roots.push(q);
     });
+    var out = [], seen = {};
+    var visit = function(q) {
+      if (seen[q.id]) return;
+      seen[q.id] = 1; out.push(q);
+      (kids[q.id] || []).forEach(visit);
+    };
+    roots.forEach(visit);
+    qs.forEach(visit);   // 万一の循環参照でも取りこぼさない
+    return out;
+  }
+
+  function _hrDepthOf(byId, id) {
+    var d = 0, q = byId[id], guard = 0;
+    while (q && q.parentId && byId[q.parentId] && guard++ < 50) { d++; q = byId[q.parentId]; }
+    return d;
+  }
+
+  /** プレビューに並んでいる順の一覧（項目の行と、ログ作成補助の「↳ ボタン名」の区切り） */
+  function _hrDisplayEntries(byId) {
+    var el = document.getElementById('hearingContent');
+    if (!el) return [];
+    var out = [], seen = {};
+    el.querySelectorAll('.hr-row[data-q-id], .hr-log-opt-divider[data-log-id]').forEach(function(n) {
+      if (n.classList.contains('hr-log-opt-divider')) {
+        var lid = n.getAttribute('data-log-id');
+        if (!byId[lid]) return;
+        out.push({ div: true, logId: lid, opt: n.getAttribute('data-opt') || '', indent: _hrDepthOf(byId, lid) + 1 });
+        return;
+      }
+      var id = n.getAttribute('data-q-id');
+      if (!byId[id] || seen[id]) return;
+      seen[id] = 1;
+      out.push({ id: id, indent: _hrDepthOf(byId, id) });
+    });
+    return out;
+  }
+
+  /** entries[i] と、その下に続く子孫（自分より深い段）の終わりの位置 */
+  function _hrBlockEnd(entries, i) {
+    var base = entries[i].indent, j = i + 1;
+    while (j < entries.length && entries[j].indent > base) j++;
+    return j;
+  }
+
+  /** 並び順と段から親を決め直す（entries の indent も、付けられる段に直す） */
+  function _hrReparent(entries, byId) {
+    // done には、ここまでに見た項目と「↳ ボタン名」の区切りが入る。
+    // 区切りはログ作成補助の中身の段にあり、そこから下はそのボタンの中身として扱う
+    // （上へ親を探すとき、区切りに当たったらそのログ作成補助のそのボタンの中に入る）。
+    var done = [];
+    entries.forEach(function(e) {
+      if (e.div) { if (byId[e.logId]) done.push(e); return; }
+      var q = byId[e.id];
+      if (!q) return;
+      var k = Math.max(0, e.indent | 0);
+      if (q.type === 'spacer' || _hrIsMemoQ(q)) k = 0;
+      var last = done.length ? done[done.length - 1] : null;
+      var limit = !last ? 0
+                : last.div ? last.indent
+                : (_hrCanBeParent(byId[last.id]) ? last.indent + 1 : last.indent);
+      if (k > limit) k = limit;
+      e.indent = k;
+      var parent = null, viaDiv = null;
+      for (var j = done.length - 1; j >= 0; j--) {
+        var d = done[j];
+        if (d.div) {
+          if (d.indent <= k) { parent = byId[d.logId]; viaDiv = d.opt; break; }
+          continue;
+        }
+        if (d.indent < k) { parent = byId[d.id]; break; }
+      }
+      done.push(e);
+      if (!parent) { delete q.parentId; delete q.parentOpt; return; }
+      if (parent.type === 'log') {
+        var opts = (window.getHearingOptions(parent) || []).map(function(o) { return o.v || o.l; });
+        var opt = viaDiv;
+        if (opt == null || opts.indexOf(opt) < 0) {
+          opt = (q.parentId === parent.id && opts.indexOf(q.parentOpt) >= 0) ? q.parentOpt : (opts[0] || '');
+        }
+        q.parentId = parent.id;
+        q.parentOpt = opt;
+      } else {
+        q.parentId = parent.id;
+        delete q.parentOpt;
+      }
+    });
+  }
+
+  function _hrOutlineSig(qs) {
+    return JSON.stringify(qs.map(function(q) { return [q.id, q.parentId || '', q.parentOpt || '']; }));
+  }
+
+  /**
+   * 並び・段を変える操作の共通部分。
+   * mutate(entries, byId, qs) で並び・段を変え、{ qs: 新しい並び } を返す（できなければ false）。
+   * dry のときは保存せず、結果の親と段だけ返す（編集フォームの案内に使う）。
+   */
+  function _hrOutlineRun(mutate, opt) {
+    opt = opt || {};
+    var qs = _hrDfsOrder(_hrQuestionsGet());
+    var byId = {}; qs.forEach(function(q) { byId[q.id] = q; });
+    var before = _hrOutlineSig(qs);
+    var entries = _hrDisplayEntries(byId);
+    var res = mutate(entries, byId, qs);
+    if (!res) return false;
+    _hrReparent(entries, byId);
+    var next = _hrDfsOrder(res.qs || qs);
+    if (opt.dry) {
+      var e = entries.find(function(x) { return !x.div && x.id === opt.dry; });
+      var q = byId[opt.dry];
+      return { indent: e ? e.indent : 0, parent: q && q.parentId ? byId[q.parentId] : null, parentOpt: q ? q.parentOpt || '' : '' };
+    }
+    if (_hrOutlineSig(next) === before) return null;   // 変化なし
+    Promise.resolve(_hrQuestionsSave(next)).then(function() {
+      window.renderHearing();
+      if (opt.msg) toast(opt.msg);
+    });
+    return true;
+  }
+
+  /** qs（親→子の順）の中で、id の項目と子孫が並ぶ範囲の終わり */
+  function _hrQsSubtreeEnd(qs, id) {
+    var i = qs.findIndex(function(q) { return q.id === id; });
+    if (i < 0) return -1;
+    var inSub = {}; inSub[id] = 1;
+    var j = i + 1;
+    while (j < qs.length && qs[j].parentId && inSub[qs[j].parentId]) { inSub[qs[j].id] = 1; j++; }
+    return j;
+  }
+
+  /**
+   * 段を変える（delta：+1 でインデント、-1 で戻す）。下に続く子孫も一緒に動く。
+   *   ・インデント：位置はそのまま。直上の同じ段の項目（の中身の最後）に入る
+   *   ・戻す：親の中身の最後の後ろ（親と同じ段）へ出る。
+   *     その場で段だけ下げると、下に続く兄弟が「直上の段の少ない項目」として自分の中に入ってしまうため。
+   */
+  function _hrShiftEntries(id, delta) {
+    return function(entries, byId, qs) {
+      var i = entries.findIndex(function(e) { return !e.div && e.id === id; });
+      if (i < 0) return false;
+      if (entries[i].indent + delta < 0) return false;
+      if (delta > 0) {
+        var end = _hrBlockEnd(entries, i);
+        for (var j = i; j < end; j++) entries[j].indent += delta;
+        return {};
+      }
+      var list = qs;
+      for (var step = 0; step < -delta; step++) {
+        i = entries.findIndex(function(e) { return !e.div && e.id === id; });
+        var base = entries[i].indent;
+        var pi = -1;
+        for (var k = i - 1; k >= 0; k--) { if (!entries[k].div && entries[k].indent < base) { pi = k; break; } }
+        var bEnd = _hrBlockEnd(entries, i);
+        var block = entries.splice(i, bEnd - i);
+        block.forEach(function(e) { e.indent -= 1; });
+        var at = entries.length;
+        if (pi >= 0) at = _hrBlockEnd(entries, pi);
+        Array.prototype.splice.apply(entries, [at, 0].concat(block));
+        // 保存する並びも、親（と子孫）の後ろへ移す
+        if (pi >= 0) {
+          var ids = {}; block.forEach(function(e) { if (!e.div) ids[e.id] = 1; });
+          var moving = list.filter(function(q) { return ids[q.id]; });
+          var rest = list.filter(function(q) { return !ids[q.id]; });
+          var pe = _hrQsSubtreeEnd(rest, entries[pi].id);
+          if (pe >= 0) { Array.prototype.splice.apply(rest, [pe, 0].concat(moving)); list = rest; }
+        }
+      }
+      return { qs: list };
+    };
+  }
+
+  function _hrIndentQuestion(id, delta, quiet) {
+    if (!delta) return;
+    var r = _hrOutlineRun(_hrShiftEntries(id, delta),
+      { msg: delta > 0 ? '→ インデントしました（直上の項目の中に入りました）' : '← インデントを戻しました' });
+    if (!r && !quiet) {
+      toast(delta > 0
+        ? '⚠️ これ以上インデントできません（直上に、中に入れられる項目がありません）'
+        : '⚠️ これ以上インデントを戻せません');
+    }
+  }
+  window._hrIndentQuestion = _hrIndentQuestion;
+
+  /** 保存せずに、段を変えたときの結果（段と親）を調べる */
+  window._hrOutlineSimulate = function(id, delta) {
+    return _hrOutlineRun(delta ? _hrShiftEntries(id, delta) : function() { return {}; }, { dry: id });
+  };
+
+  // ── 項目の並べ替え（左端のつまみをドラッグ）──
+  // 以前は同じ親の中でしか動かせなかったが、段（インデント）で親を決めるようにしたので、どこへでも動かせる。
+  // 動かした項目は、その下の子孫と一緒に動き、段はそのまま。移した先で「直上の、段の少ない項目」が親になる。
+  // （すぐ下の行より浅い段のまま入ると下の行を取り込んでしまうので、そのときだけ下の行の段にそろえる）
+  var _hrDragId = null, _hrDragBlock = {};
+
+  /** srcId の質問（と子孫）を dstId の前（または後）へ移し、親を付け直す */
+  function _hrMoveQuestion(srcId, dstId, after) {
+    if (srcId === dstId) return;
+    var r = _hrOutlineRun(function(entries, byId, qs) {
+      var si = entries.findIndex(function(e) { return !e.div && e.id === srcId; });
+      var di = entries.findIndex(function(e) { return !e.div && e.id === dstId; });
+      if (si < 0 || di < 0) return false;
+      var end = _hrBlockEnd(entries, si);
+      if (di >= si && di < end) return false;          // 自分の中（子孫）へは移せない
+      var block = entries.splice(si, end - si);
+      var d2 = entries.findIndex(function(e) { return !e.div && e.id === dstId; });
+      var at = after ? d2 + 1 : d2;
+      // 段はそのまま。ただし、すぐ下の行より浅いと、下の行が自分の中に入ってしまう（親子が崩れる）ので、
+      // そのときは下の行と同じ段にそろえて、その並びの一員として入れる
+      var nx = entries[at];
+      if (nx && !nx.div && nx.indent > block[0].indent) {
+        var up = nx.indent - block[0].indent;
+        block.forEach(function(e) { e.indent += up; });
+      }
+      Array.prototype.splice.apply(entries, [at, 0].concat(block));
+      // 保存する並び：移す項目を、移し先の項目の前（後）に置く（見えていない子孫は親について動く）
+      var ids = {}; block.forEach(function(e) { if (!e.div) ids[e.id] = 1; });
+      var moving = qs.filter(function(q) { return ids[q.id]; });
+      var rest = qs.filter(function(q) { return !ids[q.id]; });
+      var dp = rest.findIndex(function(q) { return q.id === dstId; });
+      Array.prototype.splice.apply(rest, [after ? dp + 1 : dp, 0].concat(moving));
+      return { qs: rest };
+    }, { msg: '↕ 並べ替えました' });
+    if (r === false) toast('⚠️ 自分の中の項目の位置へは移せません');
   }
   window._hrMoveQuestion = _hrMoveQuestion;
 
@@ -16036,12 +16503,18 @@ window.addEventListener('resize',function(){
     handle.title = 'ドラッグで並べ替え';
     rowEl.insertBefore(handle, rowEl.firstChild);   // ラベルの中ではなく、行の左端に独立して置く
 
-    // 中の項目は同じログ作成補助の中でだけ並べ替える（外へは出さない）
-    var _myQ = _hrQuestionsGet().find(function(x) { return x.id === qId; });
-    var myParent = (_myQ && _myQ.parentId) || '';
-    var myOpt = (_myQ && _myQ.parentOpt) || '';   // ログ作成補助のどのボタンの中か（違うボタンの中へは移せない）
     handle.addEventListener('dragstart', function(e) {
-      _hrDragId = qId; _hrDragParent = myParent; _hrDragOpt = myOpt;
+      _hrDragId = qId;
+      // 一緒に動く範囲（自分と、その下に続く子孫）には落とせないので覚えておく
+      _hrDragBlock = {};
+      var _all = _hrQuestionsGet(), _byId = {};
+      _all.forEach(function(x) { _byId[x.id] = x; });
+      var _ents = _hrDisplayEntries(_byId);
+      var _si = _ents.findIndex(function(x) { return !x.div && x.id === qId; });
+      if (_si >= 0) {
+        var _end = _hrBlockEnd(_ents, _si);
+        for (var _k = _si; _k < _end; _k++) if (!_ents[_k].div) _hrDragBlock[_ents[_k].id] = 1;
+      }
       e.dataTransfer.effectAllowed = 'move';
       try { e.dataTransfer.setData('text/plain', qId); } catch (err) {}
       try { e.dataTransfer.setDragImage(rowEl, 16, 12); } catch (err) {}
@@ -16054,7 +16527,7 @@ window.addEventListener('resize',function(){
       return e.clientY > r.top + r.height / 2;
     };
     rowEl.addEventListener('dragover', function(e) {
-      if (!_hrDragId || _hrDragId === qId || _hrDragParent !== myParent || _hrDragOpt !== myOpt) return;
+      if (!_hrDragId || _hrDragId === qId || _hrDragBlock[qId]) return;
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
       var after = isAfter(e);
@@ -16066,7 +16539,7 @@ window.addEventListener('resize',function(){
       rowEl.classList.remove('hr-drop-before', 'hr-drop-after');
     });
     rowEl.addEventListener('drop', function(e) {
-      if (!_hrDragId || _hrDragId === qId || _hrDragParent !== myParent || _hrDragOpt !== myOpt) return;
+      if (!_hrDragId || _hrDragId === qId || _hrDragBlock[qId]) return;
       e.preventDefault();
       var src = _hrDragId, after = isAfter(e);
       _hrDragId = null; _hrClearDropMarks();
@@ -16136,6 +16609,7 @@ window.addEventListener('resize',function(){
              '<b>選択肢</b>・<b>機器</b>で候補を編集　/　' +
              '記号・出力文・選択肢は、右端の<b>編集</b>からまとめて設定します　/　' +
              '左端の <b>⠿</b> をドラッグすると並べ替えられます<br>' +
+             '右端の <b>⇤ ⇥</b>（または編集画面の書式バーの ⇤ ⇥）で段を変えると、直上にある段の少ない項目の中に入ります（親子になり、親が表示されるときだけ表示）<br>' +
              '末尾の <b>＋ 質問を追加</b> から新しい項目を追加できます。' +
            '</div>';
 
@@ -16228,7 +16702,7 @@ window.addEventListener('resize',function(){
              '<div class="hr-label">' +
                ((q.type === 'log' || q.type === 'spacer')
                  ? '<span class="hr-label-text" style="opacity:.7;font-size:11px;">' + (q.type === 'spacer' ? '空白行' : 'ログ作成補助') + '</span>'
-                 : (q.parentId ? '<span class="hr-child-tag">ログ内</span>' : '') +
+                 : _hrChildTagHtml(q, qsAll) +
                    '<span class="hr-label-prefix">' + escHtml(window.getHearingPrefix(q)) + '</span>' +
                    '<span class="hr-label-text">' + _hrLabelAdmin(q) + '</span>') + '</div>' +
              '<div class="hr-btns">' + content + '</div>' +

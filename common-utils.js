@@ -1408,6 +1408,7 @@ window._appCache = {
   maintenance: {},          // メンテナンス中のページ（{'script.html': true} の形）
   notice: '',               // お知らせ本文（管理画面で編集し data.js に載せる）
   noticeDate: '',           // 更新日の手動指定（空なら本文中の日付から拾う）
+  noticeHtml: null,         // お知らせ本文の書式つき HTML（画像を含む）。null なら本文（notice）を文字のまま出す
   hearingDevices:   [],     // デバイス候補（[{name, details:[]}]）
   hearingCarriers:  []      // キャリア候補（文字列の配列）
 };
@@ -1449,6 +1450,7 @@ window.AppProfile.onDataReady(function _seedFromStaticData() {
   if (sd.hearingFixedReady != null) window._appCache.hearingFixedReady = sd.hearingFixedReady;
   if (sd.notice      != null) window._appCache.notice      = sd.notice;
   if (sd.noticeDate  != null) window._appCache.noticeDate  = sd.noticeDate;
+  if (sd.noticeHtml  != null) window._appCache.noticeHtml  = sd.noticeHtml;
   if (sd.maintenance != null) window._appCache.maintenance = sd.maintenance;
   if (sd.hearingDevices   != null) window._appCache.hearingDevices  = sd.hearingDevices;
   if (sd.hearingCarriers  != null) window._appCache.hearingCarriers = sd.hearingCarriers;
@@ -1511,6 +1513,7 @@ window.initAppData = function() {
     if (sd.hearingFixedReady != null) window._appCache.hearingFixedReady = sd.hearingFixedReady;
     if (sd.notice      != null) window._appCache.notice      = sd.notice;
     if (sd.noticeDate  != null) window._appCache.noticeDate  = sd.noticeDate;
+    if (sd.noticeHtml  != null) window._appCache.noticeHtml  = sd.noticeHtml;
     if (sd.maintenance != null) window._appCache.maintenance = sd.maintenance;
     if (sd.hearingDevices   != null) window._appCache.hearingDevices  = sd.hearingDevices;
     if (sd.hearingCarriers  != null) window._appCache.hearingCarriers = sd.hearingCarriers;
@@ -5381,6 +5384,15 @@ window.AppProfile.onDataReady(function () {
   window._appCache.notice = window.APP_NOTICE;
 });
 
+/** 書式つき本文に、表示するもの（文字か画像）があるか */
+window.noticeHtmlHasContent = function (html) {
+  if (typeof html !== 'string' || !html) return false;
+  if (/<img\b/i.test(html)) return true;
+  var d = document.createElement('div');
+  d.innerHTML = html;
+  return !!(d.textContent || '').replace(/[\s\u00a0\u3000]/g, '');
+};
+
 /** お知らせの更新日（手動指定）。無ければ空文字 */
 window.getNoticeDate = function () {
   if (window.APP_NOTICE_DATE) return String(window.APP_NOTICE_DATE);
@@ -5388,17 +5400,34 @@ window.getNoticeDate = function () {
   return v ? String(v) : '';
 };
 
-/** お知らせを保存する（管理画面から呼ぶ） */
-window.setNotice = function (text, dateStr) {
+/**
+ * お知らせの書式つき本文（HTML）。画像はここに入る。
+ * 管理画面で一度も書式つきで保存していない（旧データ）なら null を返し、本文（getNotice）を文字のまま使う。
+ */
+window.getNoticeHtml = function () {
+  var v = window._appCache && window._appCache.noticeHtml;
+  if (typeof v === 'string') return v;
+  var sd = window.APP_STATIC_DATA;
+  return (sd && typeof sd.noticeHtml === 'string') ? sd.noticeHtml : null;
+};
+
+/**
+ * お知らせを保存する（管理画面から呼ぶ）。
+ * text は文字だけの本文（更新日の自動判定・空かどうかの判定に使う）、html は画像を含む書式つきの本文。
+ */
+window.setNotice = function (text, dateStr, html) {
   window._appCache.notice = String(text == null ? '' : text);
   window._appCache.noticeDate = String(dateStr == null ? '' : dateStr);
+  if (html !== undefined) window._appCache.noticeHtml = (html == null) ? null : String(html);
   if (window.idbSetAppData) {
     window.idbSetAppData('notice', window._appCache.notice);
     window.idbSetAppData('noticeDate', window._appCache.noticeDate);
+    window.idbSetAppData('noticeHtml', window._appCache.noticeHtml);
   }
   try {
     var bc = new BroadcastChannel('tool_data_update');
-    bc.postMessage({ type: 'noticeUpdated', data: window._appCache.notice, date: window._appCache.noticeDate });
+    bc.postMessage({ type: 'noticeUpdated', data: window._appCache.notice, date: window._appCache.noticeDate,
+                     html: window._appCache.noticeHtml });
     bc.close();
   } catch (e) {}
 };
@@ -6741,6 +6770,7 @@ window.refreshAppCacheFromIDB = function (keys) {
     // ── お知らせ（ホーム） ──
     if (type === 'noticeUpdated') {
       if (ev.data.data != null) window._appCache.notice = String(ev.data.data);
+      if (ev.data.html !== undefined) window._appCache.noticeHtml = (ev.data.html == null) ? null : String(ev.data.html);
       if (ev.data.date != null) {
         window._appCache.noticeDate = String(ev.data.date);
         // getNoticeDate() は読み込み時に設定した APP_NOTICE_DATE を先に見るので、こちらも更新する
@@ -6752,7 +6782,7 @@ window.refreshAppCacheFromIDB = function (keys) {
     // ── 全データ更新（どのページからのインポートでも全タブに反映） ──
     if (type === 'allDataUpdated') {
       call('reloadScripts');
-      window.refreshAppCacheFromIDB(['fixedTexts', 'notice', 'noticeDate']).then(function () { call('renderNotice'); });
+      window.refreshAppCacheFromIDB(['fixedTexts', 'notice', 'noticeDate', 'noticeHtml']).then(function () { call('renderNotice'); });
       reloaders.mail();
       reloaders.faq();
       reloaders.hearing();
