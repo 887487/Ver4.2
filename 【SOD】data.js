@@ -1,9 +1,9 @@
 // ツール設定ファイル — スクリプト・メール・サイドメニュー・ヒアリング・更新履歴・固定テキスト・画面遷移
 // admin.html の「💾 保存して反映」で自動更新されます。手動編集は非推奨です。
-// 生成日時: 2026-09-26T08:42:22.534Z
+// 生成日時: 2026-09-26T09:55:55.612Z
 window.APP_STATIC_DATA = {
-  "generatedAt": "2026-09-26T08:42:22.534Z",
-  "savedAt": "2026-09-26T08:42:22.534Z",
+  "generatedAt": "2026-09-26T09:55:55.612Z",
+  "savedAt": "2026-09-26T09:55:55.612Z",
   "sideMenuData": [
     {
       "id": "smCat_1789973152233",
@@ -616,6 +616,7 @@ window.APP_STATIC_DATA = {
       "field": "q_s8andm1",
       "prefix": "",
       "placeholder": "本数",
+      "qtyBase": "radio",
       "options": [
         {
           "l": "ソーダストリームのガスシリンダーが●本、資源ごみに出されていた。",
@@ -711,17 +712,19 @@ window.APP_STATIC_DATA = {
         },
         {
           "l": "◆お問合せフォーム送信不承◆",
-          "v": "◆お問合せフォーム送信不承◆"
+          "v": "◆お問合せフォーム送信不承◆",
+          "text": "\ninfo@sodastream.jpへのお問合せフォーム送信不承だったため、お客様のメールアドレスをお伺いしご連絡すると案内済。不備があった際は、登録した電話番号へ連絡すること了承済。\n"
         }
       ],
-      "autoLabel": true
+      "autoLabel": true,
+      "logMulti": false
     },
     {
       "id": "q_lv50jau",
       "enabled": true,
       "label": "・お客様メールアドレス",
       "outLabel": "",
-      "outTpl": "info@sodastream.jpへのお問合せフォーム送信不承だったため、お客様のメールアドレスをお伺いしご連絡すると案内済。不備があった際は、登録した電話番号へ連絡すること了承済。\n\n・お客様メールアドレス：[入力]",
+      "outTpl": "・お客様メールアドレス：[入力]",
       "type": "text",
       "common": true,
       "tplIds": [],
@@ -865,7 +868,8 @@ window.APP_STATIC_DATA = {
           "text": "返送用の箱・伝票の手配希望のため、送付先情報を聴取済。\n"
         }
       ],
-      "autoLabel": true
+      "autoLabel": true,
+      "logMulti": false
     },
     {
       "id": "q_u2lwne5",
@@ -958,6 +962,31 @@ window.APP_STATIC_DATA = {
       "multiline": false
     },
     {
+      "id": "q_x6yo4db",
+      "enabled": true,
+      "label": "ログ作成補助（▼返却先を案内した場合は下記も記載ください。）",
+      "outLabel": "",
+      "outTpl": "",
+      "type": "log",
+      "common": true,
+      "tplIds": [],
+      "tplId": "",
+      "field": "q_x6yo4db",
+      "parentId": "q_vzhg5p7",
+      "parentOpt": "◆お客様にて箱をご準備の上、返送いただける場合◆",
+      "prefix": "",
+      "options": [
+        {
+          "l": "▼返却先を案内した場合は下記も記載ください。",
+          "v": "▼返却先を案内した場合は下記も記載ください。",
+          "text": "返却先は下記を案内済。\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n〒509-5312　岐阜県土岐市鶴里町柿野2322-102\n(株)ユーファクトリー第4物流センター　ソーダストリーム ガス回収係 宛\n電話番号：0120-286-230\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+          "textHtml": "<div><span style=\"color:var(--text)\">返却先は下記を案内済。</span></div><div>~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</div><div>〒509-5312　岐阜県土岐市鶴里町柿野2322-102</div><div>(株)ユーファクトリー第4物流センター　ソーダストリーム ガス回収係 宛</div><div>電話番号：0120-286-230</div><div>~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</div>"
+        }
+      ],
+      "autoLabel": true,
+      "logMulti": false
+    },
+    {
       "id": "q_zmjwk9k",
       "enabled": true,
       "label": "判断理由　※「原因切り分けのため」は使わず、『今回のGCのみ症状が出ているため』など具体的に記載ください。",
@@ -1018,6 +1047,21 @@ window.APP_STATIC_DATA = {
       "multi": false
     },
     {
+      "id": "q_5981qkw",
+      "enabled": true,
+      "label": "空白行",
+      "outLabel": "",
+      "outTpl": "",
+      "type": "spacer",
+      "common": false,
+      "tplIds": [
+        "tpl_o9v91b"
+      ],
+      "tplId": "tpl_o9v91b",
+      "field": "q_5981qkw",
+      "prefix": ""
+    },
+    {
       "id": "q_7ky2ddx",
       "enabled": true,
       "label": "＜ご利用機種特定＞",
@@ -1037,7 +1081,7 @@ window.APP_STATIC_DATA = {
       "placeholder": "機種名を記載してください"
     },
     {
-      "id": "q_5981qkw",
+      "id": "q_dk3ww9w",
       "enabled": true,
       "label": "空白行",
       "outLabel": "",
@@ -1048,24 +1092,8 @@ window.APP_STATIC_DATA = {
         "tpl_o9v91b"
       ],
       "tplId": "tpl_o9v91b",
-      "field": "q_5981qkw",
+      "field": "q_dk3ww9w",
       "prefix": ""
-    },
-    {
-      "id": "q_piudh27",
-      "enabled": true,
-      "label": "▼該当の内容を案内し、履歴にも記載ください。",
-      "outLabel": "",
-      "outTpl": "",
-      "type": "heading",
-      "common": false,
-      "tplIds": [
-        "tpl_o9v91b"
-      ],
-      "tplId": "tpl_o9v91b",
-      "field": "q_piudh27",
-      "prefix": "",
-      "includeInOutput": false
     },
     {
       "id": "q_ohzuzlp",
@@ -1100,7 +1128,10 @@ window.APP_STATIC_DATA = {
           "textHtml": "<div><span style=\"color:var(--text)\">症状改善なければ有償点検・修理か本体をお買い換えになる旨案内済。</span></div>"
         }
       ],
-      "autoLabel": true
+      "autoLabel": true,
+      "logHeading": "▼該当の内容を案内し、履歴にも記載ください。",
+      "logHeadingOut": false,
+      "logMulti": false
     },
     {
       "id": "q_j6u9jv5",
@@ -1489,7 +1520,8 @@ window.APP_STATIC_DATA = {
           "v": "◆GC起因ではない場合は追加ヒアリング◆"
         }
       ],
-      "autoLabel": true
+      "autoLabel": true,
+      "logMulti": false
     },
     {
       "id": "q_xsjvk9w",
@@ -1745,7 +1777,8 @@ window.APP_STATIC_DATA = {
           "text": "通常、発送後のキャンセルは不可、次回以降は送料のご負担をお願いする可能性案内済。\n佐川急便の配送をお止め致します。弊社倉庫に商品返送確認後にご注文キャンセルとなる旨案内済。\n（お得便の1回目の配送キャンセル時）お得便の大元についてはキャンセル不可案内済。\n\n佐川急便へ架電。UFへ返送いただくよう案内済。"
         }
       ],
-      "autoLabel": true
+      "autoLabel": true,
+      "logMulti": false
     },
     {
       "id": "q_gl11egb29",
@@ -1843,7 +1876,8 @@ window.APP_STATIC_DATA = {
           "textHtml": "<div><span style=\"color:var(--text)\">ご注文の日時変更希望</span></div><div><br></div>"
         }
       ],
-      "autoLabel": true
+      "autoLabel": true,
+      "logMulti": false
     },
     {
       "id": "q_cbsg6ac",
@@ -2373,22 +2407,6 @@ window.APP_STATIC_DATA = {
       ]
     },
     {
-      "id": "q_7mq6kvu",
-      "enabled": true,
-      "label": "▼お得便の場合",
-      "outLabel": "",
-      "outTpl": "",
-      "type": "heading",
-      "common": false,
-      "tplIds": [
-        "tpl_0tljqg"
-      ],
-      "tplId": "tpl_0tljqg",
-      "field": "q_7mq6kvu",
-      "prefix": "",
-      "includeInOutput": false
-    },
-    {
       "id": "q_zbhq1x1",
       "enabled": true,
       "label": "ログ作成補助（◆大元の誤購入◆／◆交換申込時の選択誤り（2回目以降の申込）…）",
@@ -2420,7 +2438,9 @@ window.APP_STATIC_DATA = {
           "text": "\nお得便の色を誤って購入してしまった（規格誤り）とお問合せ \n\n今回のみ交換対応を案内。次回の交換申込からは交換対応ができかねるため、ピンク（青）を選択いただき申込するよう注意喚起済。"
         }
       ],
-      "autoLabel": true
+      "autoLabel": true,
+      "logHeading": "▼お得便の場合",
+      "logHeadingOut": false
     },
     {
       "id": "q_4oxewb9",
@@ -2463,7 +2483,8 @@ window.APP_STATIC_DATA = {
           "text": "●●（購入から2か月以内の購入証明書）の写真をメール送信依頼済。確認後、メールにてご連絡する旨を案内済。\nもし交換させていただく場合は、交換品GCに箱がついていないこと了承済。\n"
         }
       ],
-      "autoLabel": true
+      "autoLabel": true,
+      "logMulti": false
     },
     {
       "id": "q_ml86z9e",
@@ -2630,17 +2651,17 @@ window.APP_STATIC_DATA = {
     {
       "id": "q_ax4gfy1",
       "enabled": true,
-      "label": "",
+      "label": "空白行",
       "outLabel": "",
       "outTpl": "",
-      "type": "heading",
+      "type": "spacer",
       "common": true,
       "tplIds": [],
       "tplId": "",
       "field": "q_ax4gfy1",
       "parentId": "q_y9rz8qv",
-      "prefix": "",
-      "parentOpt": "◆電話口で購入履歴が確認でき、対象本数が4本以下の場合◆"
+      "parentOpt": "◆電話口で購入履歴が確認でき、対象本数が4本以下の場合◆",
+      "prefix": ""
     },
     {
       "id": "q_e6do4qg",
@@ -2662,17 +2683,17 @@ window.APP_STATIC_DATA = {
     {
       "id": "q_gwb6eld",
       "enabled": true,
-      "label": "",
+      "label": "空白行",
       "outLabel": "",
       "outTpl": "",
-      "type": "heading",
+      "type": "spacer",
       "common": true,
       "tplIds": [],
       "tplId": "",
       "field": "q_gwb6eld",
       "parentId": "q_y9rz8qv",
-      "prefix": "",
-      "parentOpt": "◆電話口で購入履歴が確認でき、対象本数が4本以下の場合◆"
+      "parentOpt": "◆電話口で購入履歴が確認でき、対象本数が4本以下の場合◆",
+      "prefix": ""
     },
     {
       "id": "q_9dhpjec",
@@ -2698,17 +2719,17 @@ window.APP_STATIC_DATA = {
     {
       "id": "q_r707fh1",
       "enabled": true,
-      "label": "",
+      "label": "空白行",
       "outLabel": "",
       "outTpl": "",
-      "type": "heading",
+      "type": "spacer",
       "common": true,
       "tplIds": [],
       "tplId": "",
       "field": "q_r707fh1",
       "parentId": "q_y9rz8qv",
-      "prefix": "",
-      "parentOpt": "◆電話口で購入履歴が確認でき、対象本数が4本以下の場合◆"
+      "parentOpt": "◆電話口で購入履歴が確認でき、対象本数が4本以下の場合◆",
+      "prefix": ""
     },
     {
       "id": "q_p5t0uqn",
@@ -2825,30 +2846,6 @@ window.APP_STATIC_DATA = {
           "l": "▼お得便の残回数がある場合は下記も案内および記載ください。",
           "v": "▼お得便の残回数がある場合は下記も案内および記載ください。",
           "text": "\n次回の交換申込からはピンク（青）を選択いただき申込するよう案内済。"
-        }
-      ],
-      "autoLabel": true
-    },
-    {
-      "id": "q_x6yo4db",
-      "enabled": true,
-      "label": "ログ作成補助（▼返却先を案内した場合は下記も記載ください。）",
-      "outLabel": "",
-      "outTpl": "",
-      "type": "log",
-      "common": true,
-      "tplIds": [],
-      "tplId": "",
-      "field": "q_x6yo4db",
-      "parentId": "q_vzhg5p7",
-      "parentOpt": "◆お客様にて箱をご準備の上、返送いただける場合◆",
-      "prefix": "",
-      "options": [
-        {
-          "l": "▼返却先を案内した場合は下記も記載ください。",
-          "v": "▼返却先を案内した場合は下記も記載ください。",
-          "text": "返却先は下記を案内済。\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n〒509-5312　岐阜県土岐市鶴里町柿野2322-102\n(株)ユーファクトリー第4物流センター　ソーダストリーム ガス回収係 宛\n電話番号：0120-286-230\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
-          "textHtml": "<div><span style=\"color:var(--text)\">返却先は下記を案内済。</span></div><div>~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</div><div>〒509-5312　岐阜県土岐市鶴里町柿野2322-102</div><div>(株)ユーファクトリー第4物流センター　ソーダストリーム ガス回収係 宛</div><div>電話番号：0120-286-230</div><div>~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</div>"
         }
       ],
       "autoLabel": true
@@ -4424,13 +4421,13 @@ window.APP_STATIC_DATA = {
       "id": "hcb_muhzac6gw7wt",
       "tplId": "tpl_o9v91b",
       "label": "Level 2（ご申告にあわせて選択）",
-      "text": " "
+      "text": ""
     },
     {
       "id": "hcb_muhzacv9qsko",
       "tplId": "tpl_o9v91b",
       "label": "Level 3（ご申告にあわせて選択）",
-      "text": " "
+      "text": ""
     },
     {
       "id": "hcb_muhz72qftntq",
@@ -4442,7 +4439,7 @@ window.APP_STATIC_DATA = {
       "id": "hcb_muhzaeqivb7n",
       "tplId": "tpl_8cmqca",
       "label": "Level 1（注文商品にあわせて選択）",
-      "text": " "
+      "text": ""
     },
     {
       "id": "hcb_mui0e4ff5zic",
@@ -4455,7 +4452,7 @@ window.APP_STATIC_DATA = {
       "id": "hcb_mui0ej5bmeli",
       "tplId": "tpl_8cmqca",
       "label": "Level 3（ご申告にあわせて選択）",
-      "text": " ",
+      "text": "",
       "group": "＜キャンセル＞"
     },
     {
@@ -4679,7 +4676,7 @@ window.APP_STATIC_DATA = {
 // 画面遷移データ。画像は screen-images/ フォルダに実ファイルとして保存されています。
 // library は画像ライブラリの復元用です（別PCでも一覧が再現されます）。
 window.APP_SCREEN_DATA = {
-  "savedAt": "2026-09-26T08:42:22.534Z",
+  "savedAt": "2026-09-26T09:55:55.612Z",
   "images": {
     "libk7d3dxigl": "【SOD】screen-images/download.png"
   },

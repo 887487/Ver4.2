@@ -1,9 +1,9 @@
 // ツール設定ファイル — スクリプト・メール・サイドメニュー・ヒアリング・更新履歴・固定テキスト・画面遷移
 // admin.html の「💾 保存して反映」で自動更新されます。手動編集は非推奨です。
-// 生成日時: 2026-09-22T08:36:09.247Z
+// 生成日時: 2026-09-26T10:15:22.089Z
 window.APP_STATIC_DATA = {
-  "generatedAt": "2026-09-22T08:36:09.247Z",
-  "savedAt": "2026-09-22T08:36:09.247Z",
+  "generatedAt": "2026-09-26T10:15:22.089Z",
+  "savedAt": "2026-09-26T10:15:22.089Z",
   "sideMenuData": [
     {
       "id": "smCat_1789974391763",
@@ -237,7 +237,56 @@ window.APP_STATIC_DATA = {
     }
   ],
   "sideMenuFiles": {},
-  "hearingQuestions": [],
+  "hearingQuestions": [
+    {
+      "id": "q_3vtxiu8",
+      "enabled": true,
+      "label": "",
+      "outLabel": "",
+      "outTpl": "",
+      "type": "heading",
+      "common": false,
+      "tplIds": [
+        "tpl_gbbve1"
+      ],
+      "tplId": "tpl_gbbve1",
+      "field": "q_3vtxiu8",
+      "prefix": "",
+      "includeInOutput": false
+    },
+    {
+      "id": "q_gfl0srx",
+      "enabled": true,
+      "label": "",
+      "outLabel": "",
+      "outTpl": "",
+      "type": "heading",
+      "common": false,
+      "tplIds": [
+        "tpl_ehnxez"
+      ],
+      "tplId": "tpl_ehnxez",
+      "field": "q_gfl0srx",
+      "prefix": "",
+      "includeInOutput": false
+    },
+    {
+      "id": "q_dhtej93",
+      "enabled": true,
+      "label": "",
+      "outLabel": "",
+      "outTpl": "",
+      "type": "heading",
+      "common": false,
+      "tplIds": [
+        "tpl_jw8d24"
+      ],
+      "tplId": "tpl_jw8d24",
+      "field": "q_dhtej93",
+      "prefix": "",
+      "includeInOutput": false
+    }
+  ],
   "hearingPolicies": [],
   "hearingPatterns": [],
   "updateHistory": [
@@ -293,11 +342,29 @@ window.APP_STATIC_DATA = {
   ],
   "fixedTexts": {},
   "faqData": [],
-  "hearingTemplates": [],
-  "hearingLabelPrefix": "■",
+  "hearingTemplates": [
+    {
+      "id": "tpl_gbbve1",
+      "name": "世帯",
+      "order": 0
+    },
+    {
+      "id": "tpl_ehnxez",
+      "name": "事業",
+      "order": 1
+    },
+    {
+      "id": "tpl_jw8d24",
+      "name": "学校",
+      "order": 2
+    }
+  ],
+  "hearingCopyButtons": [],
+  "hearingLabelPrefix": "",
   "hearingFixedReady": true,
   "notice": "",
   "noticeDate": "",
+  "noticeHtml": null,
   "maintenance": {
     "screen.html": true,
     "faq.html": true
@@ -3884,7 +3951,7 @@ window.APP_STATIC_DATA = {
 // 画面遷移データ。画像は screen-images/ フォルダに実ファイルとして保存されています。
 // library は画像ライブラリの復元用です（別PCでも一覧が再現されます）。
 window.APP_SCREEN_DATA = {
-  "savedAt": "2026-09-22T08:36:09.246Z",
+  "savedAt": "2026-09-26T10:15:22.089Z",
   "images": {},
   "library": [],
   "patterns": [

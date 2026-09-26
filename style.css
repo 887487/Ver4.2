@@ -575,7 +575,7 @@ body > .hearing-panel { top:var(--header-h); }
 /* 中身が多いと、枠の中でスクロールするテンプレート欄などが縦に潰されるので、縮ませない（全体をスクロールさせる） */
 .hearing-content > * { flex-shrink:0; }
 .hr-row { display:flex;flex-direction:column;gap:5px; }
-.hr-label { font-size:10px;font-weight:700;color:#555;line-height:1.4; }
+.hr-label { font-size:12px;font-weight:700;color:#555;line-height:1.4; }
 .hr-btns { display:flex;flex-wrap:wrap;gap:5px; }
 .hr-btn { min-height:28px;padding:4px 10px;border:1px solid var(--border);border-radius:5px;background:var(--surface);font-size:11px;cursor:pointer;color:var(--text);transition:border-color 0.15s,background 0.15s,color 0.15s;font-family:inherit;line-height:1.4;white-space:normal;text-align:left; }
 .hr-btn:hover { border-color:var(--accent);color:var(--accent-text);background:#f0f4ff; }
