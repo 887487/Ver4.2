@@ -600,7 +600,7 @@
 }
 .hr-cb-tpl { height:30px;width:auto; }
 .hr-cb-label { height:30px; }
-.hr-cb-text { min-height:56px;resize:vertical;line-height:1.5; }
+.hr-cb-text { height:30px;min-height:30px;resize:none;overflow:hidden;line-height:1.5;display:block; }   /* 初めは1行。改行すると広がる（_hrCbFit） */
 .hr-cb-tpl:focus, .hr-cb-label:focus, .hr-cb-text:focus { outline:none;border-color:var(--accent); }
 .hr-cb-card .hr-cb-add { align-self:flex-start;margin-left:32px;padding:3px 12px;border:1px dashed var(--accent);background:transparent;color:var(--accent-text);font-weight:700; }
 .hr-cb-card .hr-cb-add:hover { background:var(--accent-lt); }
@@ -2966,12 +2966,12 @@ function _hrCbRender(force) {
       var lab = document.createElement('input'); lab.type = 'text'; lab.className = 'hr-cb-label';
       lab.placeholder = '例：折り返し案内'; lab.value = b.label || '';
       var cell = document.createElement('div'); cell.className = 'hr-cb-textcell';
-      var txt = document.createElement('textarea'); txt.className = 'hr-cb-text';
+      var txt = document.createElement('textarea'); txt.className = 'hr-cb-text'; txt.rows = 1;
       txt.placeholder = 'ボタンを押したときにコピーするテキスト'; txt.value = b.text || '';
       var warn = document.createElement('span'); warn.className = 'hr-cb-warn';
       var paintWarn = function () { warn.textContent = txt.value ? '' : '⚠ テキストが空のためツール画面には表示されません'; };
       lab.addEventListener('input', function () { _hrCbUpdate(b.id, { label: lab.value }); });
-      txt.addEventListener('input', function () { _hrCbUpdate(b.id, { text: txt.value }); paintWarn(); });
+      txt.addEventListener('input', function () { _hrCbFit(txt); _hrCbUpdate(b.id, { text: txt.value }); paintWarn(); });
       paintWarn();
       cell.appendChild(txt); cell.appendChild(warn);
       var acts = document.createElement('span'); acts.className = 'hr-cb-acts';
@@ -2989,7 +2989,29 @@ function _hrCbRender(force) {
     card.appendChild(add);
     el.appendChild(card);
   });
+  _hrCbFitAll();
 }
+
+/**
+ * 「コピーするテキスト」欄の高さを中身に合わせる（初めは1行、改行するたびに広がる）。
+ * 閉じた枠の中など、画面に出ていないときは高さを測れないので、開いたとき（_hrCbFitAll）に合わせ直す。
+ */
+function _hrCbFit(t) {
+  if (!t || !t.isConnected) return;
+  t.style.height = 'auto';
+  var h = t.scrollHeight;
+  if (!h) { t.style.height = ''; return; }
+  t.style.height = (h + (t.offsetHeight - t.clientHeight)) + 'px';   // 枠線ぶんを足す（box-sizing:border-box）
+}
+function _hrCbFitAll() {
+  document.querySelectorAll('#hrCbList .hr-cb-text').forEach(_hrCbFit);
+}
+document.addEventListener('DOMContentLoaded', function () {
+  var sec = document.getElementById('hrCbSection');
+  if (sec) sec.addEventListener('toggle', function () { if (sec.open) _hrCbFitAll(); });
+});
+// 幅が変わると折り返しの行数も変わるので合わせ直す
+window.addEventListener('resize', function () { _hrCbFitAll(); });
 
 function _hrQuestionsGet() {
   // 空配列は「全部削除した」という意思表示。長さで判定して data.js から
