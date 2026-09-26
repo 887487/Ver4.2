@@ -582,21 +582,28 @@
 
 /* ── コピーボタン設定 ── */
 .hr-cb-card { background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:6px; }
-.hr-cb-hd { display:flex;align-items:center;gap:6px; }
-.hr-cb-hd .hr-cb-no { font-size:11px;font-weight:700;color:var(--text3);flex-shrink:0;min-width:22px; }
-.hr-cb-field { display:flex;align-items:flex-start;gap:8px; }
-.hr-cb-field > span { font-size:11px;font-weight:700;color:var(--text2);width:92px;flex-shrink:0;padding-top:6px; }
-.hr-cb-tpl, .hr-cb-label, .hr-cb-text {
-  flex:1;min-width:0;font-size:12px;font-family:inherit;color:var(--text);background:var(--surface);
-  border:1px solid var(--border);border-radius:6px;padding:5px 8px;box-sizing:border-box;
-}
-.hr-cb-tpl { height:30px; }
-.hr-cb-label { height:30px; }
-.hr-cb-text { min-height:60px;resize:vertical;line-height:1.5; }
-.hr-cb-tpl:focus, .hr-cb-label:focus, .hr-cb-text:focus { outline:none;border-color:var(--accent); }
-.hr-cb-hd button { font-size:11px;padding:2px 7px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text);cursor:pointer;font-family:inherit; }
-.hr-cb-hd button:disabled { opacity:.35;cursor:default; }
+.hr-cb-hd { display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:4px; }
+.hr-cb-hd-label { font-size:11px;font-weight:700;color:var(--text2);flex-shrink:0; }
+.hr-cb-hd .hr-cb-tpl { flex:0 1 320px;min-width:180px; }
 .hr-cb-hd .hr-cb-sp { flex:1; }
+.hr-cb-card button { font-size:11px;padding:2px 7px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text);cursor:pointer;font-family:inherit; }
+.hr-cb-card button:disabled { opacity:.35;cursor:default; }
+.hr-cb-row { display:grid;grid-template-columns:24px minmax(140px,220px) 1fr auto;gap:8px;align-items:start; }
+.hr-cb-colhd { font-size:10px;font-weight:700;color:var(--text3);border-top:1px solid var(--border);padding-top:6px; }
+.hr-cb-row + .hr-cb-row:not(.hr-cb-colhd) { border-top:1px dashed var(--border);padding-top:6px; }
+.hr-cb-no { font-size:11px;font-weight:700;color:var(--text3);padding-top:7px;text-align:right; }
+.hr-cb-textcell { display:flex;flex-direction:column;gap:2px;min-width:0; }
+.hr-cb-acts { display:flex;gap:3px;padding-top:3px; }
+.hr-cb-tpl, .hr-cb-label, .hr-cb-text {
+  min-width:0;font-size:12px;font-family:inherit;color:var(--text);background:var(--surface);
+  border:1px solid var(--border);border-radius:6px;padding:5px 8px;box-sizing:border-box;width:100%;
+}
+.hr-cb-tpl { height:30px;width:auto; }
+.hr-cb-label { height:30px; }
+.hr-cb-text { min-height:56px;resize:vertical;line-height:1.5; }
+.hr-cb-tpl:focus, .hr-cb-label:focus, .hr-cb-text:focus { outline:none;border-color:var(--accent); }
+.hr-cb-card .hr-cb-add { align-self:flex-start;margin-left:32px;padding:3px 12px;border:1px dashed var(--accent);background:transparent;color:var(--accent-text);font-weight:700; }
+.hr-cb-card .hr-cb-add:hover { background:var(--accent-lt); }
 .hr-cb-warn { font-size:10px;color:var(--red,#e63946); }
 
 /* ── 共通：アコーディオン矢印 ── */
@@ -2003,13 +2010,14 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
           <span class="hr-section-acc-title">📎 コピーボタン</span>
           <span class="hr-section-acc-count" id="hrCbCountBadge">0件</span>
           <button class="hr-add-btn" id="hrCbAddBtn"
-                  title="プレビューで選択中のテンプレートに紐付けて追加します"
-                  onclick="event.stopPropagation();document.getElementById('hrCbSection').open=true;_hrCbAdd()">＋ コピーボタンを追加</button>
+                  title="まだ枠の無いテンプレート（プレビューで選択中のものを優先）の枠を追加します"
+                  onclick="event.stopPropagation();document.getElementById('hrCbSection').open=true;_hrCbAdd()">＋ テンプレートの枠を追加</button>
         </summary>
         <div class="hr-section-acc-body">
           <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.7;">
             紐付けたテンプレートを選んでいるときだけ、ヒアリングの結果文の下に別枠でボタンを表示します（「共通」はどのテンプレートでも表示）。<br>
-            ボタンを押すと、登録したテキストがそのままコピーされます（ツール画面では編集できません）。テキストが空のボタンは表示されません。
+            ボタンを押すと、登録したテキストがそのままコピーされます（ツール画面では編集できません）。テキストが空のボタンは表示されません。<br>
+            テンプレートごとに1つの枠にまとまります。同じテンプレートのボタンは、枠の中の「＋ 追加」で続けて登録できます。
           </div>
           <div id="hrCbList" style="display:flex;flex-direction:column;gap:8px;"></div>
         </div>
@@ -2766,38 +2774,135 @@ function _hrCbUpdate(id, patch) {
   _hrCbSave(_hrCbList().map(function (b) { return b.id === id ? Object.assign({}, b, patch) : b; }));
 }
 
-/** 追加：プレビューで選んでいるテンプレートに紐付ける（未選択なら共通） */
+function _hrCbNewId() {
+  return 'hcb_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 4);
+}
+
+/** テンプレートごとの枠（同じ tplId のボタンをまとめたもの）。並びは各枠の最初のボタンの位置順 */
+function _hrCbGroups(list) {
+  var order = [], map = {};
+  (list || _hrCbList()).forEach(function (b) {
+    var k = b.tplId || '';
+    if (!map[k]) { map[k] = []; order.push(k); }
+    map[k].push(b);
+  });
+  return order.map(function (k) { return { tplId: k, items: map[k] }; });
+}
+
+/** 枠の並びどおりにボタンを並べ直した一覧 */
+function _hrCbFlatten(groups) {
+  var out = [];
+  groups.forEach(function (g) { g.items.forEach(function (b) { out.push(b); }); });
+  return out;
+}
+
+/** 追加したボタンの「ボタンラベル名」欄にカーソルを置く */
+function _hrCbFocus(id) {
+  var inp = document.querySelector('#hrCbList .hr-cb-row[data-id="' + id + '"] .hr-cb-label');
+  if (inp) { inp.focus(); if (inp.scrollIntoView) inp.scrollIntoView({ block: 'nearest' }); }
+}
+
+/**
+ * 上の「＋ テンプレートの枠を追加」：まだ枠の無いテンプレートの枠を1つ作る。
+ * プレビューで選んでいるテンプレートに枠が無ければそれを、あればまだ枠の無い別のテンプレート（最後に共通）を使う。
+ * すべてに枠があるときは、選んでいるテンプレートの枠にボタンを1つ足す。
+ */
 function _hrCbAdd() {
-  var id = 'hcb_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 4);
-  var cur = window.getCurrentTemplate ? window.getCurrentTemplate() : '';
   var list = _hrCbList();
-  list.push({ id: id, tplId: cur || '', label: '', text: '' });
+  var has = {}; list.forEach(function (b) { has[b.tplId || ''] = 1; });
+  var cur = window.getCurrentTemplate ? (window.getCurrentTemplate() || '') : '';
+  var tpls = window.getHearingTemplates ? window.getHearingTemplates() : [];
+  var cands = [cur].concat(tpls.map(function (t) { return t.id; })).concat(['']);
+  var tplId = cands.find(function (k) { return !has[k] && (k === '' || tpls.some(function (t) { return t.id === k; })); });
+  if (tplId === undefined) {
+    _hrCbAddTo(cur);
+    toast('ℹ️ すべてのテンプレートに枠があるため、選択中の枠にボタンを追加しました');
+    return;
+  }
+  var id = _hrCbNewId();
+  list.push({ id: id, tplId: tplId, label: '', text: '' });
   _hrCbSave(list);
   _hrCbRender(true);
-  var inp = document.querySelector('#hrCbList .hr-cb-card[data-id="' + id + '"] .hr-cb-label');
-  if (inp) { inp.focus(); if (inp.scrollIntoView) inp.scrollIntoView({ block: 'nearest' }); }
+  _hrCbFocus(id);
+}
+
+/** 枠の中の「＋ 追加」：同じテンプレートのボタン（ボタンラベル名・コピーするテキストの欄）を枠の最後に足す */
+function _hrCbAddTo(tplId) {
+  var groups = _hrCbGroups();
+  var g = groups.find(function (x) { return x.tplId === (tplId || ''); });
+  var id = _hrCbNewId();
+  var nb = { id: id, tplId: tplId || '', label: '', text: '' };
+  if (g) g.items.push(nb); else groups.push({ tplId: tplId || '', items: [nb] });
+  _hrCbSave(_hrCbFlatten(groups));
+  _hrCbRender(true);
+  _hrCbFocus(id);
 }
 
 function _hrCbDelete(id) {
   var b = _hrCbList().find(function (x) { return x.id === id; });
   if (!b) return;
-  if (!window.confirm('コピーボタン「' + (window.hearingCopyButtonLabel(b) || '（名前なし）') + '」を削除しますか？')) return;
+  var empty = !String(b.label || '').trim() && !String(b.text || '');
+  if (!empty && !window.confirm('コピーボタン「' + (window.hearingCopyButtonLabel(b) || '（名前なし）') + '」を削除しますか？')) return;
   _hrCbSave(_hrCbList().filter(function (x) { return x.id !== id; }));
   _hrCbRender(true);
 }
 
-function _hrCbMove(id, dir) {
+/** 枠ごと削除（その枠のボタンをすべて消す） */
+function _hrCbDeleteGroup(tplId) {
   var list = _hrCbList();
-  var i = list.findIndex(function (x) { return x.id === id; });
+  var n = list.filter(function (b) { return (b.tplId || '') === tplId; }).length;
+  if (!n) return;
+  if (!window.confirm('この枠のコピーボタン ' + n + ' 件をすべて削除しますか？')) return;
+  _hrCbSave(list.filter(function (b) { return (b.tplId || '') !== tplId; }));
+  _hrCbRender(true);
+}
+
+/** 枠の中でボタンを上下に動かす */
+function _hrCbMove(id, dir) {
+  var groups = _hrCbGroups();
+  groups.forEach(function (g) {
+    var i = g.items.findIndex(function (x) { return x.id === id; });
+    if (i < 0) return;
+    var j = i + dir;
+    if (j < 0 || j >= g.items.length) return;
+    var t = g.items[i]; g.items[i] = g.items[j]; g.items[j] = t;
+  });
+  _hrCbSave(_hrCbFlatten(groups));
+  _hrCbRender(true);
+}
+
+/** 枠そのものを上下に動かす（ツール画面では、共通の枠と選んだテンプレートの枠がこの順に並ぶ） */
+function _hrCbMoveGroup(tplId, dir) {
+  var groups = _hrCbGroups();
+  var i = groups.findIndex(function (g) { return g.tplId === tplId; });
   var j = i + dir;
-  if (i < 0 || j < 0 || j >= list.length) return;
-  var t = list[i]; list[i] = list[j]; list[j] = t;
-  _hrCbSave(list);
+  if (i < 0 || j < 0 || j >= groups.length) return;
+  var t = groups[i]; groups[i] = groups[j]; groups[j] = t;
+  _hrCbSave(_hrCbFlatten(groups));
+  _hrCbRender(true);
+}
+
+/** 枠のテンプレートを変える。変更先にすでに枠があれば、その枠の最後にまとめる */
+function _hrCbChangeGroupTpl(from, to) {
+  if (from === to) return;
+  var groups = _hrCbGroups();
+  var src = groups.find(function (g) { return g.tplId === from; });
+  if (!src) return;
+  var dst = groups.find(function (g) { return g.tplId === to; });
+  src.items.forEach(function (b) { b.tplId = to; });
+  if (dst) {
+    dst.items = dst.items.concat(src.items);
+    groups = groups.filter(function (g) { return g !== src; });
+    toast('ℹ️ 同じテンプレートの枠がすでにあったため、1つの枠にまとめました');
+  } else {
+    src.tplId = to;
+  }
+  _hrCbSave(_hrCbFlatten(groups));
   _hrCbRender(true);
 }
 
 /**
- * 一覧を描く。
+ * 一覧を描く。テンプレートごとに1つの枠にまとめ、枠の中にボタン（ボタンラベル名・コピーするテキスト）を並べる。
  * テンプレートの追加・名前変更に追従させるため、プレビューを描き直すたびにも呼ぶ。
  * ただし入力中（一覧の中にフォーカスがある）は、打っている欄が消えないよう作り直さない（force で強制）。
  */
@@ -2808,73 +2913,80 @@ function _hrCbRender(force) {
   if (badge) badge.textContent = list.length + '件';
   if (!force && document.activeElement && el.contains(document.activeElement)) return;
   if (!list.length) {
-    el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:12px;background:var(--surface);border:1px dashed var(--border);border-radius:8px;text-align:center;">コピーボタンがありません。「＋ コピーボタンを追加」から登録してください。</div>';
+    el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:12px;background:var(--surface);border:1px dashed var(--border);border-radius:8px;text-align:center;">コピーボタンがありません。「＋ テンプレートの枠を追加」から登録してください。</div>';
     return;
   }
   var tpls = window.getHearingTemplates ? window.getHearingTemplates() : [];
+  var groups = _hrCbGroups(list);
+  var mkBtn = function (text, title, onClick, disabled) {
+    var b = document.createElement('button'); b.type = 'button'; b.textContent = text; b.title = title;
+    if (disabled) b.disabled = true;
+    b.addEventListener('click', onClick);
+    return b;
+  };
   el.innerHTML = '';
-  list.forEach(function (b, i) {
+  groups.forEach(function (g, gi) {
     var card = document.createElement('div');
     card.className = 'hr-cb-card';
-    card.setAttribute('data-id', b.id);
+    card.setAttribute('data-tpl', g.tplId);
 
-    // 見出し行（番号・並べ替え・削除）
+    // ── 枠の見出し：テンプレートのプルダウン・枠の並べ替え・枠ごと削除 ──
     var hd = document.createElement('div'); hd.className = 'hr-cb-hd';
-    var no = document.createElement('span'); no.className = 'hr-cb-no'; no.textContent = (i + 1) + '.';
-    var sp = document.createElement('span'); sp.className = 'hr-cb-sp';
-    var warn = document.createElement('span'); warn.className = 'hr-cb-warn';
-    var up = document.createElement('button'); up.type = 'button'; up.textContent = '▲'; up.title = '上へ';
-    up.disabled = (i === 0);
-    up.addEventListener('click', function () { _hrCbMove(b.id, -1); });
-    var dn = document.createElement('button'); dn.type = 'button'; dn.textContent = '▼'; dn.title = '下へ';
-    dn.disabled = (i === list.length - 1);
-    dn.addEventListener('click', function () { _hrCbMove(b.id, 1); });
-    var del = document.createElement('button'); del.type = 'button'; del.textContent = '🗑'; del.title = '削除';
-    del.addEventListener('click', function () { _hrCbDelete(b.id); });
-    hd.appendChild(no); hd.appendChild(warn); hd.appendChild(sp);
-    hd.appendChild(up); hd.appendChild(dn); hd.appendChild(del);
-
-    var row = function (label, input) {
-      var f = document.createElement('label'); f.className = 'hr-cb-field';
-      var t = document.createElement('span'); t.textContent = label;
-      f.appendChild(t); f.appendChild(input);
-      return f;
-    };
-
-    // ① 紐付けるテンプレート
+    var hl = document.createElement('span'); hl.className = 'hr-cb-hd-label'; hl.textContent = 'テンプレート';
     var sel = document.createElement('select'); sel.className = 'hr-cb-tpl';
     var addOpt = function (v, txt) {
       var o = document.createElement('option'); o.value = v; o.textContent = txt; sel.appendChild(o);
     };
     addOpt('', '（共通：全テンプレート）');
     tpls.forEach(function (t) { addOpt(t.id, t.name); });
-    var cur = b.tplId || '';
-    if (cur && !tpls.some(function (t) { return t.id === cur; })) addOpt(cur, '（削除されたテンプレート）');
-    sel.value = cur;
-
-    // ② ボタンラベル名
-    var lab = document.createElement('input'); lab.type = 'text'; lab.className = 'hr-cb-label';
-    lab.placeholder = '例：折り返し案内'; lab.value = b.label || '';
-
-    // ③ コピーするテキスト
-    var txt = document.createElement('textarea'); txt.className = 'hr-cb-text';
-    txt.placeholder = 'ボタンを押したときにコピーするテキスト'; txt.value = b.text || '';
-
-    var paintWarn = function () {
-      var ws = [];
-      if (!txt.value) ws.push('テキストが空のため表示されません');
-      if (sel.value && !tpls.some(function (t) { return t.id === sel.value; })) ws.push('紐付け先のテンプレートがありません');
-      warn.textContent = ws.length ? '⚠ ' + ws.join(' / ') : '';
-    };
-    sel.addEventListener('change', function () { _hrCbUpdate(b.id, { tplId: sel.value }); paintWarn(); });
-    lab.addEventListener('input', function () { _hrCbUpdate(b.id, { label: lab.value }); });
-    txt.addEventListener('input', function () { _hrCbUpdate(b.id, { text: txt.value }); paintWarn(); });
-    paintWarn();
-
+    var orphan = g.tplId && !tpls.some(function (t) { return t.id === g.tplId; });
+    if (orphan) addOpt(g.tplId, '（削除されたテンプレート）');
+    sel.value = g.tplId;
+    sel.addEventListener('change', function () { _hrCbChangeGroupTpl(g.tplId, sel.value); });
+    var gwarn = document.createElement('span'); gwarn.className = 'hr-cb-warn';
+    if (orphan) gwarn.textContent = '⚠ 紐付け先のテンプレートがありません';
+    var sp = document.createElement('span'); sp.className = 'hr-cb-sp';
+    hd.appendChild(hl); hd.appendChild(sel); hd.appendChild(gwarn); hd.appendChild(sp);
+    hd.appendChild(mkBtn('▲', '枠を上へ', function () { _hrCbMoveGroup(g.tplId, -1); }, gi === 0));
+    hd.appendChild(mkBtn('▼', '枠を下へ', function () { _hrCbMoveGroup(g.tplId, 1); }, gi === groups.length - 1));
+    hd.appendChild(mkBtn('🗑 枠を削除', 'この枠のボタンをすべて削除', function () { _hrCbDeleteGroup(g.tplId); }));
     card.appendChild(hd);
-    card.appendChild(row('テンプレート', sel));
-    card.appendChild(row('ボタンラベル名', lab));
-    card.appendChild(row('コピーするテキスト', txt));
+
+    // ── 列の見出し ──
+    var colHd = document.createElement('div'); colHd.className = 'hr-cb-row hr-cb-colhd';
+    ['', 'ボタンラベル名', 'コピーするテキスト', ''].forEach(function (t) {
+      var c = document.createElement('span'); c.textContent = t; colHd.appendChild(c);
+    });
+    card.appendChild(colHd);
+
+    // ── ボタン（1行＝1ボタン）──
+    g.items.forEach(function (b, i) {
+      var row = document.createElement('div'); row.className = 'hr-cb-row'; row.setAttribute('data-id', b.id);
+      var no = document.createElement('span'); no.className = 'hr-cb-no'; no.textContent = (i + 1) + '.';
+      var lab = document.createElement('input'); lab.type = 'text'; lab.className = 'hr-cb-label';
+      lab.placeholder = '例：折り返し案内'; lab.value = b.label || '';
+      var cell = document.createElement('div'); cell.className = 'hr-cb-textcell';
+      var txt = document.createElement('textarea'); txt.className = 'hr-cb-text';
+      txt.placeholder = 'ボタンを押したときにコピーするテキスト'; txt.value = b.text || '';
+      var warn = document.createElement('span'); warn.className = 'hr-cb-warn';
+      var paintWarn = function () { warn.textContent = txt.value ? '' : '⚠ テキストが空のためツール画面には表示されません'; };
+      lab.addEventListener('input', function () { _hrCbUpdate(b.id, { label: lab.value }); });
+      txt.addEventListener('input', function () { _hrCbUpdate(b.id, { text: txt.value }); paintWarn(); });
+      paintWarn();
+      cell.appendChild(txt); cell.appendChild(warn);
+      var acts = document.createElement('span'); acts.className = 'hr-cb-acts';
+      acts.appendChild(mkBtn('▲', '上へ', function () { _hrCbMove(b.id, -1); }, i === 0));
+      acts.appendChild(mkBtn('▼', '下へ', function () { _hrCbMove(b.id, 1); }, i === g.items.length - 1));
+      acts.appendChild(mkBtn('×', 'このボタンを削除', function () { _hrCbDelete(b.id); }));
+      row.appendChild(no); row.appendChild(lab); row.appendChild(cell); row.appendChild(acts);
+      card.appendChild(row);
+    });
+
+    // ── ＋ 追加：同じテンプレートのボタンを枠の中に足す ──
+    var add = document.createElement('button'); add.type = 'button'; add.className = 'hr-cb-add';
+    add.textContent = '＋ 追加'; add.title = 'この枠（同じテンプレート）にボタンを追加';
+    add.addEventListener('click', function () { _hrCbAddTo(g.tplId); });
+    card.appendChild(add);
     el.appendChild(card);
   });
 }
