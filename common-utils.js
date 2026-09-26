@@ -6176,23 +6176,43 @@ function _hrCopyBtnLabel(b) {
 window.hearingCopyButtonLabel = _hrCopyBtnLabel;
 
 /** 結果文の下に出すコピーボタン枠の HTML（出すものが無ければ空文字） */
+/**
+ * ボタンを「グループ」ごとにまとめる（b.group がグループ名。空ならグループなし）。
+ * グループなしを先頭に、グループは最初に出てきた順に並べる。共通とテンプレートで同じ名前なら1つにまとめる。
+ */
+window.hearingCopyButtonGroups = function (list) {
+  var order = [], map = {};
+  (list || []).forEach(function (b) {
+    var g = String(b.group || '').trim();
+    if (!map.hasOwnProperty(g)) { map[g] = []; order.push(g); }
+    map[g].push(b);
+  });
+  order.sort(function (x, y) { return (x === '' ? 0 : 1) - (y === '' ? 0 : 1); });   // グループなしを先頭に（それ以外は順番どおり）
+  return order.map(function (g) { return { name: g, items: map[g] }; });
+};
+
+/** 結果文の下に出すコピーボタン枠の HTML（出すものが無ければ空文字） */
 function _hrCopyButtonsHTML() {
   var list = window.getHearingCopyButtons(window.getCurrentTemplate()).filter(function (b) {
     return String(b.text || '') !== '';   // コピーする中身が無いボタンは出さない
   });
   if (!list.length) return '';
+  var btn = function (b) {
+    return '<button type="button" class="hr-copybtn" data-id="' + escHtml(b.id) + '"' +
+      ' title="' + escHtml(b.text) + '"' +
+      // フォーカスが移るとスクロール位置が動くことがあるため、フォーカスさせない
+      ' onmousedown="event.preventDefault()"' +
+      ' onclick="window.copyHearingFixedText(this.getAttribute(\'data-id\'))">📋 ' +
+      escHtml(_hrCopyBtnLabel(b)) + '</button>';
+  };
   return '<div class="hr-copybtns">' +
            '<div class="hr-copybtns-title">📎 コピー用テキスト</div>' +
-           '<div class="hr-copybtns-list">' +
-           list.map(function (b) {
-             return '<button type="button" class="hr-copybtn" data-id="' + escHtml(b.id) + '"' +
-               ' title="' + escHtml(b.text) + '"' +
-               // フォーカスが移るとスクロール位置が動くことがあるため、フォーカスさせない
-               ' onmousedown="event.preventDefault()"' +
-               ' onclick="window.copyHearingFixedText(this.getAttribute(\'data-id\'))">📋 ' +
-               escHtml(_hrCopyBtnLabel(b)) + '</button>';
+           window.hearingCopyButtonGroups(list).map(function (g) {
+             return '<div class="hr-copybtns-group' + (g.name ? '' : ' is-plain') + '">' +
+                      (g.name ? '<div class="hr-copybtns-gname">' + escHtml(g.name) + '</div>' : '') +
+                      '<div class="hr-copybtns-list">' + g.items.map(btn).join('') + '</div>' +
+                    '</div>';
            }).join('') +
-           '</div>' +
          '</div>';
 }
 

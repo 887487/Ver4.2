@@ -605,6 +605,16 @@
 .hr-cb-card .hr-cb-add { align-self:flex-start;margin-left:32px;padding:3px 12px;border:1px dashed var(--accent);background:transparent;color:var(--accent-text);font-weight:700; }
 .hr-cb-card .hr-cb-add:hover { background:var(--accent-lt); }
 .hr-cb-warn { font-size:10px;color:var(--red,#e63946); }
+/* 枠の中のグループ */
+.hr-cb-sub { display:flex;flex-direction:column;gap:6px; }
+.hr-cb-sub.is-named { border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:6px;padding:8px 10px;background:var(--surface2); }
+.hr-cb-subhd { display:flex;align-items:center;gap:6px;flex-wrap:wrap; }
+.hr-cb-gname { height:28px;flex:0 1 240px;min-width:120px;font-size:12px;font-weight:700;font-family:inherit;color:var(--accent-text);
+  background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 8px;box-sizing:border-box; }
+.hr-cb-gname:focus { outline:none;border-color:var(--accent); }
+.hr-cb-move { height:22px;font-size:10px;font-family:inherit;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text2);max-width:110px; }
+.hr-cb-card .hr-cb-addgroup { align-self:flex-start;padding:3px 12px;border:1px dashed var(--border);background:transparent;color:var(--text2);font-weight:700; }
+.hr-cb-card .hr-cb-addgroup:hover { border-color:var(--accent);color:var(--accent-text);background:var(--accent-lt); }
 
 /* ── 共通：アコーディオン矢印 ── */
 .hr-acc-arrow {
@@ -2017,7 +2027,8 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
           <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.7;">
             紐付けたテンプレートを選んでいるときだけ、ヒアリングの結果文の下に別枠でボタンを表示します（「共通」はどのテンプレートでも表示）。<br>
             ボタンを押すと、登録したテキストがそのままコピーされます（ツール画面では編集できません）。テキストが空のボタンは表示されません。<br>
-            テンプレートごとに1つの枠にまとまります。同じテンプレートのボタンは、枠の中の「＋ 追加」で続けて登録できます。
+            テンプレートごとに1つの枠にまとまります。同じテンプレートのボタンは、枠の中の「＋ 追加」で続けて登録できます。<br>
+            「＋ グループを追加」で枠の中にグループを作ると、ツール画面ではグループ名の見出しの下にボタンがまとまって表示されます。
           </div>
           <div id="hrCbList" style="display:flex;flex-direction:column;gap:8px;"></div>
         </div>
@@ -2777,8 +2788,12 @@ function _hrCbUpdate(id, patch) {
 function _hrCbNewId() {
   return 'hcb_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 4);
 }
+function _hrCbGname(b) { return String((b && b.group) || '').trim(); }
 
-/** テンプレートごとの枠（同じ tplId のボタンをまとめたもの）。並びは各枠の最初のボタンの位置順 */
+/**
+ * テンプレートごとの枠（同じ tplId のボタンをまとめたもの）。並びは各枠の最初のボタンの位置順。
+ * 枠の中はさらに「グループ」（b.group）ごとに分ける（subs）。グループなし（''）を先頭に置く。
+ */
 function _hrCbGroups(list) {
   var order = [], map = {};
   (list || _hrCbList()).forEach(function (b) {
@@ -2786,15 +2801,35 @@ function _hrCbGroups(list) {
     if (!map[k]) { map[k] = []; order.push(k); }
     map[k].push(b);
   });
-  return order.map(function (k) { return { tplId: k, items: map[k] }; });
+  return order.map(function (k) { return { tplId: k, subs: _hrCbSubs(map[k]) }; });
+}
+function _hrCbSubs(items) {
+  var order = [], map = {};
+  items.forEach(function (b) {
+    var g = _hrCbGname(b);
+    if (!map.hasOwnProperty(g)) { map[g] = []; order.push(g); }
+    map[g].push(b);
+  });
+  order.sort(function (x, y) { return (x === '' ? 0 : 1) - (y === '' ? 0 : 1); });
+  return order.map(function (g) { return { name: g, items: map[g] }; });
 }
 
-/** 枠の並びどおりにボタンを並べ直した一覧 */
+/** 枠・グループの並びどおりにボタンを並べ直した一覧（保存する形） */
 function _hrCbFlatten(groups) {
   var out = [];
-  groups.forEach(function (g) { g.items.forEach(function (b) { out.push(b); }); });
+  groups.forEach(function (g) {
+    g.subs.forEach(function (sg) {
+      sg.items.forEach(function (b) {
+        b.tplId = g.tplId;
+        if (sg.name) b.group = sg.name; else delete b.group;
+        out.push(b);
+      });
+    });
+  });
   return out;
 }
+function _hrCbCard(groups, tplId) { return groups.find(function (g) { return g.tplId === (tplId || ''); }); }
+function _hrCbSub(card, name) { return card ? card.subs.find(function (x) { return x.name === name; }) : null; }
 
 /** 追加したボタンの「ボタンラベル名」欄にカーソルを置く */
 function _hrCbFocus(id) {
@@ -2815,7 +2850,7 @@ function _hrCbAdd() {
   var cands = [cur].concat(tpls.map(function (t) { return t.id; })).concat(['']);
   var tplId = cands.find(function (k) { return !has[k] && (k === '' || tpls.some(function (t) { return t.id === k; })); });
   if (tplId === undefined) {
-    _hrCbAddTo(cur);
+    _hrCbAddTo(cur, '');
     toast('ℹ️ すべてのテンプレートに枠があるため、選択中の枠にボタンを追加しました');
     return;
   }
@@ -2826,16 +2861,121 @@ function _hrCbAdd() {
   _hrCbFocus(id);
 }
 
-/** 枠の中の「＋ 追加」：同じテンプレートのボタン（ボタンラベル名・コピーするテキストの欄）を枠の最後に足す */
-function _hrCbAddTo(tplId) {
+/** 「＋ 追加」：同じテンプレート・同じグループのボタン（ボタンラベル名・コピーするテキストの欄）を最後に足す */
+function _hrCbAddTo(tplId, groupName) {
   var groups = _hrCbGroups();
-  var g = groups.find(function (x) { return x.tplId === (tplId || ''); });
+  var card = _hrCbCard(groups, tplId);
+  if (!card) { card = { tplId: tplId || '', subs: [] }; groups.push(card); }
+  var name = String(groupName || '').trim();
+  var sub = _hrCbSub(card, name);
+  if (!sub) { sub = { name: name, items: [] }; if (name) card.subs.push(sub); else card.subs.unshift(sub); }
   var id = _hrCbNewId();
-  var nb = { id: id, tplId: tplId || '', label: '', text: '' };
-  if (g) g.items.push(nb); else groups.push({ tplId: tplId || '', items: [nb] });
+  sub.items.push({ id: id, tplId: card.tplId, label: '', text: '' });
   _hrCbSave(_hrCbFlatten(groups));
   _hrCbRender(true);
   _hrCbFocus(id);
+}
+
+/** 「＋ グループを追加」：枠の中に新しいグループ（名前つきのまとまり）を作り、最初のボタンの欄を1つ用意する */
+function _hrCbAddGroup(tplId) {
+  var groups = _hrCbGroups();
+  var card = _hrCbCard(groups, tplId);
+  if (!card) return;
+  var n = 1, name;
+  do { name = 'グループ' + n++; } while (_hrCbSub(card, name));
+  var id = _hrCbNewId();
+  card.subs.push({ name: name, items: [{ id: id, tplId: card.tplId, label: '', text: '' }] });
+  _hrCbSave(_hrCbFlatten(groups));
+  _hrCbRender(true);
+  // グループ名をすぐ書き換えられるよう、名前欄を選んだ状態にする
+  var inp = Array.prototype.find.call(
+    document.querySelectorAll('#hrCbList .hr-cb-card[data-tpl="' + card.tplId + '"] .hr-cb-gname'),
+    function (x) { return x.value === name; });
+  if (inp) { inp.focus(); inp.select(); if (inp.scrollIntoView) inp.scrollIntoView({ block: 'nearest' }); }
+}
+
+/** グループ名を変える。同じ枠に同じ名前のグループがあれば1つにまとめる。空にしたときは元に戻す */
+function _hrCbRenameGroup(tplId, from, to, inp) {
+  to = String(to || '').trim();
+  if (to === from) { if (inp) inp.value = from; return; }
+  if (!to) {
+    if (inp) inp.value = from;
+    toast('⚠️ グループ名を入力してください（グループをやめるときは「グループ解除」）');
+    return;
+  }
+  var groups = _hrCbGroups();
+  var card = _hrCbCard(groups, tplId);
+  var src = _hrCbSub(card, from);
+  if (!src) return;
+  var dst = _hrCbSub(card, to);
+  if (dst) {
+    dst.items = dst.items.concat(src.items);
+    card.subs = card.subs.filter(function (x) { return x !== src; });
+    toast('ℹ️ 同じ名前のグループがあったため、1つにまとめました');
+  } else {
+    src.name = to;
+  }
+  _hrCbSave(_hrCbFlatten(groups));
+  _hrCbRender(true);
+}
+
+/** グループ解除：グループのボタンを「グループなし」へ移す（ボタンは消さない） */
+function _hrCbUngroup(tplId, name) {
+  var groups = _hrCbGroups();
+  var card = _hrCbCard(groups, tplId);
+  var src = _hrCbSub(card, name);
+  if (!src || !name) return;
+  var plain = _hrCbSub(card, '');
+  if (!plain) { plain = { name: '', items: [] }; card.subs.unshift(plain); }
+  plain.items = plain.items.concat(src.items);
+  card.subs = card.subs.filter(function (x) { return x !== src; });
+  _hrCbSave(_hrCbFlatten(groups));
+  _hrCbRender(true);
+}
+
+/** グループごと削除（そのグループのボタンをすべて消す） */
+function _hrCbDeleteSub(tplId, name) {
+  var list = _hrCbList();
+  var hit = function (b) { return (b.tplId || '') === (tplId || '') && _hrCbGname(b) === name; };
+  var n = list.filter(hit).length;
+  if (!n) return;
+  if (!window.confirm('グループ「' + name + '」のコピーボタン ' + n + ' 件をすべて削除しますか？')) return;
+  _hrCbSave(list.filter(function (b) { return !hit(b); }));
+  _hrCbRender(true);
+}
+
+/** 枠の中でグループを上下に動かす（グループなしは常に先頭） */
+function _hrCbMoveSub(tplId, name, dir) {
+  var groups = _hrCbGroups();
+  var card = _hrCbCard(groups, tplId);
+  if (!card) return;
+  var named = card.subs.filter(function (x) { return x.name; });
+  var i = named.findIndex(function (x) { return x.name === name; });
+  var j = i + dir;
+  if (i < 0 || j < 0 || j >= named.length) return;
+  var t = named[i]; named[i] = named[j]; named[j] = t;
+  card.subs = card.subs.filter(function (x) { return !x.name; }).concat(named);
+  _hrCbSave(_hrCbFlatten(groups));
+  _hrCbRender(true);
+}
+
+/** ボタンを別のグループへ移す（移した先のグループの最後に入る） */
+function _hrCbMoveToSub(id, tplId, name) {
+  var groups = _hrCbGroups();
+  var card = _hrCbCard(groups, tplId);
+  if (!card) return;
+  var item = null;
+  card.subs.forEach(function (sg) {
+    var i = sg.items.findIndex(function (x) { return x.id === id; });
+    if (i >= 0) item = sg.items.splice(i, 1)[0];
+  });
+  if (!item) return;
+  var dst = _hrCbSub(card, name);
+  if (!dst) { dst = { name: name, items: [] }; if (name) card.subs.push(dst); else card.subs.unshift(dst); }
+  dst.items.push(item);
+  card.subs = card.subs.filter(function (x) { return x.items.length; });
+  _hrCbSave(_hrCbFlatten(groups));
+  _hrCbRender(true);
 }
 
 function _hrCbDelete(id) {
@@ -2857,15 +2997,17 @@ function _hrCbDeleteGroup(tplId) {
   _hrCbRender(true);
 }
 
-/** 枠の中でボタンを上下に動かす */
+/** グループの中でボタンを上下に動かす */
 function _hrCbMove(id, dir) {
   var groups = _hrCbGroups();
   groups.forEach(function (g) {
-    var i = g.items.findIndex(function (x) { return x.id === id; });
-    if (i < 0) return;
-    var j = i + dir;
-    if (j < 0 || j >= g.items.length) return;
-    var t = g.items[i]; g.items[i] = g.items[j]; g.items[j] = t;
+    g.subs.forEach(function (sg) {
+      var i = sg.items.findIndex(function (x) { return x.id === id; });
+      if (i < 0) return;
+      var j = i + dir;
+      if (j < 0 || j >= sg.items.length) return;
+      var t = sg.items[i]; sg.items[i] = sg.items[j]; sg.items[j] = t;
+    });
   });
   _hrCbSave(_hrCbFlatten(groups));
   _hrCbRender(true);
@@ -2882,27 +3024,69 @@ function _hrCbMoveGroup(tplId, dir) {
   _hrCbRender(true);
 }
 
-/** 枠のテンプレートを変える。変更先にすでに枠があれば、その枠の最後にまとめる */
+/** 枠のテンプレートを変える。変更先にすでに枠があれば、その枠にまとめる（同じ名前のグループも1つにまとまる） */
 function _hrCbChangeGroupTpl(from, to) {
   if (from === to) return;
-  var groups = _hrCbGroups();
-  var src = groups.find(function (g) { return g.tplId === from; });
+  var list = _hrCbList();
+  var had = list.some(function (b) { return (b.tplId || '') === to; });
+  var groups = _hrCbGroups(list);
+  var src = _hrCbCard(groups, from);
   if (!src) return;
-  var dst = groups.find(function (g) { return g.tplId === to; });
-  src.items.forEach(function (b) { b.tplId = to; });
+  var dst = _hrCbCard(groups, to);
   if (dst) {
-    dst.items = dst.items.concat(src.items);
+    src.subs.forEach(function (sg) {
+      var d = _hrCbSub(dst, sg.name);
+      if (d) d.items = d.items.concat(sg.items);
+      else if (sg.name) dst.subs.push(sg); else dst.subs.unshift(sg);
+    });
     groups = groups.filter(function (g) { return g !== src; });
-    toast('ℹ️ 同じテンプレートの枠がすでにあったため、1つの枠にまとめました');
   } else {
     src.tplId = to;
   }
+  if (had) toast('ℹ️ 同じテンプレートの枠がすでにあったため、1つの枠にまとめました');
   _hrCbSave(_hrCbFlatten(groups));
   _hrCbRender(true);
 }
 
+/** ボタン1行（ボタンラベル名・コピーするテキスト・移動・並べ替え・削除） */
+function _hrCbRowEl(card, sg, b, i, mkBtn) {
+  var row = document.createElement('div'); row.className = 'hr-cb-row'; row.setAttribute('data-id', b.id);
+  var no = document.createElement('span'); no.className = 'hr-cb-no'; no.textContent = (i + 1) + '.';
+  var lab = document.createElement('input'); lab.type = 'text'; lab.className = 'hr-cb-label';
+  lab.placeholder = '例：折り返し案内'; lab.value = b.label || '';
+  var cell = document.createElement('div'); cell.className = 'hr-cb-textcell';
+  var txt = document.createElement('textarea'); txt.className = 'hr-cb-text'; txt.rows = 1;
+  txt.placeholder = 'ボタンを押したときにコピーするテキスト'; txt.value = b.text || '';
+  var warn = document.createElement('span'); warn.className = 'hr-cb-warn';
+  var paintWarn = function () { warn.textContent = txt.value ? '' : '⚠ テキストが空のためツール画面には表示されません'; };
+  lab.addEventListener('input', function () { _hrCbUpdate(b.id, { label: lab.value }); });
+  txt.addEventListener('input', function () { _hrCbFit(txt); _hrCbUpdate(b.id, { text: txt.value }); paintWarn(); });
+  paintWarn();
+  cell.appendChild(txt); cell.appendChild(warn);
+  var acts = document.createElement('span'); acts.className = 'hr-cb-acts';
+  // 別のグループへ移す（グループが2つ以上あるときだけ出す）
+  if (card.subs.length > 1 || sg.name) {
+    var mv = document.createElement('select'); mv.className = 'hr-cb-move'; mv.title = '別のグループへ移す';
+    var o0 = document.createElement('option'); o0.value = '__'; o0.textContent = '移動…'; mv.appendChild(o0);
+    card.subs.forEach(function (x) {
+      if (x === sg) return;
+      var o = document.createElement('option'); o.value = x.name; o.textContent = x.name ? '→ ' + x.name : '→ グループなし'; mv.appendChild(o);
+    });
+    if (sg.name && !card.subs.some(function (x) { return !x.name; })) {
+      var on = document.createElement('option'); on.value = ''; on.textContent = '→ グループなし'; mv.appendChild(on);
+    }
+    mv.addEventListener('change', function () { if (mv.value !== '__') _hrCbMoveToSub(b.id, card.tplId, mv.value); });
+    acts.appendChild(mv);
+  }
+  acts.appendChild(mkBtn('▲', '上へ', function () { _hrCbMove(b.id, -1); }, i === 0));
+  acts.appendChild(mkBtn('▼', '下へ', function () { _hrCbMove(b.id, 1); }, i === sg.items.length - 1));
+  acts.appendChild(mkBtn('×', 'このボタンを削除', function () { _hrCbDelete(b.id); }));
+  row.appendChild(no); row.appendChild(lab); row.appendChild(cell); row.appendChild(acts);
+  return row;
+}
+
 /**
- * 一覧を描く。テンプレートごとに1つの枠にまとめ、枠の中にボタン（ボタンラベル名・コピーするテキスト）を並べる。
+ * 一覧を描く。テンプレートごとに1つの枠にまとめ、枠の中はグループごとに分けてボタン（ボタンラベル名・コピーするテキスト）を並べる。
  * テンプレートの追加・名前変更に追従させるため、プレビューを描き直すたびにも呼ぶ。
  * ただし入力中（一覧の中にフォーカスがある）は、打っている欄が消えないよう作り直さない（force で強制）。
  */
@@ -2923,6 +3107,13 @@ function _hrCbRender(force) {
     if (disabled) b.disabled = true;
     b.addEventListener('click', onClick);
     return b;
+  };
+  var colHead = function () {
+    var colHd = document.createElement('div'); colHd.className = 'hr-cb-row hr-cb-colhd';
+    ['', 'ボタンラベル名', 'コピーするテキスト', ''].forEach(function (t) {
+      var c = document.createElement('span'); c.textContent = t; colHd.appendChild(c);
+    });
+    return colHd;
   };
   el.innerHTML = '';
   groups.forEach(function (g, gi) {
@@ -2952,41 +3143,45 @@ function _hrCbRender(force) {
     hd.appendChild(mkBtn('🗑 枠を削除', 'この枠のボタンをすべて削除', function () { _hrCbDeleteGroup(g.tplId); }));
     card.appendChild(hd);
 
-    // ── 列の見出し ──
-    var colHd = document.createElement('div'); colHd.className = 'hr-cb-row hr-cb-colhd';
-    ['', 'ボタンラベル名', 'コピーするテキスト', ''].forEach(function (t) {
-      var c = document.createElement('span'); c.textContent = t; colHd.appendChild(c);
+    var named = g.subs.filter(function (x) { return x.name; });
+    g.subs.forEach(function (sg) {
+      var box = document.createElement('div');
+      box.className = 'hr-cb-sub' + (sg.name ? ' is-named' : '');
+      box.setAttribute('data-group', sg.name);
+      // ── グループの見出し：名前・並べ替え・グループ解除・削除（グループなしには出さない）──
+      if (sg.name) {
+        var sh = document.createElement('div'); sh.className = 'hr-cb-subhd';
+        var sl = document.createElement('span'); sl.className = 'hr-cb-hd-label'; sl.textContent = 'グループ名';
+        var gn = document.createElement('input'); gn.type = 'text'; gn.className = 'hr-cb-gname'; gn.value = sg.name;
+        gn.title = 'ツール画面で、このグループのボタンの上に見出しとして表示されます';
+        gn.addEventListener('change', function () { _hrCbRenameGroup(g.tplId, sg.name, gn.value, gn); });
+        gn.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); gn.blur(); } });
+        var ni = named.indexOf(sg);
+        var ssp = document.createElement('span'); ssp.className = 'hr-cb-sp';
+        sh.appendChild(sl); sh.appendChild(gn); sh.appendChild(ssp);
+        sh.appendChild(mkBtn('▲', 'グループを上へ', function () { _hrCbMoveSub(g.tplId, sg.name, -1); }, ni === 0));
+        sh.appendChild(mkBtn('▼', 'グループを下へ', function () { _hrCbMoveSub(g.tplId, sg.name, 1); }, ni === named.length - 1));
+        sh.appendChild(mkBtn('グループ解除', 'グループをやめて、ボタンを「グループなし」へ移す', function () { _hrCbUngroup(g.tplId, sg.name); }));
+        sh.appendChild(mkBtn('🗑', 'このグループのボタンをすべて削除', function () { _hrCbDeleteSub(g.tplId, sg.name); }));
+        box.appendChild(sh);
+      }
+      box.appendChild(colHead());
+      sg.items.forEach(function (b, i) { box.appendChild(_hrCbRowEl(g, sg, b, i, mkBtn)); });
+      // ── ＋ 追加：同じテンプレート・同じグループのボタンを足す ──
+      var add = document.createElement('button'); add.type = 'button'; add.className = 'hr-cb-add';
+      add.textContent = '＋ 追加';
+      add.title = sg.name ? 'このグループにボタンを追加' : 'この枠（同じテンプレート）にボタンを追加';
+      add.addEventListener('click', function () { _hrCbAddTo(g.tplId, sg.name); });
+      box.appendChild(add);
+      card.appendChild(box);
     });
-    card.appendChild(colHd);
 
-    // ── ボタン（1行＝1ボタン）──
-    g.items.forEach(function (b, i) {
-      var row = document.createElement('div'); row.className = 'hr-cb-row'; row.setAttribute('data-id', b.id);
-      var no = document.createElement('span'); no.className = 'hr-cb-no'; no.textContent = (i + 1) + '.';
-      var lab = document.createElement('input'); lab.type = 'text'; lab.className = 'hr-cb-label';
-      lab.placeholder = '例：折り返し案内'; lab.value = b.label || '';
-      var cell = document.createElement('div'); cell.className = 'hr-cb-textcell';
-      var txt = document.createElement('textarea'); txt.className = 'hr-cb-text'; txt.rows = 1;
-      txt.placeholder = 'ボタンを押したときにコピーするテキスト'; txt.value = b.text || '';
-      var warn = document.createElement('span'); warn.className = 'hr-cb-warn';
-      var paintWarn = function () { warn.textContent = txt.value ? '' : '⚠ テキストが空のためツール画面には表示されません'; };
-      lab.addEventListener('input', function () { _hrCbUpdate(b.id, { label: lab.value }); });
-      txt.addEventListener('input', function () { _hrCbFit(txt); _hrCbUpdate(b.id, { text: txt.value }); paintWarn(); });
-      paintWarn();
-      cell.appendChild(txt); cell.appendChild(warn);
-      var acts = document.createElement('span'); acts.className = 'hr-cb-acts';
-      acts.appendChild(mkBtn('▲', '上へ', function () { _hrCbMove(b.id, -1); }, i === 0));
-      acts.appendChild(mkBtn('▼', '下へ', function () { _hrCbMove(b.id, 1); }, i === g.items.length - 1));
-      acts.appendChild(mkBtn('×', 'このボタンを削除', function () { _hrCbDelete(b.id); }));
-      row.appendChild(no); row.appendChild(lab); row.appendChild(cell); row.appendChild(acts);
-      card.appendChild(row);
-    });
-
-    // ── ＋ 追加：同じテンプレートのボタンを枠の中に足す ──
-    var add = document.createElement('button'); add.type = 'button'; add.className = 'hr-cb-add';
-    add.textContent = '＋ 追加'; add.title = 'この枠（同じテンプレート）にボタンを追加';
-    add.addEventListener('click', function () { _hrCbAddTo(g.tplId); });
-    card.appendChild(add);
+    // ── ＋ グループを追加 ──
+    var addG = document.createElement('button'); addG.type = 'button'; addG.className = 'hr-cb-addgroup';
+    addG.textContent = '＋ グループを追加';
+    addG.title = 'この枠の中に、名前つきのボタンのまとまりを作ります（ツール画面では見出しの下にまとめて表示）';
+    addG.addEventListener('click', function () { _hrCbAddGroup(g.tplId); });
+    card.appendChild(addG);
     el.appendChild(card);
   });
   _hrCbFitAll();
