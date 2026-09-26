@@ -909,6 +909,9 @@ details[open] > summary .hr-acc-arrow { transform: rotate(90deg); }
 .rt-color-auto-sw{ width:16px; height:16px; background:#000; border:1px solid #999; }
 .rt-color-more{ display:flex; align-items:center; gap:6px; margin-top:6px; padding:4px; border-radius:3px; cursor:pointer; position:relative; font-size:11px; }
 .rt-color-more input{ position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+/* 選択中の色（「A」の下線の色）。マスをオレンジの枠で囲む */
+.rt-color-cell.is-current{ outline:2px solid #e3842b; outline-offset:1px; position:relative; z-index:2; }
+.rt-color-auto.is-current, .rt-color-more.is-current{ border:1px solid #e3842b; background:#fdf1e6; }
 
 /* お知らせの編集欄（書式つき。画像を挿入できる） */
 .notice-edit{ min-height:170px; max-height:520px; overflow-y:auto; font-size:12px; line-height:1.7; }
@@ -6881,7 +6884,7 @@ function rtBar(onLink, linked) {
     + '<span class="rt-color">'
     +   '<button type="button" class="rt-btn rt-color-apply" data-cmd="forecolor" onmousedown="event.preventDefault()"'
     +     ' onclick="rtColorApplyLast()" title="フォントの色">'
-    +     '<span class="rt-color-a">A</span><span class="rt-color-bar" style="background:' + (_rtLastColor || '#C00000') + '"></span></button>'
+    +     '<span class="rt-color-a">A</span><span class="rt-color-bar" style="background:' + _rtBarColor() + '"></span></button>'
     +   '<button type="button" class="rt-btn rt-color-drop" onmousedown="event.preventDefault()"'
     +     ' onclick="rtColorMenu(this)" title="フォントの色（パレット）">▾</button>'
     + '</span>'
@@ -7087,6 +7090,9 @@ function rtApplyColor(color) {
       if (/rgb\(\s*1,\s*2,\s*3\s*\)/.test(el.style.color)) el.style.color = '';
       if (el.getAttribute('style') === '') el.removeAttribute('style');
     });
+    // Word と同じく「自動」も選んだ色として覚える（「A」を押すと色を外す。下線は黒）
+    _rtLastColor = 'auto';
+    document.querySelectorAll('.rt-color-bar').forEach(function(bar) { bar.style.background = _rtBarColor(); });
   } else {
     document.execCommand('foreColor', false, color);
     _rtLastColor = color;
@@ -7096,11 +7102,85 @@ function rtApplyColor(color) {
   _rtUpdateActiveStates();
 }
 
+/** 「A」の下線の色（「自動」を選んでいるときは黒） */
+function _rtBarColor() {
+  if (_rtLastColor === undefined) return '#C00000';   // 初期化前（最初は濃い赤）
+  return (!_rtLastColor || _rtLastColor === 'auto') ? '#000000' : _rtLastColor;
+}
+
 /** 左の「A」：直前に使った色を付ける */
 function rtColorApplyLast() { rtApplyColor(_rtLastColor); }
 
 function rtColorClose() {
   if (_rtColorPop) _rtColorPop.style.display = 'none';
+}
+
+/** '#abc' / 'rgb(1,2,3)' などを '#AABBCC' にそろえる（読めなければ空文字） */
+function _rtHex(c) {
+  c = String(c || '').trim();
+  var m = /^#([0-9a-f]{3})$/i.exec(c);
+  if (m) return ('#' + m[1].replace(/./g, function(x) { return x + x; })).toUpperCase();
+  if (/^#[0-9a-f]{6}$/i.test(c)) return c.toUpperCase();
+  m = /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i.exec(c);
+  if (m) return '#' + [m[1], m[2], m[3]].map(function(x) { return ('0' + (+x).toString(16)).slice(-2); }).join('').toUpperCase();
+  return '';
+}
+
+/**
+ * パレットの中で、選択中の色（「A」の下線の色＝「A」を押すと付く色）のマスに枠を付ける。
+ * 「自動」を選んでいるときは「自動」に、パレットに無い色のときは「その他の色」に付ける。
+ */
+function _rtMarkCurrentColor() {
+  if (!_rtColorPop) return;
+  _rtColorPop.querySelectorAll('.is-current').forEach(function(x) { x.classList.remove('is-current'); });
+  var cur = (!_rtLastColor || _rtLastColor === 'auto') ? 'auto' : (_rtHex(_rtLastColor) || 'auto');
+  var hit = null;
+  if (cur === 'auto') hit = _rtColorPop.querySelector('.rt-color-auto');
+  else {
+    // テーマの色と標準の色で同じ色（オレンジ #FFC000 など）があれば、Office と同じくテーマの色の方に付ける
+    hit = Array.prototype.find.call(_rtColorPop.querySelectorAll('.rt-color-cell'), function(x) {
+      return String(x.getAttribute('data-color')).toUpperCase() === cur;
+    }) || _rtColorPop.querySelector('.rt-color-more');   // パレットに無い色は「その他の色」に枠を付ける
+  }
+  if (hit) hit.classList.add('is-current');
+}
+
+// ── 最近使用した色（「その他の色」で RGB を指定して作った色の履歴）──
+// Word と同じく「その他の色」の上段に、新しいものから左に並べる（最大 10 色）。
+// パレットにすでにある色は並べない。ブラウザに保存するので、閉じて開き直しても残る。
+var RT_RECENT_KEY = 'rtRecentColors';
+var RT_RECENT_MAX = 10;
+function _rtRecentColors() {
+  try {
+    var a = JSON.parse(localStorage.getItem(RT_RECENT_KEY) || '[]');
+    return Array.isArray(a) ? a.map(_rtHex).filter(Boolean).slice(0, RT_RECENT_MAX) : [];
+  } catch (e) { return []; }
+}
+function _rtInPalette(hex) {
+  var all = [].concat.apply([], RT_THEME_ROWS).concat(RT_STD_COLORS.map(function(x) { return '#' + x[0]; }));
+  return all.some(function(c) { return c.toUpperCase() === hex; });
+}
+function _rtAddRecentColor(hex) {
+  hex = _rtHex(hex);
+  if (!hex || _rtInPalette(hex)) return;
+  var list = _rtRecentColors().filter(function(c) { return c !== hex; });
+  list.unshift(hex);
+  try { localStorage.setItem(RT_RECENT_KEY, JSON.stringify(list.slice(0, RT_RECENT_MAX))); } catch (e) {}
+}
+/** パレットの「最近使用した色」の段を描き直す（履歴が無ければ段ごと出さない） */
+function _rtRenderRecent() {
+  var wrap = _rtColorPop && _rtColorPop.querySelector('.rt-color-recent-wrap');
+  if (!wrap) return;
+  var list = _rtRecentColors();
+  if (!list.length) { wrap.innerHTML = ''; return; }
+  wrap.innerHTML = '<div class="rt-color-cap">最近使用した色</div><div class="rt-color-grid rt-color-recent">'
+    + list.map(function(hex) {
+        var n = parseInt(hex.slice(1), 16);
+        var rgb = [(n >> 16) & 255, (n >> 8) & 255, n & 255].join(', ');
+        return '<button type="button" class="rt-color-cell" data-color="' + hex + '" title="最近使用した色：' + hex + '（RGB ' + rgb + '）"'
+          + ' style="background:' + hex + '"></button>';
+      }).join('')
+    + '</div>';
 }
 
 /** ▾：パレットを開く */
@@ -7123,7 +7203,9 @@ function rtColorMenu(btn) {
     }
     h += '</div><div class="rt-color-cap">標準の色</div><div class="rt-color-grid">';
     RT_STD_COLORS.forEach(function(x) { h += cell(x[0], x[1]); });
-    h += '</div><label class="rt-color-more">🎨 その他の色…<input type="color" value="#c00000"></label>';
+    // 「その他の色」で作った色の履歴（最近使用した色）。開くたびに _rtRenderRecent で中身を入れ直す
+    h += '</div><div class="rt-color-recent-wrap"></div>';
+    h += '<label class="rt-color-more">🎨 その他の色…<input type="color" value="#c00000"></label>';
     _rtColorPop.innerHTML = h;
     // 押しても編集欄の選択が外れないようにする（「その他の色」の入力だけは除く）
     _rtColorPop.addEventListener('mousedown', function(e) { if (!e.target.closest('.rt-color-more')) e.preventDefault(); });
@@ -7137,8 +7219,10 @@ function rtColorMenu(btn) {
     var more = _rtColorPop.querySelector('.rt-color-more input');
     more.addEventListener('change', function() {
       rtColorClose();
+      var hex = more.value.toUpperCase();
+      _rtAddRecentColor(hex);            // 付けられなかった場合も、作った色は履歴に残す
       if (!_rtRestoreRange()) return;
-      rtApplyColor(more.value.toUpperCase());
+      rtApplyColor(hex);
     });
     document.body.appendChild(_rtColorPop);
     document.addEventListener('mousedown', function(e) {
@@ -7149,6 +7233,8 @@ function rtColorMenu(btn) {
     document.addEventListener('keydown', function(e) { if (e.key === 'Escape') rtColorClose(); });
   }
   _rtColorPop._btn = btn;
+  _rtRenderRecent();
+  _rtMarkCurrentColor();
   _rtColorPop.style.display = 'block';
   // ボタンのすぐ下に出す（画面からはみ出す場合は内側へずらす）
   var r = btn.getBoundingClientRect(), w = _rtColorPop.offsetWidth, hh = _rtColorPop.offsetHeight;
