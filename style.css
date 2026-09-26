@@ -575,7 +575,22 @@ body > .hearing-panel { top:var(--header-h); }
 /* 中身が多いと、枠の中でスクロールするテンプレート欄などが縦に潰されるので、縮ませない（全体をスクロールさせる） */
 .hearing-content > * { flex-shrink:0; }
 .hr-row { display:flex;flex-direction:column;gap:5px; }
-.hr-label { font-size:12px;font-weight:700;color:#555;line-height:1.4; }
+/* 項目名と回答の並べ方（管理画面のプレビューで、項目名・回答をドラッグして決める。common-utils.js の hearingAnsPos）
+   right：回答を項目名の右に（1行にまとめる）／ left：回答を項目名の左に／ above：回答を項目名の上に */
+.hr-row.hr-pos-right, .hr-row.hr-pos-left { flex-direction:row !important;flex-wrap:wrap !important;align-items:center !important;column-gap:12px;row-gap:6px; }
+.hr-row.hr-pos-above { flex-direction:column !important;flex-wrap:nowrap !important;align-items:stretch !important; }
+.hr-row.hr-pos-right > .hr-label, .hr-row.hr-pos-left > .hr-label { flex:0 1 auto !important;min-width:0 !important;max-width:50%;white-space:normal !important;padding-top:0 !important;margin:0 !important; }
+.hr-row.hr-pos-right > .hr-btns, .hr-row.hr-pos-left > .hr-btns { flex:1 1 0 !important;min-width:0;width:auto !important; }
+.hr-row.hr-pos-left > .hr-btns, .hr-row.hr-pos-above > .hr-btns { order:-1; }
+.hr-row.hr-pos-above > .hr-label { padding-top:0 !important; }
+/* 横に並べたときは、縦一列の選択肢（ラジオ・チェックボックス）も横に並べて1行にまとめる */
+.hr-row.hr-pos-right .hr-choice-vertical, .hr-row.hr-pos-left .hr-choice-vertical,
+.hr-row.hr-pos-right .hr-choice-vertical .hr-radio-group, .hr-row.hr-pos-left .hr-choice-vertical .hr-radio-group { flex-direction:row !important;flex-wrap:wrap;align-items:center !important;column-gap:14px; }
+/* 中の項目は、行の下にまとめて出す */
+.hr-row[class*="hr-pos-"] > .hr-nested-children, .hr-row[class*="hr-pos-"] > .hr-log-children { order:1;flex:0 0 100%; }
+/* 結果文の値：先頭の空白（字下げ）や連続する空白をそのまま見せる */
+.hr-sum-val { white-space:pre-wrap; }
+.hr-label { font-size:10px;font-weight:700;color:#555;line-height:1.4; }
 .hr-btns { display:flex;flex-wrap:wrap;gap:5px; }
 .hr-btn { min-height:28px;padding:4px 10px;border:1px solid var(--border);border-radius:5px;background:var(--surface);font-size:11px;cursor:pointer;color:var(--text);transition:border-color 0.15s,background 0.15s,color 0.15s;font-family:inherit;line-height:1.4;white-space:normal;text-align:left; }
 .hr-btn:hover { border-color:var(--accent);color:var(--accent-text);background:#f0f4ff; }

@@ -388,10 +388,18 @@
 .hr-row-child{border-left:3px solid var(--accent-lt,#dfe3ff);background:var(--surface2);}   /* margin-left は深さに応じて行ごとに指定 */
 .hr-child-tag{display:inline-block;margin-right:6px;padding:0 6px;border-radius:8px;font-size:9px;font-weight:700;background:var(--accent-lt);color:var(--accent-text);vertical-align:middle;}
 /* ログ作成補助：ボタンごとの中の項目の区切り（本物の質問ではなく、見出し＋その場で追加できるボタン） */
-.hr-log-opt-divider{display:flex;align-items:center;gap:6px;padding:6px 14px 4px;margin:0 -14px;border-top:1px dashed var(--border);}   /* 点線は、行の実線（border-bottom）と同じ幅にそろえる */
+.hr-log-opt-divider{display:flex;align-items:center;gap:6px;padding:6px 14px 4px;margin:0 -14px;}
+/* ログ作成補助の区切り線：
+   ボタン → ↳ ボタン名 ＋ 項目 の間には線を引かない。ボタンの中身どうし（↳ Test1 … と Test2 の間）は点線、
+   ログ作成補助のいちばん最後（↳ 最後のボタン ＋ 項目、または中の項目の下）は実線。
+   直前の行の実線（border-bottom）は、二重にならないよう消す */
+.page-admin .hr-row:has(+ .hr-log-opt-divider),
+.page-admin .hr-row:has(+ .hr-log-btn-row),
+.page-admin .hr-row:has(+ .hr-log-end){ border-bottom:none; }
+.hr-log-end{ margin:0 -14px; border-top:1px solid var(--border); }
 .hr-log-opt-divider-label{font-size:9px;font-weight:700;color:var(--text3);white-space:nowrap;opacity:.8;}
 /* ログ作成補助の2つ目以降のボタン（そのボタンの中身のすぐ上に出す） */
-.hr-log-btn-row{padding:6px 0 2px 18px;}
+.hr-log-btn-row{padding:8px 14px 2px 32px;margin:0 -14px;border-top:1px dashed var(--border);}
 .hr-log-opt-add{height:18px;padding:0 7px;border-radius:3px;border:1px solid var(--border);background:var(--surface);color:var(--text3);font-size:10px;font-family:inherit;cursor:pointer;}
 .hr-log-opt-add:hover{border-color:var(--accent);color:var(--accent-text);}
 .hr-tpl-edit{
@@ -426,6 +434,17 @@
 .hr-indent-info{ font-size:11px; color:var(--text2); padding:2px 2px 0; }
 .hr-indent-info b{ color:var(--accent-text); }
 .tab-panel-hearing .hr-row .hr-drag-handle{ position:absolute; top:2px; left:-2px; margin-right:0; }
+/* 項目名と回答の並べ方（ドラッグ） */
+.tab-panel-hearing .hr-label.hr-lay-src{ cursor:grab; }
+.tab-panel-hearing .hr-btns.hr-lay-ans{ position:relative; }
+.hr-ans-grip{ position:absolute; left:-14px; top:2px; width:12px; font-size:10px; line-height:14px; text-align:center; color:var(--text3); cursor:grab; opacity:0; transition:opacity .12s; user-select:none; z-index:2; }
+.tab-panel-hearing .hr-row:hover > .hr-btns > .hr-ans-grip{ opacity:.8; }
+.hr-lay-dragging{ outline:1px dashed var(--accent); outline-offset:-1px; }
+[data-lay-zone]{ border-radius:3px; }
+[data-lay-zone="right"]{ box-shadow:4px 0 0 0 var(--accent); }
+[data-lay-zone="left"]{ box-shadow:-4px 0 0 0 var(--accent); }
+[data-lay-zone="above"]{ box-shadow:0 -4px 0 0 var(--accent); }
+[data-lay-zone="below"]{ box-shadow:0 4px 0 0 var(--accent); }
 .hr-row-edit{
   height:18px; padding:0 7px; border-radius:3px;
   border:1px solid var(--border); background:var(--surface); color:var(--text3);
@@ -870,6 +889,26 @@ details[open] > summary .hr-acc-arrow { transform: rotate(90deg); }
   font-size:11px;color:var(--text2);white-space:nowrap;cursor:pointer;
 }
 .rt-link input{width:14px;height:14px;cursor:pointer;accent-color:var(--accent-text);}
+
+/* 文字色（A ＋ ▾ のパレット） */
+.rt-color{ display:inline-flex; align-items:stretch; }
+.rt-color .rt-color-apply{ display:inline-flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; padding:0 5px; border-top-right-radius:0; border-bottom-right-radius:0; }
+.rt-color .rt-color-drop{ padding:0 3px; min-width:0; width:14px; font-size:9px; border-left:none; border-top-left-radius:0; border-bottom-left-radius:0; }
+.rt-color-a{ font-weight:700; line-height:1; font-size:12px; }
+.rt-color-bar{ display:block; width:14px; height:3px; border-radius:1px; }
+.rt-color-pop{ position:fixed; z-index:10060; display:none; width:224px; padding:8px; box-sizing:border-box; background:#fff; color:#222;
+  border:1px solid #c8c8c8; border-radius:6px; box-shadow:0 6px 18px rgba(0,0,0,.2); font-size:11px; }
+.rt-color-cap{ font-size:11px; font-weight:700; color:#444; margin:6px 0 4px; }
+.rt-color-grid{ display:grid; grid-template-columns:repeat(10, 18px); gap:2px 3px; }
+.rt-color-theme-top{ margin-bottom:4px; }
+.rt-color-theme-shades{ row-gap:0; }
+.rt-color-cell{ width:18px; height:18px; padding:0; border:1px solid rgba(0,0,0,.18); cursor:pointer; border-radius:0; }
+.rt-color-cell:hover{ outline:2px solid #f29436; outline-offset:0; position:relative; z-index:1; }
+.rt-color-auto{ display:flex; align-items:center; gap:8px; width:100%; height:24px; padding:0 4px; border:1px solid transparent; background:none; font-size:11px; font-family:inherit; color:#222; cursor:pointer; border-radius:3px; }
+.rt-color-auto:hover, .rt-color-more:hover{ background:#f0f0f0; }
+.rt-color-auto-sw{ width:16px; height:16px; background:#000; border:1px solid #999; }
+.rt-color-more{ display:flex; align-items:center; gap:6px; margin-top:6px; padding:4px; border-radius:3px; cursor:pointer; position:relative; font-size:11px; }
+.rt-color-more input{ position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
 
 /* お知らせの編集欄（書式つき。画像を挿入できる） */
 .notice-edit{ min-height:170px; max-height:520px; overflow-y:auto; font-size:12px; line-height:1.7; }
@@ -1958,11 +1997,17 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
   <div class="tab-panel tab-panel-hearing" id="tabHearing">
     <div style="max-width:920px;margin:0 auto;display:flex;flex-direction:column;gap:20px;">
 
+      <!-- ── ヒアリングタブ ヘッダーバー ── -->
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:14px;font-weight:700;color:var(--text);">📋 ヒアリング設定</div>
+      </div>
+      <div id="hrSaveStatus" style="display:none;padding:8px 12px;border-radius:6px;font-size:12px;"></div>
+
       <!-- ── プレビュー ── -->
       <div>
         <!-- ボタンは hearing.html と同じく見出しの右に置く -->
         <div class="hr-prev-head">
-          <span class="hr-prev-head-title">📋 ヒアリング設定（プレビュー）</span>
+          <span class="hr-prev-head-title">📋 ヒアリングシート（プレビュー）</span>
           <div class="hearing-header-btns">
             <button class="hearing-copy-btn" onclick="window.copyHearingText&&window.copyHearingText()" title="ヒアリング内容をコピー">📋 コピー</button>
             <button class="hearing-reset-btn" onclick="window.resetHearing&&window.resetHearing()" title="入力内容をすべて消去">🗑 リセット</button>
@@ -2067,6 +2112,12 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
     </div>
   </div>
 </div>
+
+<!-- ===== 画像ライブラリ（画面遷移タブ内オーバーレイパネル） ===== -->
+  <!-- 旧・全画面の画像ライブラリは廃止（右パネルに統合） -->
+
+
+
 
   <!-- ===== 画面遷移タブ（1カラム構成） ===== -->
   <div class="tab-panel" id="tabScreen">
@@ -6826,9 +6877,14 @@ function rtBar(onLink, linked) {
     + b('italic', 'I', '斜体', 'font-style:italic;')
     + b('underline', 'U', '下線', 'text-decoration:underline;')
     + b('strikeThrough', 'S', '取り消し線', 'text-decoration:line-through;')
-    + b('red',   'A', '赤字', 'color:#e63946;font-weight:700;')
-    + b('blue',  'A', '青字', 'color:#2f6df6;font-weight:700;')
-    + b('green', 'A', '緑字', 'color:#2f9e44;font-weight:700;')
+    // 文字色：左は直前に使った色をそのまま付ける。右の ▾ でパレット（Microsoft 365 と同じ配色・配置）を開く
+    + '<span class="rt-color">'
+    +   '<button type="button" class="rt-btn rt-color-apply" data-cmd="forecolor" onmousedown="event.preventDefault()"'
+    +     ' onclick="rtColorApplyLast()" title="フォントの色">'
+    +     '<span class="rt-color-a">A</span><span class="rt-color-bar" style="background:' + (_rtLastColor || '#C00000') + '"></span></button>'
+    +   '<button type="button" class="rt-btn rt-color-drop" onmousedown="event.preventDefault()"'
+    +     ' onclick="rtColorMenu(this)" title="フォントの色（パレット）">▾</button>'
+    + '</span>'
     + '<span class="rt-sep"></span>'
     + b('justifyLeft',   _rtAlignIcon('left'),   '左揃え')
     + b('justifyCenter', _rtAlignIcon('center'), '中央揃え')
@@ -6908,20 +6964,6 @@ function _rtUpdateActiveStates() {
     });
   });
 
-  // 文字色は queryCommandValue で調べる
-  var col = '';
-  try { col = document.queryCommandValue('foreColor') || ''; } catch (e) {}
-  var isRed   = /230,\s*57,\s*70|#e63946/i.test(col);
-  var isBlue  = /47,\s*109,\s*246|#2f6df6/i.test(col);
-  var isGreen = /47,\s*158,\s*68|#2f9e44/i.test(col);
-  hosts.forEach(function(host) {
-    var rb = host.querySelector('[data-cmd="red"]');
-    if (rb) rb.classList.toggle('is-on', isRed);
-    var bb = host.querySelector('[data-cmd="blue"]');
-    if (bb) bb.classList.toggle('is-on', isBlue);
-    var gb = host.querySelector('[data-cmd="green"]');
-    if (gb) gb.classList.toggle('is-on', isGreen);
-  });
 
   _rtUpdateMergeBtn();
 }
@@ -6969,24 +7011,154 @@ function rtExec(cmd, btn) {
     return;
   }
   if (cmd === 'table' && btn) _rtLastTableBtn = btn;
-  if (cmd === 'red' || cmd === 'blue' || cmd === 'green') {
-    // 同じ色なら黒へ戻す（押すたびに切り替わる）
-    var COLORS = { red: '#e63946', blue: '#2f6df6', green: '#2f9e44' };
-    var RE_C   = { red: /230,\s*57,\s*70|#e63946/i, blue: /47,\s*109,\s*246|#2f6df6/i, green: /47,\s*158,\s*68|#2f9e44/i };
-    var cur = '';
-    try { cur = document.queryCommandValue('foreColor') || ''; } catch (e) {}
-    var same = RE_C[cmd].test(cur);
-    document.execCommand('foreColor', false, same ? '#000000' : COLORS[cmd]);
-    if (_rtActive) _rtActive.dispatchEvent(new Event('input'));
-    _rtUpdateActiveStates();
-    return;
-  }
   if (cmd === 'table') { rtInsertTable(); return; }   // 位置は _rtLastTableBtn を使う
   if (cmd === 'image') { rtInsertImage(); return; }
   document.execCommand(cmd, false, null);
   if (_rtActive) _rtActive.dispatchEvent(new Event('input'));
   _rtUpdateActiveStates();
 }
+
+// ── 文字色のパレット（Microsoft 365 の Word の既定「Office テーマ」と同じ配色・配置。お送りいただいた画面と同じ色）──
+// 上段：テーマの色（背景 1・テキスト 1・背景 2・テキスト 2・アクセント 1〜6）と、その明るさ違い 5 段
+//        （明るさの変え方も Office と同じ：通常の色は 白 + 基本色 80/60/40%・黒 + 基本色 25/50%）
+// 下段：標準の色（濃い赤〜紫）
+var RT_THEME_ROWS = [
+  ['#FFFFFF', '#000000', '#E7E6E6', '#44546A', '#4472C4', '#ED7D31', '#A5A5A5', '#FFC000', '#5B9BD5', '#70AD47'],
+  ['#F2F2F2', '#7F7F7F', '#D0CECE', '#D6DCE4', '#D9E2F3', '#FBE5D5', '#EDEDED', '#FFF2CC', '#DEEBF6', '#E2EFD9'],
+  ['#D8D8D8', '#595959', '#AEABAB', '#ADB9CA', '#B4C6E7', '#F7CAAC', '#DBDBDB', '#FEE599', '#BDD6EE', '#C5E0B3'],
+  ['#BFBFBF', '#3F3F3F', '#757070', '#8496B0', '#8EAADB', '#F4B083', '#C9C9C9', '#FFD965', '#9CC3E5', '#A8D08D'],
+  ['#A5A5A5', '#262626', '#3A3838', '#323E4F', '#2F5496', '#C45911', '#7B7B7B', '#BF9000', '#2E75B5', '#538135'],
+  ['#7F7F7F', '#0C0C0C', '#171616', '#222A35', '#1F3864', '#833C0B', '#525252', '#7F6000', '#1E4E79', '#375623']
+];
+var RT_THEME_NAMES = ['白、背景 1', '黒、テキスト 1', '灰色、背景 2', '青灰色、テキスト 2',
+  '青、アクセント 1', 'オレンジ、アクセント 2', '灰色、アクセント 3', 'ゴールド、アクセント 4', '青、アクセント 5', '緑、アクセント 6'];
+var RT_STD_COLORS = [['C00000', '濃い赤'], ['FF0000', '赤'], ['FFC000', 'オレンジ'], ['FFFF00', '黄'], ['92D050', '薄い緑'],
+  ['00B050', '緑'], ['00B0F0', '薄い青'], ['0070C0', '青'], ['002060', '濃い青'], ['7030A0', '紫']];
+var _rtLastColor = '#C00000';     // 左の「A」で付ける色（Office と同じく、最初は濃い赤）
+var _rtColorRange = null;         // パレットを開いたときの選択範囲（色を選ぶ間に外れても戻せるように）
+var _rtColorPop = null;
+
+/** 明るさ違いの説明（Office と同じ言い方） */
+function _rtVariantName(col, row) {
+  var base = RT_THEME_ROWS[0][col];
+  var hex = base.replace('#', '');
+  var r = parseInt(hex.substr(0, 2), 16) / 255, g = parseInt(hex.substr(2, 2), 16) / 255, b = parseInt(hex.substr(4, 2), 16) / 255;
+  var L = (Math.max(r, g, b) + Math.min(r, g, b)) / 2;
+  var steps = (L === 0) ? [50, 35, 25, 15, 5] : (L === 1) ? [-5, -15, -25, -35, -50]
+            : (L < 0.2) ? [90, 75, 50, 25, 10] : (L > 0.8) ? [-10, -25, -50, -75, -90] : [80, 60, 40, -25, -50];
+  var x = steps[row - 1];
+  return x > 0 ? '白 + 基本色 ' + x + '%' : '黒 + 基本色 ' + (-x) + '%';
+}
+
+function _rtSaveRange() {
+  var sel = window.getSelection();
+  _rtColorRange = null;
+  if (_rtActive && sel && sel.rangeCount && _rtActive.contains(sel.getRangeAt(0).commonAncestorContainer)) {
+    _rtColorRange = sel.getRangeAt(0).cloneRange();
+  }
+}
+function _rtRestoreRange() {
+  if (!_rtActive || !document.contains(_rtActive)) return false;
+  _rtActive.focus();
+  if (_rtColorRange) {
+    var sel = window.getSelection();
+    sel.removeAllRanges(); sel.addRange(_rtColorRange);
+  }
+  return true;
+}
+
+/** 文字色を付ける（'auto' は色を外して、元の文字色に戻す） */
+function rtApplyColor(color) {
+  if (!_rtActive || !document.contains(_rtActive)) { toast('⚠️ 色を付ける文字を選んでから押してください'); return; }
+  if (color === 'auto') {
+    // 目印の色を付けてから、その色だけを取り除く（選んだ範囲の色がすべて外れる）
+    var MARK = '#010203';
+    document.execCommand('styleWithCSS', false, false);
+    document.execCommand('foreColor', false, MARK);
+    _rtActive.querySelectorAll('font[color]').forEach(function(f) {
+      if (String(f.getAttribute('color')).toLowerCase() !== MARK) return;
+      f.removeAttribute('color');
+      if (!f.attributes.length) {                       // 属性が何も残らなければ、中身だけ残して外す
+        while (f.firstChild) f.parentNode.insertBefore(f.firstChild, f);
+        f.parentNode.removeChild(f);
+      }
+    });
+    _rtActive.querySelectorAll('[style*="color"]').forEach(function(el) {
+      if (/rgb\(\s*1,\s*2,\s*3\s*\)/.test(el.style.color)) el.style.color = '';
+      if (el.getAttribute('style') === '') el.removeAttribute('style');
+    });
+  } else {
+    document.execCommand('foreColor', false, color);
+    _rtLastColor = color;
+    document.querySelectorAll('.rt-color-bar').forEach(function(bar) { bar.style.background = color; });
+  }
+  _rtActive.dispatchEvent(new Event('input'));
+  _rtUpdateActiveStates();
+}
+
+/** 左の「A」：直前に使った色を付ける */
+function rtColorApplyLast() { rtApplyColor(_rtLastColor); }
+
+function rtColorClose() {
+  if (_rtColorPop) _rtColorPop.style.display = 'none';
+}
+
+/** ▾：パレットを開く */
+function rtColorMenu(btn) {
+  if (_rtColorPop && _rtColorPop.style.display === 'block' && _rtColorPop._btn === btn) { rtColorClose(); return; }
+  _rtSaveRange();
+  if (!_rtColorPop) {
+    _rtColorPop = document.createElement('div');
+    _rtColorPop.className = 'rt-color-pop';
+    var cell = function(hex, title) {
+      return '<button type="button" class="rt-color-cell" data-color="#' + hex + '" title="' + escHtml(title) + '" style="background:#' + hex + '"></button>';
+    };
+    var h = '<button type="button" class="rt-color-auto" data-color="auto"><span class="rt-color-auto-sw"></span>自動</button>';
+    h += '<div class="rt-color-cap">テーマの色</div><div class="rt-color-grid rt-color-theme-top">';
+    RT_THEME_ROWS[0].forEach(function(hex, c) { h += cell(hex.replace('#', ''), RT_THEME_NAMES[c]); });
+    h += '</div><div class="rt-color-grid rt-color-theme-shades">';
+    // 明るさ違いは、Office と同じく列ごとに縦につながって見えるように並べる
+    for (var r = 1; r < RT_THEME_ROWS.length; r++) {
+      RT_THEME_ROWS[r].forEach(function(hex, c) { h += cell(hex.replace('#', ''), RT_THEME_NAMES[c] + '、' + _rtVariantName(c, r)); });
+    }
+    h += '</div><div class="rt-color-cap">標準の色</div><div class="rt-color-grid">';
+    RT_STD_COLORS.forEach(function(x) { h += cell(x[0], x[1]); });
+    h += '</div><label class="rt-color-more">🎨 その他の色…<input type="color" value="#c00000"></label>';
+    _rtColorPop.innerHTML = h;
+    // 押しても編集欄の選択が外れないようにする（「その他の色」の入力だけは除く）
+    _rtColorPop.addEventListener('mousedown', function(e) { if (!e.target.closest('.rt-color-more')) e.preventDefault(); });
+    _rtColorPop.addEventListener('click', function(e) {
+      var b = e.target.closest('[data-color]');
+      if (!b) return;
+      rtColorClose();
+      if (!_rtRestoreRange()) { toast('⚠️ 色を付ける文字を選んでから押してください'); return; }
+      rtApplyColor(b.getAttribute('data-color'));
+    });
+    var more = _rtColorPop.querySelector('.rt-color-more input');
+    more.addEventListener('change', function() {
+      rtColorClose();
+      if (!_rtRestoreRange()) return;
+      rtApplyColor(more.value.toUpperCase());
+    });
+    document.body.appendChild(_rtColorPop);
+    document.addEventListener('mousedown', function(e) {
+      if (_rtColorPop.style.display !== 'block') return;
+      if (_rtColorPop.contains(e.target) || e.target.closest('.rt-color-drop')) return;
+      rtColorClose();
+    }, true);
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') rtColorClose(); });
+  }
+  _rtColorPop._btn = btn;
+  _rtColorPop.style.display = 'block';
+  // ボタンのすぐ下に出す（画面からはみ出す場合は内側へずらす）
+  var r = btn.getBoundingClientRect(), w = _rtColorPop.offsetWidth, hh = _rtColorPop.offsetHeight;
+  var left = Math.min(Math.max(4, r.left - 20), window.innerWidth - w - 4);
+  var top = r.bottom + 4;
+  if (top + hh > window.innerHeight - 4) top = Math.max(4, r.top - hh - 4);
+  _rtColorPop.style.left = left + 'px';
+  _rtColorPop.style.top = top + 'px';
+}
+window.addEventListener('scroll', function() { rtColorClose(); }, true);
 
 // ── 本文のインデント ──
 // 選んだ行（カーソルのある行）の行頭に全角スペースを1つ足す／1つ減らす。
@@ -8101,9 +8273,9 @@ function smRender() {
         ? '<span class="sm-name-fixed" title="名称は common-utils.js で管理しています（変更できません）">' + escHtml(sec.label) + '</span>'
         : '<input class="sm-input" value="' + escHtml(sec.label) + '" placeholder="カテゴリ名（絵文字可）" oninput="smSetCat(' + si + ',\'label\',this.value)" style="flex:1;min-width:0;font-weight:700;font-size:13px;">') +
       (isCode
-        ? '<span class="sm-type-label sm-type-label-code" title="内容・名称は common-utils.js で管理。data.js には並び順だけ保存されます">' + (isFixed ? '表（見出し付き）' : '表') + '・共通管理</span>'
+        ? '<span class="sm-type-label sm-type-label-code" title="内容・名称は common-utils.js で管理。data.js には並び順だけ保存されます">' + (isFixed ? 'ショートカット一覧' : '表') + '・共通管理</span>'
         : isFixed
-        ? '<span class="sm-type-label">表（見出し付き）</span>'
+        ? '<span class="sm-type-label">ショートカット一覧</span>'
         : isTable
           ? '<span class="sm-type-label">表</span>'
           : '<select class="sm-select" onchange="smSetCat(' + si + ',\'type\',this.value)">' +
@@ -14891,7 +15063,7 @@ window.addEventListener('resize',function(){
     d.style.cssText = css + 'height:auto;min-height:28px;padding:4px 8px;line-height:1.5;overflow:hidden;';
     Object.defineProperty(d, 'value', {
       get: function() { var t = _hrReadRich(d).text; return allowMultiline ? t : t.replace(/\n/g, ' '); },
-      set: function(v) { d.textContent = (v == null) ? '' : String(v); },
+      set: function(v) { _setPlain(v); },
       configurable: true
     });
     Object.defineProperty(d, 'placeholder', {
@@ -14899,10 +15071,19 @@ window.addEventListener('resize',function(){
       set: function(v) { d.dataset.ph = v; },
       configurable: true
     });
+    /**
+     * plain な文字を入れる。改行を許可する欄では、改行を1行ずつの <div> にして見えるようにする
+     * （textContent のままだと、改行が詰まって1行に見えていた。保存される中身は改行つきのまま）
+     */
+    var _setPlain = function(v) {
+      var t = (v == null) ? '' : String(v);
+      if (allowMultiline && /\n/.test(t)) d.innerHTML = window.hearingTextToHtml(t.replace(/\r\n?/g, '\n'));
+      else d.textContent = t;
+    };
     /** 書式つき HTML があればそれを、無ければ plain を入れる */
     d.setRich = function(html, plain) {
       if (html) d.innerHTML = window.hearingSanitizeHtml(html);
-      else d.textContent = (plain == null) ? '' : String(plain);
+      else _setPlain(plain);
     };
     // 貼り付けは文字だけにする（外部の書式は持ち込まない。改行は、許可されている欄だけ残す）
     d.addEventListener('paste', function(e) {
@@ -15613,7 +15794,7 @@ window.addEventListener('resize',function(){
     var _qtyMode = (isEdit && editQ.type === 'qtycheck');   // 「数量も選べるようにする」の状態。チェックボックスの操作だけで変わる
     var _syncOtherBtn = null;   // 「その他（手入力）」ボタンの出し分け
 
-    var addOptRow = function(val, details, logText, logHtml, lHtml, detailsHtml) {
+    var addOptRow = function(val, details, logText, logHtml, lHtml, detailsHtml, link) {
       var withDetail = (typeSel.value === 'toggle');
       var withLog    = (typeSel.value === 'log');
       var r = document.createElement('div');
@@ -15745,6 +15926,45 @@ window.addEventListener('resize',function(){
         });
         refWrap.appendChild(refSel);
         r.appendChild(refWrap);   // 「新しい項目を作って差し込む」があるので、既存の候補が無くても隠さない
+
+        // ── 連動：チェックボックス／ラジオボタン／トグル／プルダウンで選んだ選択肢に合わせて、このボタンも選択する ──
+        var linkWrap = document.createElement('div');
+        linkWrap.style.cssText = 'display:flex;align-items:center;gap:6px;';
+        var linkLbl = document.createElement('span');
+        linkLbl.style.cssText = 'font-size:10px;font-weight:700;color:var(--text2);white-space:nowrap;';
+        linkLbl.textContent = '連動';
+        var linkSel = document.createElement('select');
+        linkSel.dataset.role = 'optlink';
+        linkSel.className = 'hr-link-select';
+        linkSel.style.cssText = INP + 'flex:0 1 auto;max-width:340px;font-size:10px;height:22px;';
+        linkSel.title = '選んだ選択肢が選ばれたとき、このボタンも選択された状態になります（選択が外れると、このボタンも外れます）';
+        linkSel.appendChild(new Option('（連動しない）', ''));
+        var LINK_TYPES = { checkbox: 1, radio: 1, toggle: 1, select: 1, str: 1, qtycheck: 1 };
+        var curLink = (link && link.field) ? JSON.stringify([link.field, link.v]) : '';
+        var foundLink = false;
+        _hrQuestionsGet().forEach(function(x) {
+          if (!x || !LINK_TYPES[x.type] || x.id === formId) return;
+          var xo = (window.getHearingOptions(x) || []).filter(function(o) { return !o.manual; });
+          if (!xo.length) return;
+          var og = document.createElement('optgroup');
+          og.label = (x.label || '（名前なし）').replace(/\s+/g, ' ');
+          xo.forEach(function(o) {
+            var val2 = JSON.stringify([x.field || x.id, o.v || o.l]);
+            var op = new Option((o.l || o.v), val2);
+            if (val2 === curLink) { op.selected = true; foundLink = true; }
+            og.appendChild(op);
+          });
+          linkSel.appendChild(og);
+        });
+        if (curLink && !foundLink) {                   // 連動先の項目・選択肢が消えている
+          var lost = new Option('（連動先が見つかりません）', curLink); lost.selected = true;
+          linkSel.appendChild(lost);
+        }
+        var linkNote = document.createElement('span');
+        linkNote.style.cssText = 'font-size:10px;color:var(--text3);';
+        linkNote.textContent = 'が選ばれたら、このボタンも選択';
+        linkWrap.appendChild(linkLbl); linkWrap.appendChild(linkSel); linkWrap.appendChild(linkNote);
+        r.appendChild(linkWrap);
       } else {
         r.appendChild(inp);
         if (det) r.appendChild(det);
@@ -15942,7 +16162,7 @@ window.addEventListener('resize',function(){
         editQ.options.slice().sort(function(a, b) {
           return (a.manual ? 1 : 0) - (b.manual ? 1 : 0);
         }).forEach(function(o) {
-          var inp = addOptRow(o.l || o.v, (o.details || []).join(', '), o.text || '', o.textHtml || '', o.lHtml || '', o.detailsHtml || null);
+          var inp = addOptRow(o.l || o.v, (o.details || []).join(', '), o.text || '', o.textHtml || '', o.lHtml || '', o.detailsHtml || null, o.link || null);
           var mk = inp.parentNode.querySelector('[data-role="optmanual"]');
           if (mk && o.manual) mk.checked = true;
         });
@@ -16126,7 +16346,9 @@ window.addEventListener('resize',function(){
     addBtn.addEventListener('click', function() {
       var isLog = (typeSel.value === 'log');
       var isSpacer = (typeSel.value === 'spacer');
-      var label = labelInp.value.trim();
+      // 先頭の空白・改行は字下げとして残す（末尾の空白だけ削る）。空白だけなら空欄とみなす
+      var label = labelInp.value.replace(/\s+$/, '');
+      if (!label.trim()) label = '';
       // 空白行は項目名を持たない。内部の名前だけ付ける（表示はしない）
       if (isSpacer) label = '空白行';
       // 項目名は必須ではない（空のままでも保存できる。ラベルを出したくない項目のため）
@@ -16154,7 +16376,9 @@ window.addEventListener('resize',function(){
       // 実際に保存する種類は、あくまで「数量も選べるようにする」のチェック状態で決める。
       if (_qtyMode && (t === 'checkbox' || t === 'toggle' || t === 'radio')) t = 'qtycheck';
       // 出力欄は1つ。[入力] を含めば文章、含まなければ「出力名：回答」
-      var outVal = outTplInp.value.trim();
+      // 出力も、先頭の空白・改行は残す（末尾の空白だけ削る）。空白だけなら空欄とみなす
+      var outVal = outTplInp.value.replace(/\s+$/, '');
+      if (!outVal.trim()) outVal = '';
       var lblRich = _hrReadRich(labelInp), outRich = _hrReadRich(outTplInp);
       var isSentence = !!(window.hearingHasSlot && window.hearingHasSlot(outVal));
       var newQ = {
@@ -16225,6 +16449,11 @@ window.addEventListener('resize',function(){
             var lgHasImg = /<img\b|<table\b/i.test(lgHtml);
             if (lgText !== '') o.text = lgText;
             if (/<(b|strong|i|em|u|s|strike|del|font|span|img|table)\b|text-align/i.test(lgHtml) && (lgText !== '' || lgHasImg)) o.textHtml = lgHtml;
+            // 連動（選択肢が選ばれたら、このボタンも選択する）
+            var lkSel = lgRow.parentNode.querySelector('[data-role="optlink"]');
+            if (lkSel && lkSel.value) {
+              try { var lk = JSON.parse(lkSel.value); if (lk && lk[0]) o.link = { field: lk[0], v: lk[1] }; } catch (e) {}
+            }
           }
           // 選ぶとテキストボックスが出る選択肢
           var mInp = inp.parentNode.querySelector('[data-role="optmanual"]');
@@ -16870,6 +17099,99 @@ window.addEventListener('resize',function(){
     });
   }
 
+  // ── 項目名と回答の並べ方（ドラッグで配置）──
+  // 項目名そのもの、または回答の左上のつまみ（✥）をドラッグして、相手の上下左右の好きな側に落とす。
+  // 例：ラジオボタンの回答を項目名の右に落とすと、項目名とボタンが1行にまとまる。
+  // 保存するのは q.ansPos（'' ＝ 回答が下、'right'、'left'、'above'）。
+  var _hrLay = null;   // { qId, src: 'label' | 'ans', rowEl }
+  function _hrLayZone(refEl, x, y) {
+    var r = refEl.getBoundingClientRect();
+    var dx = (x - (r.left + r.width / 2)) / Math.max(1, r.width / 2);
+    var dy = (y - (r.top + r.height / 2)) / Math.max(1, r.height / 2);
+    if (Math.abs(dx) >= Math.abs(dy)) return dx >= 0 ? 'right' : 'left';
+    return dy >= 0 ? 'below' : 'above';
+  }
+  var _HR_OPPOSITE = { right: 'left', left: 'right', above: 'below', below: 'above' };
+  function _hrLayClear(rowEl) {
+    (rowEl || document).querySelectorAll('[data-lay-zone]').forEach(function(el) { el.removeAttribute('data-lay-zone'); });
+  }
+  function _hrSaveAnsPos(qId, pos) {
+    var qs = _hrQuestionsGet();
+    var q = qs.find(function(x) { return x.id === qId; });
+    if (!q) return;
+    var cur = q.ansPos || '';
+    var next = (pos === 'below') ? '' : pos;
+    if (cur === next) return;
+    if (next) q.ansPos = next; else delete q.ansPos;
+    Promise.resolve(_hrQuestionsSave(qs)).then(function() {
+      window.renderHearing();
+      toast({ '': '✅ 回答を項目名の下に配置しました', right: '✅ 回答を項目名の右に配置しました（1行にまとめました）',
+              left: '✅ 回答を項目名の左に配置しました', above: '✅ 回答を項目名の上に配置しました' }[next]);
+    });
+  }
+  function _attachLayoutDnD(rowEl, qId) {
+    var q = _hrQuestionsGet().find(function(x) { return x.id === qId; });
+    if (!q || q.type === 'heading' || q.type === 'spacer') return;
+    var labelEl = rowEl.querySelector(':scope > .hr-label');
+    var btnsEl = rowEl.querySelector(':scope > .hr-btns');
+    if (!labelEl || !btnsEl || !btnsEl.children.length) return;
+    var start = function(src) {
+      return function(e) {
+        e.stopPropagation();
+        _hrLay = { qId: qId, src: src, rowEl: rowEl };
+        e.dataTransfer.effectAllowed = 'move';
+        try { e.dataTransfer.setData('text/x-hr-layout', qId); } catch (err) {}
+        rowEl.classList.add('hr-lay-dragging');
+      };
+    };
+    var end = function() { _hrLay = null; rowEl.classList.remove('hr-lay-dragging'); _hrLayClear(rowEl); };
+    // 項目名：そのままドラッグできる（ダブルクリックでの名前の編集はそのまま使える）
+    labelEl.draggable = true;
+    labelEl.classList.add('hr-lay-src');
+    labelEl.title = (labelEl.title ? labelEl.title + '\n' : '') + 'ドラッグすると、回答の上下左右に項目名を動かせます';
+    // 名前をダブルクリックで編集しているとき（入力欄の中）は、文字を選べるようにドラッグを止める
+    labelEl.addEventListener('mousedown', function(e) {
+      labelEl.draggable = !(e.target.isContentEditable || (e.target.closest && e.target.closest('input,select,textarea,button,[contenteditable="true"]')));
+    });
+    labelEl.addEventListener('dragstart', start('label'));
+    labelEl.addEventListener('dragend', end);
+    // 回答：入力欄・ボタンの操作を邪魔しないよう、左上のつまみ（✥）からドラッグする
+    var grip = document.createElement('span');
+    grip.className = 'hr-ans-grip';
+    grip.textContent = '✥';
+    grip.draggable = true;
+    grip.title = 'ドラッグすると、項目名の上下左右に回答を動かせます（例：右に落とすと1行にまとまります）';
+    grip.addEventListener('mousedown', function(e) { e.stopPropagation(); });
+    grip.addEventListener('dragstart', start('ans'));
+    grip.addEventListener('dragend', end);
+    btnsEl.classList.add('hr-lay-ans');
+    btnsEl.insertBefore(grip, btnsEl.firstChild);
+
+    rowEl.addEventListener('dragover', function(e) {
+      if (!_hrLay || _hrLay.qId !== qId) return;
+      e.preventDefault(); e.stopPropagation();
+      e.dataTransfer.dropEffect = 'move';
+      var ref = (_hrLay.src === 'ans') ? labelEl : btnsEl;
+      var zone = _hrLayZone(ref, e.clientX, e.clientY);
+      _hrLayClear(rowEl);
+      ref.setAttribute('data-lay-zone', zone);
+    });
+    rowEl.addEventListener('dragleave', function(e) {
+      if (!_hrLay || _hrLay.qId !== qId) return;
+      if (!rowEl.contains(e.relatedTarget)) _hrLayClear(rowEl);
+    });
+    rowEl.addEventListener('drop', function(e) {
+      if (!_hrLay || _hrLay.qId !== qId) return;
+      e.preventDefault(); e.stopPropagation();
+      var ref = (_hrLay.src === 'ans') ? labelEl : btnsEl;
+      var zone = _hrLayZone(ref, e.clientX, e.clientY);
+      var pos = (_hrLay.src === 'ans') ? zone : _HR_OPPOSITE[zone];   // 項目名を動かしたときは、回答の位置は逆側
+      _hrLay = null; _hrLayClear(rowEl); rowEl.classList.remove('hr-lay-dragging');
+      _hrSaveAnsPos(qId, pos);
+    });
+  }
+  window._hrSaveAnsPos = _hrSaveAnsPos;
+
   function _attachRowDnD(rowEl, qId) {
     // メモは常に最下段に固定なので、並べ替えの対象にしない
     if (qId === 'q_memo') return;
@@ -16901,6 +17223,7 @@ window.addEventListener('resize',function(){
       rowEl.classList.add('hr-dragging');
     });
     handle.addEventListener('dragend', function() { _hrDragId = null; _hrClearDropMarks(); });
+    _attachLayoutDnD(rowEl, qId);
 
     var isAfter = function(e) {
       var r = rowEl.getBoundingClientRect();
@@ -16989,6 +17312,7 @@ window.addEventListener('resize',function(){
              '<b>選択肢</b>・<b>機器</b>で候補を編集　/　' +
              '記号・出力文・選択肢は、右端の<b>編集</b>からまとめて設定します　/　' +
              '左端の <b>⠿</b> をドラッグすると並べ替えられます<br>' +
+             '項目名、または回答の左上の <b>✥</b> をドラッグして相手の上下左右に落とすと、項目名と回答の並べ方を変えられます（右に落とすと1行にまとまります）<br>' +
              '右端の <b>⇤ ⇥</b>（または編集画面の書式バーの ⇤ ⇥）で段を変えると、直上にある段の少ない項目の中に入ります（親子になり、親が表示されるときだけ表示）<br>' +
              '末尾の <b>＋ 質問を追加</b> から新しい項目を追加できます。' +
            '</div>';
@@ -17022,6 +17346,8 @@ window.addEventListener('resize',function(){
             ordered.push({ __divider: true, id: '__div_' + q.id + '_' + v, parentLogId: q.id, optV: v, optLabel: (o.l || v) });
             group.forEach(function(k) { addWithChildren(k, depth + 1); });
           });
+          // ログ作成補助の終わり（最後のボタンの中身の下に実線を引く）
+          ordered.push({ __logEnd: true, id: '__end_' + q.id, parentLogId: q.id });
         } else {
           (childrenOf[q.id] || []).forEach(function(k) { addWithChildren(k, depth + 1); });
         }
@@ -17031,6 +17357,7 @@ window.addEventListener('resize',function(){
       var logBtnHtml = {};   // ログ作成補助のボタン（区切りの直前に1つずつ出す）
 
       ordered.forEach(function(q) {
+        if (q.__logEnd) { h += '<div class="hr-log-end" data-log-id="' + escHtml(q.parentLogId) + '"></div>'; return; }
         if (q.__divider) {
           // 本物の質問ではなく、ボタンごとの中の項目をまとめる見出し（＋その場で追加できる小さなボタン）
           var divDepth = (depthOf[q.parentLogId] || 0) + 1;
@@ -17040,7 +17367,7 @@ window.addEventListener('resize',function(){
           var opts0 = (window.getHearingOptions(qsAll.find(function(x) { return x.id === q.parentLogId; }) || {}) || []);
           var oi = opts0.findIndex(function(o) { return (o.v || o.l) === q.optV; });
           if (oi > 0 && btnList[oi]) {
-            h += '<div class="hr-log-btn-row" style="margin-left:' + (24 * logDepth) + 'px">'
+            h += '<div class="hr-log-btn-row" style="padding-left:' + (24 * logDepth + 32) + 'px">'
               + '<div class="hr-log-group">' + btnList[oi] + '</div></div>';
           }
           // 区切りは、ボタンより一段インデントして、ボタンのすぐ下に出す
@@ -17093,7 +17420,8 @@ window.addEventListener('resize',function(){
         // data-q-id を行に付与
         // 深さに応じて字下げを重ねる（親→子→孫…）
         var depth = depthOf[q.id] || 0;
-        var rowHtml = '<div class="hr-row' + (q.parentId ? ' hr-row-child' : '') + (hiddenBy ? ' hr-row-cond-hidden' : '') + '"' +
+        var ansPos = window.hearingAnsPos ? window.hearingAnsPos(q) : '';
+        var rowHtml = '<div class="hr-row' + (q.parentId ? ' hr-row-child' : '') + (hiddenBy ? ' hr-row-cond-hidden' : '') + (ansPos ? ' hr-pos-' + ansPos : '') + '"' +
              (q.parentId ? ' style="margin-left:' + (24 * depth) + 'px"' : '') +
              ' data-q-id="' + escHtml(q.id) + '"' +
              (hiddenBy ? ' data-hidden-by="' + escHtml(hiddenBy) + '"' : '') + '>' +

@@ -36,7 +36,9 @@
     .hr-page-card {
       position: relative;   /* コピー時のトーストの位置基準 */
       width: 100%;
-      max-width: 760px;
+      /* 管理画面のヒアリングタブのプレビューと同じ幅（中身の幅 886px）にそろえる。
+         折り返し位置・1行に並ぶボタンの数が、プレビューで見たとおりになる */
+      max-width: 944px;
       display: flex;
       flex-direction: column;
       background: var(--surface);

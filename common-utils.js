@@ -1248,13 +1248,86 @@ var SHORTCUTS = [
 // ── 表のセクション（フォネティックコード／メールドメイン一覧）と、ショートカットの見出し ──
 window.SIDEMENU_DEFAULT_TABLES = [
   {
-    id: 'sm_shortcut', type: 'shortcut', label: '⌨️ ショートカットキー',groups: null   // 実際の内容は _defaultShortcutGroups()（SHORTCUTS）から入れる
+    id: 'sm_shortcut', type: 'shortcut', label: '⌨️ ショートカットキー一覧',
+    note: 'このツール固有の操作は、各ページの「?」から見られる使い方マニュアルをご覧ください。',
+    groups: null   // 実際の内容は _defaultShortcutGroups()（SHORTCUTS）から入れる
   },
   {
-    id: 'sm_phonetic', type: 'table', label: '📖 フォネティックコード',headers: ['アルファベット', '読み方'],rows: [['Ａ','アメリカ'],['Ｂ','ブラジル'],['Ｃ','チャイナ'],['Ｄ','デンマーク'],['Ｅ','イングリッシュ'],['Ｆ','フランス'],['Ｇ','ゴルフ'],['Ｈ','ハワイ'],['Ｉ','イタリア'],['Ｊ','ジャパン'],['Ｋ','コリア'],['Ｌ','ロンドン'],['Ｍ','メキシコ'],['Ｎ','ニューヨーク'],['Ｏ','オーサカ'],['Ｐ','パリ'],['Ｑ','クイーン'],['Ｒ','ローマ'],['Ｓ','スペイン'],['Ｔ','トウキョウ'],['Ｕ','ユナイテッド'],['Ｖ','ビクトリー'],['Ｗ','ワールド'],['Ｘ','エックス線'],['Ｙ','ヨコハマ'],['Ｚ','ゼブラ'],['－','ハイフン'],['＿','アンダーバー']]
+    id: 'sm_phonetic', type: 'table', label: '📖 フォネティックコード',
+    headers: ['アルファベット', '読み方'],
+    rows: [
+      ['A','アメリカ'],['B','ブラジル'],['C','チャイナ'],['D','デンマーク'],
+      ['E','エジプト'],['F','フランス'],['G','ゴルフ'],['H','ホテル'],
+      ['I','イタリア'],['J','ジャパン'],['K','キログラム'],['L','ロンドン'],
+      ['M','メキシコ'],['N','ノルウェー'],['O','オーサカ'],['P','パリ'],
+      ['Q','クイーン'],['R','ローマ'],['S','スペイン'],['T','トウキョウ'],
+      ['U','ユニオン'],['V','ビクトリー'],['W','ワシントン'],['X','エックスレイ'],
+      ['Y','ヨコハマ'],['Z','ゼブラ'],
+      ['-','ハイフン'],['_','アンダーバー']
+    ]
   },
 {
-    id: 'sm_domain', type: 'table', label: '📧 メールドメイン',headers: ['ドメイン'],rows: [['aol.com'],['asahinet.jp'],['au.com'],['auone-net.jp'],　['bbiq.jp'],['biglobe.ne.jp'],['biz.ezweb.ne.jp'],　['canet.ne.jp'],['commufa.jp'],　['dion.ne.jp'],['docomo.ne.jp'],['dream.com'],['dti.ne.jp'],　['eonet.ne.jp'],['excite.co.jp'],['ezweb.ne.jp'],　['gmail.com'],['gmobb.jp'],['gol.com'],['goo.jp'],['googlemail.com'],['goomail.com'],　['hotmail.co.jp'],['hotmail.com'],　['i.softbank.jp'],['icloud.com'],['infoseek.co.jp'],['infoseek.jp'],['itscom.net'],　['jcom.home.ne.jp'],['jcom.zaq.ne.jp'],　['ktv.ne.jp'],　['live.jp'],　['mac.com'],['mail.bbexcite.jp'],['mail.goo.ne.jp'],['me.com'],['mineo.com'],['msn.com'],['mvt-net.com'],　['nifty.com'],　['ocn.ne.jp'],['odn.ne.jp'],['outlook.com'],　['plala.or.jp'],['pobox.com'],　['rakuten.jp'],['rakumail.jp'],　['softbank.ne.jp'],['so-net.ne.jp'],　['vodafone.ne.jp'],　['wakwak.com'],　['yahoo.co.jp'],['yahoo.ne.jp'],['ybb.ne.jp'],['ymobile.ne.jp'],　['ztv.ne.jp']]
+    id: 'sm_domain', type: 'table', label: '📧 メールドメイン一覧',
+    note: 'サイドメニューに表示する参照用の一覧です。ヒアリングシートのメールドメイン候補とは別管理です。',
+    headers: ['ドメイン'],
+    rows: [
+      ['aol.com'],
+      ['asahinet.jp'],
+      ['au.com'],
+      ['auone-net.jp'],
+      ['bbiq.jp'],
+      ['biglobe.ne.jp'],
+      ['biz.ezweb.ne.jp'],
+      ['canet.ne.jp'],
+      ['commufa.jp'],
+      ['dion.ne.jp'],
+      ['docomo.ne.jp'],
+      ['dream.com'],
+      ['dti.ne.jp'],
+      ['eonet.ne.jp'],
+      ['excite.co.jp'],
+      ['ezweb.ne.jp'],
+      ['gmail.com'],
+      ['gmobb.jp'],
+      ['gol.com'],
+      ['goo.jp'],
+      ['googlemail.com'],
+      ['goomail.com'],
+      ['hotmail.co.jp'],
+      ['hotmail.com'],
+      ['i.softbank.jp'],
+      ['icloud.com'],
+      ['infoseek.co.jp'],
+      ['infoseek.jp'],
+      ['itscom.net'],
+      ['jcom.home.ne.jp'],
+      ['jcom.zaq.ne.jp'],
+      ['ktv.ne.jp'],
+      ['live.jp'],
+      ['mac.com'],
+      ['mail.bbexcite.jp'],
+      ['mail.goo.ne.jp'],
+      ['me.com'],
+      ['mineo.com'],
+      ['msn.com'],
+      ['mvt-net.com'],
+      ['nifty.com'],
+      ['ocn.ne.jp'],
+      ['odn.ne.jp'],
+      ['outlook.com'],
+      ['plala.or.jp'],
+      ['pobox.com'],
+      ['rakuten.jp'],
+      ['softbank.ne.jp'],
+      ['so-net.ne.jp'],
+      ['vodafone.ne.jp'],
+      ['wakwak.com'],
+      ['yahoo.co.jp'],
+      ['yahoo.ne.jp'],
+      ['ybb.ne.jp'],
+      ['ymobile.ne.jp'],
+      ['ztv.ne.jp']
+    ]
   }
 ];
 
@@ -1306,7 +1379,7 @@ window.stripFixedSideMenuSections = function (list) {
 // そのため data.js（hearingQuestions）には持たせず、ここで定義して必ず補う。
 // data.js や IndexedDB に古い q_memo が残っていても、読み込み時に取り除いてここの定義を使う。
 window.HEARING_MEMO_ITEM = {
-  id: 'q_memo', field: 'memo', label: '📝Memo', type: 'text', multiline: true,
+  id: 'q_memo', field: 'memo', label: 'メモ', type: 'text', multiline: true,
   placeholder: '自由記入欄…', common: true, enabled: true, builtin: true, showIf: []
 };
 function _hrIsMemoQ(q) { return !!q && (q.id === 'q_memo' || q.field === 'memo'); }
@@ -3575,7 +3648,8 @@ window.hearingResolveRefs = function (text, s) {
   var qs = _hrGetQuestions();
   return String(text).replace(/\{\{([^{}]+)\}\}/g, function (m, label) {
     label = label.trim();
-    var q = qs.find(function (x) { return x && x.label === label; });
+    // 項目名の先頭に字下げの空白があっても、{{項目名}} で参照できるようにする
+    var q = qs.find(function (x) { return x && String(x.label || '').trim() === label; });
     if (!q) return m;
     return window.hearingAnswerText(q, s);
   });
@@ -3587,7 +3661,8 @@ window.hearingResolveRefsHtml = function (html, s) {
   var qs = _hrGetQuestions();
   return String(html).replace(/\{\{([^{}]+)\}\}/g, function (m, label) {
     label = label.trim();
-    var q = qs.find(function (x) { return x && x.label === label; });
+    // 項目名の先頭に字下げの空白があっても、{{項目名}} で参照できるようにする
+    var q = qs.find(function (x) { return x && String(x.label || '').trim() === label; });
     if (!q) return m;
     return escHtml(window.hearingAnswerText(q, s));
   });
@@ -3735,8 +3810,83 @@ function loadHearingState() {
 }
 
 function saveHearingState() {
+  // 選択肢と連動するログ作成補助のボタンを、保存の前に選択／解除する
+  var linked = false;
+  try { linked = _hrApplyLogLinks(hearingState); } catch (e) {}
   try { localStorage.setItem(HEARING_KEY, JSON.stringify(hearingState)); } catch (e) {}
+  // 呼び出し元が結果文だけ描き直す場合でも、ログ作成補助のボタンの見た目を合わせる
+  if (linked && !_hrLinkRenderQueued && typeof renderHearing === 'function') {
+    _hrLinkRenderQueued = true;
+    setTimeout(function () { _hrLinkRenderQueued = false; renderHearing(); }, 0);
+  }
 }
+
+// ── 選択肢 → ログ作成補助の連動 ──
+// ログ作成補助のボタンに「連動」（o.link = { field, v }）を設定すると、
+// チェックボックス／ラジオボタン／トグル／プルダウンでその選択肢が選ばれたとき、そのボタンも選択された状態になる。
+// 選択が外れたときは、そのボタンも外す。連動した後でも、ボタンは手で押して付け外しできる。
+// 「前回の保存時点で選ばれていたか」は hearingState.__linkPrev に持ち、変わったときだけ反映する
+// （状態と一緒に保存されるので、別のタブ・再読み込み・リセットでもずれない）。
+var _hrLinkRenderQueued = false;
+
+/** 回答の値に、選択肢 v が選ばれているか（文字・配列・詳細つき・数量つきのどの形でも） */
+function _hrIsOptSelected(val, v) {
+  if (val == null || val === '') return false;
+  if (Array.isArray(val)) return val.indexOf(v) >= 0;
+  if (typeof val === 'object') {
+    if (Array.isArray(val.picked)) return val.picked.indexOf(v) >= 0;    // チェック＋数量
+    var d = val[v];
+    return !!(d && (d === true || d.selected));                          // 詳細つきトグル
+  }
+  return String(val) === String(v);
+}
+window._hrIsOptSelected = _hrIsOptSelected;
+
+/** 連動の設定の一覧 [{ q（ログ作成補助）, v（ボタン）, field, value（元の選択肢）}] */
+function _hrLogLinks() {
+  var out = [];
+  var qs = (typeof _hrGetQuestions === 'function') ? _hrGetQuestions() : [];
+  qs.forEach(function (q) {
+    if (!q || q.type !== 'log') return;
+    (window.getHearingOptions(q) || []).forEach(function (o) {
+      if (o && o.link && o.link.field && o.link.v != null) {
+        out.push({ q: q, v: o.v || o.l, field: o.link.field, value: o.link.v });
+      }
+    });
+  });
+  return out;
+}
+
+/** 連動を反映する。ログ作成補助の選択を変えたら true */
+function _hrApplyLogLinks(st) {
+  if (!st) return false;
+  var links = _hrLogLinks();
+  if (!links.length) { if (st.__linkPrev) delete st.__linkPrev; return false; }
+  var prev = (st.__linkPrev && typeof st.__linkPrev === 'object') ? st.__linkPrev : {};
+  var now = {}, changed = false;
+  links.forEach(function (L) {
+    var k = L.field + '\u0001' + L.value;
+    if (!(k in now)) now[k] = _hrIsOptSelected(st[L.field], L.value);
+  });
+  links.forEach(function (L) {
+    var k = L.field + '\u0001' + L.value;
+    if (!!prev[k] === now[k]) return;                 // 選択が変わっていない
+    var fld = L.q.field || L.q.id;
+    var cur = st[fld];
+    var arr = Array.isArray(cur) ? cur.slice() : (cur ? [cur] : []);
+    if (now[k]) {
+      if (L.q.logMulti === false) arr = [L.v];         // 1つだけ選ぶログ作成補助は入れ替える
+      else if (arr.indexOf(L.v) < 0) arr.push(L.v);
+    } else {
+      arr = arr.filter(function (x) { return x !== L.v; });
+    }
+    var next = arr.length ? arr : null;
+    if (JSON.stringify(next) !== JSON.stringify(cur == null ? null : cur)) { st[fld] = next; changed = true; }
+  });
+  st.__linkPrev = now;
+  return changed;
+}
+window._hrApplyLogLinks = _hrApplyLogLinks;
 
 var hearingState = loadHearingState();
 /**
@@ -5130,8 +5280,26 @@ window.setHearingSelect = function (field, value) {
  * （子がさらに子を持つ「入れ子の入れ子」にも、再帰なので何段でも対応する）。
  * 管理画面のプレビューは、行ごとに別々に描くため、ここでは何もしない。
  */
+/**
+ * 項目名と回答の並べ方（管理画面のプレビューで、項目名・回答をドラッグして決める）。
+ *   ''（既定）… 回答が項目名の下 ／ 'right' … 回答が項目名の右（1行にまとまる）
+ *   'left' … 回答が項目名の左 ／ 'above' … 回答が項目名の上
+ * 見出し・空白行は項目名と回答の組を持たないので対象外。
+ */
+var HR_ANS_POS = { right: 1, left: 1, above: 1 };
+window.hearingAnsPos = function (q) {
+  if (!q || q.type === 'heading' || q.type === 'spacer') return '';
+  return HR_ANS_POS[q.ansPos] ? q.ansPos : '';
+};
+/** 行の先頭の <div class="hr-row ..."> に、並べ方のクラス（hr-pos-right など）を付ける */
+function _hrApplyAnsPos(q, raw) {
+  var pos = window.hearingAnsPos(q);
+  if (!pos || !raw) return raw;
+  return raw.replace(/^<div class="hr-row/, '<div class="hr-row hr-pos-' + pos);
+}
+
 window.hearingItemHTML = function (q, s) {
-  var raw = _hearingItemHTMLRaw(q, s);
+  var raw = _hrApplyAnsPos(q, _hearingItemHTMLRaw(q, s));
   if (!raw || q.type === 'spacer' || q.type === 'heading' || q.type === 'log') return raw;
   if (document.body && document.body.classList.contains('page-admin')) return raw;
   var kids = window.hearingChildItems(q, s);
@@ -5139,6 +5307,11 @@ window.hearingItemHTML = function (q, s) {
   var kidsHtml = kids.map(function (k) { return window.hearingItemHTML(k, s); }).join('');
   var wrapClass = (q.type === 'log') ? 'hr-log-children' : 'hr-nested-children';
   var injected = '<div class="' + wrapClass + '">' + kidsHtml + '</div>';
+  // 項目名と回答を横に並べているときは、中の項目は回答の中ではなく、行の下にまとめて出す
+  if (window.hearingAnsPos(q)) {
+    var rEnd = raw.lastIndexOf('</div>');
+    return raw.slice(0, rEnd) + injected + raw.slice(rEnd);
+  }
   // .hr-btns の閉じタグの直前に差し込む（末尾は必ず </div></div> = hr-btns → hr-row の順で閉じる）
   var idx = raw.lastIndexOf('</div></div>');
   return (idx < 0) ? (raw + injected) : (raw.slice(0, idx) + injected + raw.slice(idx));
@@ -5448,7 +5621,7 @@ window.getFixedText = function (key) {
 };
 
 // ログ作成補助で、複数のボタンを選んだときの区切り線
-var LOG_SEPARATOR = '－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－';
+var LOG_SEPARATOR = '--------------------------------------------------';
 window.LOG_SEPARATOR = LOG_SEPARATOR;
 
 // ── お知らせ ────────────────────────────────────────
@@ -6010,7 +6183,8 @@ function _hrLineText(item) {
     return window.hearingFillSlot(item.outTpl, item.value);
   }
   // 項目名が空（空白だけを含む）のときは「：」を付けず、値だけにする
-  return _hrHasOutLabel(item) ? (String(item.outLabel).trim() + '：' + item.value) : item.value;
+  // 先頭の空白・改行は、字下げとしてそのまま残す（末尾の空白だけ削る）
+  return _hrHasOutLabel(item) ? (String(item.outLabel).replace(/\s+$/, '') + '：' + item.value) : item.value;
 }
 window._hrLineText = _hrLineText;
 
@@ -6525,7 +6699,7 @@ document.addEventListener('keydown', function (e) {
     '.hr-device-btn { display:inline-block; height:26px; padding:0 12px; margin-right:6px; border:1px solid var(--border,#dfe4ea); border-radius:14px; background:var(--surface2,#f1f2f6); color:var(--text2,#57606f); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit; transition:background .12s,border-color .12s,color .12s; }' +
     '.hr-device-btn.active { background:var(--accent,#3742fa); border-color:var(--accent,#3742fa); color:#fff; }' +
     '.hr-device-row { flex-direction:row !important; align-items:center; gap:6px; padding:1px 0; }' +
-    '.hr-device-row .hr-label { flex:0 0 74px; min-width:74px; font-size:12px; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }' +
+    '.hr-device-row .hr-label { flex:0 0 74px; min-width:74px; font-size:10px; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }' +
     '.hr-device-row .hr-btns { display:flex; flex:1; min-width:0; align-items:center; flex-wrap:wrap; gap:3px; }' +
     '.hr-device-row .hr-device-btn { height:22px; padding:0 8px; margin-right:0; font-size:10px; border-radius:4px; }' +
     '.hr-device-group { display:flex; flex-direction:column; gap:2px; padding:5px 7px; background:var(--surface2,#f1f2f6); border:1px solid var(--border,#dfe4ea); border-radius:6px; }' +
@@ -6549,7 +6723,7 @@ document.addEventListener('keydown', function (e) {
     '.hr-log-children > .hr-row, .hr-nested-children > .hr-row { padding:4px 0 !important; border:none !important; background:none !important; }' +
     // 空白行：枠も余白も持たない、ただの空き
     '.hr-spacer-row { padding:0 !important; border:none !important; background:none !important; min-height:0 !important; box-shadow:none !important; }' +
-    '.hr-spacer { height:10px; }' +
+    '.hr-spacer { height:14px; }' +
     // チェック＋数量
     '.hr-qtycheck-group { display:flex; flex-direction:column; gap:6px; align-items:stretch; }' +
     '.hr-qtycheck-row { display:flex; align-items:flex-start; gap:6px; font-size:13px; cursor:pointer; }' +
