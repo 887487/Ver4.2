@@ -572,8 +572,10 @@ body > .hearing-panel { top:var(--header-h); }
 .hearing-reset-btn { font-size:11px;padding:3px 10px;border:1px solid #f5a5aa;border-radius:4px;background:#fff0f0;cursor:pointer;color:var(--red);font-weight:700;font-family:inherit;transition:background 0.15s,border-color 0.15s; }
 .hearing-reset-btn:hover { background:var(--red);color:white;border-color:var(--red); }
 .hearing-content { flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:10px; }
+/* 中身が多いと、枠の中でスクロールするテンプレート欄などが縦に潰されるので、縮ませない（全体をスクロールさせる） */
+.hearing-content > * { flex-shrink:0; }
 .hr-row { display:flex;flex-direction:column;gap:5px; }
-.hr-label { font-size:12px;font-weight:700;color:#555;line-height:1.4; }
+.hr-label { font-size:10px;font-weight:700;color:#555;line-height:1.4; }
 .hr-btns { display:flex;flex-wrap:wrap;gap:5px; }
 .hr-btn { min-height:28px;padding:4px 10px;border:1px solid var(--border);border-radius:5px;background:var(--surface);font-size:11px;cursor:pointer;color:var(--text);transition:border-color 0.15s,background 0.15s,color 0.15s;font-family:inherit;line-height:1.4;white-space:normal;text-align:left; }
 .hr-btn:hover { border-color:var(--accent);color:var(--accent-text);background:#f0f4ff; }
@@ -687,6 +689,8 @@ body > .hearing-panel { top:var(--header-h); }
 .hr-copybtn { min-height:28px;max-width:100%;padding:4px 10px;border:1px solid var(--border);border-radius:5px;background:var(--surface);font-size:11px;font-weight:600;font-family:inherit;color:var(--text);cursor:pointer;line-height:1.4;white-space:normal;word-break:break-all;text-align:left;transition:border-color .15s,background .15s,color .15s; }
 .hr-copybtn:hover { border-color:var(--accent);color:var(--accent-text);background:var(--accent-lt); }
 .hr-copybtn:active { background:var(--accent);border-color:var(--accent);color:#fff; }
+/* コピーするテキストが空のボタン：ボタン名を赤で出す */
+.hr-copybtn.is-empty, .hr-copybtn.is-empty:hover { color:var(--red,#e63946); border-color:var(--red,#e63946); background:var(--surface); }
 .page-admin .hr-copybtns { margin:10px 14px; }
 
 /* ===== MAIL / HEADER ===== */

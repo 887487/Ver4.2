@@ -1248,13 +1248,86 @@ var SHORTCUTS = [
 // ── 表のセクション（フォネティックコード／メールドメイン一覧）と、ショートカットの見出し ──
 window.SIDEMENU_DEFAULT_TABLES = [
   {
-    id: 'sm_shortcut', type: 'shortcut', label: '⌨️ ショートカットキー',groups: null   // 実際の内容は _defaultShortcutGroups()（SHORTCUTS）から入れる
+    id: 'sm_shortcut', type: 'shortcut', label: '⌨️ ショートカットキー一覧',
+    note: 'このツール固有の操作は、各ページの「?」から見られる使い方マニュアルをご覧ください。',
+    groups: null   // 実際の内容は _defaultShortcutGroups()（SHORTCUTS）から入れる
   },
   {
-    id: 'sm_phonetic', type: 'table', label: '📖 フォネティックコード',headers: ['アルファベット', '読み方'],rows: [['Ａ','アメリカ'],['Ｂ','ブラジル'],['Ｃ','チャイナ'],['Ｄ','デンマーク'],['Ｅ','イングリッシュ'],['Ｆ','フランス'],['Ｇ','ゴルフ'],['Ｈ','ハワイ'],['Ｉ','イタリア'],['Ｊ','ジャパン'],['Ｋ','コリア'],['Ｌ','ロンドン'],['Ｍ','メキシコ'],['Ｎ','ニューヨーク'],['Ｏ','オーサカ'],['Ｐ','パリ'],['Ｑ','クイーン'],['Ｒ','ローマ'],['Ｓ','スペイン'],['Ｔ','トウキョウ'],['Ｕ','ユナイテッド'],['Ｖ','ビクトリー'],['Ｗ','ワールド'],['Ｘ','エックス線'],['Ｙ','ヨコハマ'],['Ｚ','ゼブラ'],['－','ハイフン'],['＿','アンダーバー']]
+    id: 'sm_phonetic', type: 'table', label: '📖 フォネティックコード',
+    headers: ['アルファベット', '読み方'],
+    rows: [
+      ['A','アメリカ'],['B','ブラジル'],['C','チャイナ'],['D','デンマーク'],
+      ['E','エジプト'],['F','フランス'],['G','ゴルフ'],['H','ホテル'],
+      ['I','イタリア'],['J','ジャパン'],['K','キログラム'],['L','ロンドン'],
+      ['M','メキシコ'],['N','ノルウェー'],['O','オーサカ'],['P','パリ'],
+      ['Q','クイーン'],['R','ローマ'],['S','スペイン'],['T','トウキョウ'],
+      ['U','ユニオン'],['V','ビクトリー'],['W','ワシントン'],['X','エックスレイ'],
+      ['Y','ヨコハマ'],['Z','ゼブラ'],
+      ['-','ハイフン'],['_','アンダーバー']
+    ]
   },
 {
-    id: 'sm_domain', type: 'table', label: '📧 メールドメイン',headers: ['ドメイン'],rows: [['aol.com'],['asahinet.jp'],['au.com'],['auone-net.jp'],　['bbiq.jp'],['biglobe.ne.jp'],['biz.ezweb.ne.jp'],　['canet.ne.jp'],['commufa.jp'],　['dion.ne.jp'],['docomo.ne.jp'],['dream.com'],['dti.ne.jp'],　['eonet.ne.jp'],['excite.co.jp'],['ezweb.ne.jp'],　['gmail.com'],['gmobb.jp'],['gol.com'],['goo.jp'],['googlemail.com'],['goomail.com'],　['hotmail.co.jp'],['hotmail.com'],　['i.softbank.jp'],['icloud.com'],['infoseek.co.jp'],['infoseek.jp'],['itscom.net'],　['jcom.home.ne.jp'],['jcom.zaq.ne.jp'],　['ktv.ne.jp'],　['live.jp'],　['mac.com'],['mail.bbexcite.jp'],['mail.goo.ne.jp'],['me.com'],['mineo.com'],['msn.com'],['mvt-net.com'],　['nifty.com'],　['ocn.ne.jp'],['odn.ne.jp'],['outlook.com'],　['plala.or.jp'],['pobox.com'],　['rakuten.jp'],['rakumail.jp'],　['softbank.ne.jp'],['so-net.ne.jp'],　['vodafone.ne.jp'],　['wakwak.com'],　['yahoo.co.jp'],['yahoo.ne.jp'],['ybb.ne.jp'],['ymobile.ne.jp'],　['ztv.ne.jp']]
+    id: 'sm_domain', type: 'table', label: '📧 メールドメイン一覧',
+    note: 'サイドメニューに表示する参照用の一覧です。ヒアリングシートのメールドメイン候補とは別管理です。',
+    headers: ['ドメイン'],
+    rows: [
+      ['aol.com'],
+      ['asahinet.jp'],
+      ['au.com'],
+      ['auone-net.jp'],
+      ['bbiq.jp'],
+      ['biglobe.ne.jp'],
+      ['biz.ezweb.ne.jp'],
+      ['canet.ne.jp'],
+      ['commufa.jp'],
+      ['dion.ne.jp'],
+      ['docomo.ne.jp'],
+      ['dream.com'],
+      ['dti.ne.jp'],
+      ['eonet.ne.jp'],
+      ['excite.co.jp'],
+      ['ezweb.ne.jp'],
+      ['gmail.com'],
+      ['gmobb.jp'],
+      ['gol.com'],
+      ['goo.jp'],
+      ['googlemail.com'],
+      ['goomail.com'],
+      ['hotmail.co.jp'],
+      ['hotmail.com'],
+      ['i.softbank.jp'],
+      ['icloud.com'],
+      ['infoseek.co.jp'],
+      ['infoseek.jp'],
+      ['itscom.net'],
+      ['jcom.home.ne.jp'],
+      ['jcom.zaq.ne.jp'],
+      ['ktv.ne.jp'],
+      ['live.jp'],
+      ['mac.com'],
+      ['mail.bbexcite.jp'],
+      ['mail.goo.ne.jp'],
+      ['me.com'],
+      ['mineo.com'],
+      ['msn.com'],
+      ['mvt-net.com'],
+      ['nifty.com'],
+      ['ocn.ne.jp'],
+      ['odn.ne.jp'],
+      ['outlook.com'],
+      ['plala.or.jp'],
+      ['pobox.com'],
+      ['rakuten.jp'],
+      ['softbank.ne.jp'],
+      ['so-net.ne.jp'],
+      ['vodafone.ne.jp'],
+      ['wakwak.com'],
+      ['yahoo.co.jp'],
+      ['yahoo.ne.jp'],
+      ['ybb.ne.jp'],
+      ['ymobile.ne.jp'],
+      ['ztv.ne.jp']
+    ]
   }
 ];
 
@@ -1306,7 +1379,7 @@ window.stripFixedSideMenuSections = function (list) {
 // そのため data.js（hearingQuestions）には持たせず、ここで定義して必ず補う。
 // data.js や IndexedDB に古い q_memo が残っていても、読み込み時に取り除いてここの定義を使う。
 window.HEARING_MEMO_ITEM = {
-  id: 'q_memo', field: 'memo', label: '📝Memo', type: 'text', multiline: true,
+  id: 'q_memo', field: 'memo', label: 'メモ', type: 'text', multiline: true,
   placeholder: '自由記入欄…', common: true, enabled: true, builtin: true, showIf: []
 };
 function _hrIsMemoQ(q) { return !!q && (q.id === 'q_memo' || q.field === 'memo'); }
@@ -3447,7 +3520,7 @@ window.hearingChildItemsForOpt = function(q, optV, s) {
   var over = (typeof _hrPatternOverrides === 'function') ? _hrPatternOverrides(s || hearingState) : {};
   return window.filterQuestionsByTemplate(_hrGetQuestions()).filter(function(k) {
     if (k.parentId !== q.id || k.parentOpt !== optV || !k.enabled) return false;
-    if (k.type === 'spacer') return false;   // 空白行は中を持てない（見出し・ログ作成補助は中に置ける）
+    // 空白行は、ログ作成補助の中にだけ置ける（ボタンの中身の区切りとして使う）
     if (k.id in over) return !!over[k.id];
     return _hrEvalShowIf(k.showIf, s || hearingState);
   });
@@ -5186,11 +5259,15 @@ function _hearingItemHTMLRaw(q, s) {
     // 例：「テスト、●本」を選び、テキストエリアに「3」→「テスト、3本」。
     var qtySt = s[fld] || {};
     var qtyPicked = Array.isArray(qtySt.picked) ? qtySt.picked : [];
+    // ラジオボタン＋数量（qtyBase が radio）は1つだけ選ぶ。見た目もラジオボタンにする
+    var qtySingle = (q.qtyBase === 'radio');
     var qtyRows = (window.getHearingOptions(q) || []).map(function (o) {
       var v = o.v || o.l;
       var on = qtyPicked.indexOf(v) >= 0;
-      return '<label class="hr-qtycheck-row"><input type="checkbox"' + (on ? ' checked' : '') +
-        ' onchange="toggleHearingQtyCheck(\'' + fld + '\',\'' + escHtml(v).replace(/'/g, "\\'") + '\')">' +
+      // ラジオは、選んでいるものをもう一度押しても change が起きないので click で切り替える（もう一度押すと外れる）
+      return '<label class="hr-qtycheck-row"><input type="' + (qtySingle ? 'radio' : 'checkbox') + '"' + (on ? ' checked' : '') +
+        (qtySingle ? ' name="hrqty_' + escHtml(fld) + '" onclick' : ' onchange') +
+        '="toggleHearingQtyCheck(\'' + fld + '\',\'' + escHtml(v).replace(/'/g, "\\'") + '\'' + (qtySingle ? ',true' : '') + ')">' +
         '<span>' + window.hrOptHtmlEsc(o, v) + '</span></label>';
     }).join('');
     var qtyPh = escHtml(q.placeholder || '');
@@ -5208,8 +5285,10 @@ function _hearingItemHTMLRaw(q, s) {
     var btns = opts.map(function (o) {
       var v = o.v || o.l;
       var on = picked.indexOf(v) >= 0 ? ' active' : '';
+      // 複数選択を許可しない（logMulti === false）ときは、1つだけ選べる（別のボタンを押すと入れ替わる）
+      var fn = (q.logMulti === false) ? 'toggleHearingLogSingle' : 'toggleHearingMulti';
       return '<button class="hr-log-btn' + on + '" title="押すと出力に加えます（もう一度押すと外れます）"'
-        + ' onclick="toggleHearingMulti(\'' + fld + '\',\'' + escHtml(v).replace(/'/g, "\\'") + '\')">'
+        + ' onclick="' + fn + '(\'' + fld + '\',\'' + escHtml(v).replace(/'/g, "\\'") + '\')">'
         + window.hrOptHtmlEsc(o, v) + '</button>';
     }).join('');
     var kidsHtml = '';
@@ -5220,7 +5299,10 @@ function _hearingItemHTMLRaw(q, s) {
         return '<div class="hr-log-children">' + kids.map(function (k) { return window.hearingItemHTML(k, s); }).join('') + '</div>';
       }).join('');
     }
-    return '<div class="hr-row hr-log-row"><div class="hr-btns">'
+    // 見出し（任意）：ボタンの上に、他の項目の項目名と同じように出す
+    var logHead = String(q.logHeading || '').trim();
+    var logHeadHtml = logHead ? '<div class="hr-label">' + escHtml(pf) + escHtml(logHead) + '</div>' : '';
+    return '<div class="hr-row hr-log-row">' + logHeadHtml + '<div class="hr-btns">'
       + '<div class="hr-log-group">' + btns + '</div>' + kidsHtml
       + '</div></div>';
   }
@@ -5439,7 +5521,7 @@ window.getFixedText = function (key) {
 };
 
 // ログ作成補助で、複数のボタンを選んだときの区切り線
-var LOG_SEPARATOR = '－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－';
+var LOG_SEPARATOR = '--------------------------------------------------';
 window.LOG_SEPARATOR = LOG_SEPARATOR;
 
 // ── お知らせ ────────────────────────────────────────
@@ -5636,12 +5718,13 @@ function _multiBtns(field, val, options) {
 
 /** 複数選択の値を出し入れする */
 /** チェック＋数量：チェックの ON/OFF を切り替える */
-window.toggleHearingQtyCheck = function (field, value) {
+window.toggleHearingQtyCheck = function (field, value, single) {
   var st = hearingState[field];
   if (!st || typeof st !== 'object' || Array.isArray(st)) st = hearingState[field] = { picked: [], text: '' };
   if (!Array.isArray(st.picked)) st.picked = [];
   var i = st.picked.indexOf(value);
-  if (i >= 0) st.picked.splice(i, 1); else st.picked.push(value);
+  if (single) st.picked = (i >= 0) ? [] : [value];          // ラジオボタン＋数量：1つだけ選ぶ
+  else if (i >= 0) st.picked.splice(i, 1); else st.picked.push(value);
   saveHearingState();
   renderHearing();
 };
@@ -5654,6 +5737,15 @@ window.setHearingQtyText = function (field, text) {
   saveHearingState();
   if (_hrShowIfDepends(field)) { renderHearing(); return; }
   if (typeof renderHearingSummary === 'function') renderHearingSummary();
+};
+
+/** ログ作成補助（複数選択を許可しない）：1つだけ選ぶ。選んでいるボタンをもう一度押すと外れる */
+window.toggleHearingLogSingle = function(field, value) {
+  var cur = hearingState[field];
+  var arr = Array.isArray(cur) ? cur : (cur ? [cur] : []);
+  hearingState[field] = (arr.length === 1 && arr[0] === value) ? null : [value];
+  saveHearingState();
+  renderHearing();
 };
 
 window.toggleHearingMulti = function(field, value) {
@@ -5944,6 +6036,12 @@ function _hrRichParts(q) {
   return r;
 }
 
+/** 出力する項目名があるか（空・空白だけ・全角空白だけなら無い。このときは「：」も付けない） */
+function _hrHasOutLabel(item) {
+  return String((item && item.outLabel) || '').replace(/[\s\u3000\u00a0]/g, '') !== '';
+}
+window._hrHasOutLabel = _hrHasOutLabel;
+
 /** 1行ぶんの HTML（書式つきでコピーするとき・画面に出すとき用） */
 function _hrLineHtml(item) {
   if (item.kind === 'blank') return '';
@@ -5958,9 +6056,10 @@ function _hrLineHtml(item) {
   if (item.outTpl && window.hearingHasSlot(item.outTpl)) {
     return window.hearingFillSlotHtml(item.outTplHtml || escHtml(item.outTpl), valH);
   }
-  // 項目名が空のときは「：」を付けず、値だけにする
+  // 項目名が空（空白だけ・書式だけを含む）のときは「：」を付けず、値だけにする
+  if (!_hrHasOutLabel(item)) return valH;
   var labH = item.outLabelHtml || escHtml(item.outLabel);
-  return labH ? (labH + '：' + valH) : valH;
+  return labH + '：' + valH;
 }
 window._hrLineHtml = _hrLineHtml;
 
@@ -5983,8 +6082,8 @@ function _hrLineText(item) {
   if (item.outTpl && window.hearingHasSlot(item.outTpl)) {
     return window.hearingFillSlot(item.outTpl, item.value);
   }
-  // 項目名が空のときは「：」を付けず、値だけにする
-  return item.outLabel ? (item.outLabel + '：' + item.value) : item.value;
+  // 項目名が空（空白だけを含む）のときは「：」を付けず、値だけにする
+  return _hrHasOutLabel(item) ? (String(item.outLabel).trim() + '：' + item.value) : item.value;
 }
 window._hrLineText = _hrLineText;
 
@@ -6056,7 +6155,7 @@ function buildHearingLines(s) {
         // このボタンだけの中の項目（他のボタンの中の項目とは混ざらない）
         var kidItems = [];
         qs.forEach(function (k) {
-          if (k.parentId !== q.id || k.parentOpt !== v || k.type === 'spacer') return;   // 空白行は中に置けない（見出し・ログ作成補助は置ける）
+          if (k.parentId !== q.id || k.parentOpt !== v) return;   // 空白行も置ける（出力では空行になる）
           emitWithChildren(k, kidItems);
         });
 
@@ -6074,6 +6173,11 @@ function buildHearingLines(s) {
       });
       if (!blocks.length) return;
 
+      // 見出し（任意）を設定していて「結果文にも出す」なら、ログの前に見出しの行を出す
+      var logHd = String(q.logHeading || '').trim();
+      if (logHd && q.logHeadingOut !== false) {
+        out.push({ kind: 'heading', text: logHd, prefix: window.getHearingPrefix(q) });
+      }
       out.push({
         kind: 'row', label: q.label, outLabel: (q.outLabel || q.label),
         value: blocks.join('\n' + LOG_SEPARATOR + '\n'),
@@ -6283,13 +6387,16 @@ window.hearingCopyButtonGroups = function (list) {
 
 /** 結果文の下に出すコピーボタン枠の HTML（出すものが無ければ空文字） */
 function _hrCopyButtonsHTML() {
+  // コピーするテキストが空のボタンも出す（ボタン名を赤にして、未設定だと分かるようにする）。
+  // ボタン名もテキストも空の行（入力途中）だけは出さない
   var list = window.getHearingCopyButtons(window.getCurrentTemplate()).filter(function (b) {
-    return String(b.text || '') !== '';   // コピーする中身が無いボタンは出さない
+    return _hrCopyBtnLabel(b) !== '';
   });
   if (!list.length) return '';
   var btn = function (b) {
-    return '<button type="button" class="hr-copybtn" data-id="' + escHtml(b.id) + '"' +
-      ' title="' + escHtml(b.text) + '"' +
+    var empty = String(b.text || '') === '';
+    return '<button type="button" class="hr-copybtn' + (empty ? ' is-empty' : '') + '" data-id="' + escHtml(b.id) + '"' +
+      ' title="' + (empty ? 'コピーするテキストが設定されていません' : escHtml(b.text)) + '"' +
       // フォーカスが移るとスクロール位置が動くことがあるため、フォーカスさせない
       ' onmousedown="event.preventDefault()"' +
       ' onclick="window.copyHearingFixedText(this.getAttribute(\'data-id\'))">📋 ' +
@@ -6364,7 +6471,7 @@ function renderHearingSummary() {
     var block = (it.isMemo || it.multiline);
     if (block) { valClass += ' hr-sum-multiline'; val = val.replace(/\n/g, '<br>'); }
     // 画面の結果文とコピー結果を完全に一致させるため、出力名（未設定なら項目名）で出す
-    var sumLabH = it.outLabelHtml || escHtml(it.outLabel);
+    var sumLabH = _hrHasOutLabel(it) ? (it.outLabelHtml || escHtml(it.outLabel)) : '';   // 項目名が空なら「：」も出さない
     h += '<div class="hr-summary-row' + (block ? ' hr-summary-block' : '') + '">' +
          (sumLabH ? '<span class="hr-sum-label">' + sumLabH + '</span>' : '') +
          '<span class="' + valClass + '">' + val + '</span></div>';
@@ -6491,7 +6598,7 @@ document.addEventListener('keydown', function (e) {
     '.hr-device-btn { display:inline-block; height:26px; padding:0 12px; margin-right:6px; border:1px solid var(--border,#dfe4ea); border-radius:14px; background:var(--surface2,#f1f2f6); color:var(--text2,#57606f); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit; transition:background .12s,border-color .12s,color .12s; }' +
     '.hr-device-btn.active { background:var(--accent,#3742fa); border-color:var(--accent,#3742fa); color:#fff; }' +
     '.hr-device-row { flex-direction:row !important; align-items:center; gap:6px; padding:1px 0; }' +
-    '.hr-device-row .hr-label { flex:0 0 74px; min-width:74px; font-size:12px; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }' +
+    '.hr-device-row .hr-label { flex:0 0 74px; min-width:74px; font-size:10px; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }' +
     '.hr-device-row .hr-btns { display:flex; flex:1; min-width:0; align-items:center; flex-wrap:wrap; gap:3px; }' +
     '.hr-device-row .hr-device-btn { height:22px; padding:0 8px; margin-right:0; font-size:10px; border-radius:4px; }' +
     '.hr-device-group { display:flex; flex-direction:column; gap:2px; padding:5px 7px; background:var(--surface2,#f1f2f6); border:1px solid var(--border,#dfe4ea); border-radius:6px; }' +
@@ -6515,7 +6622,7 @@ document.addEventListener('keydown', function (e) {
     '.hr-log-children > .hr-row, .hr-nested-children > .hr-row { padding:4px 0 !important; border:none !important; background:none !important; }' +
     // 空白行：枠も余白も持たない、ただの空き
     '.hr-spacer-row { padding:0 !important; border:none !important; background:none !important; min-height:0 !important; box-shadow:none !important; }' +
-    '.hr-spacer { height:10px; }' +
+    '.hr-spacer { height:14px; }' +
     // チェック＋数量
     '.hr-qtycheck-group { display:flex; flex-direction:column; gap:6px; align-items:stretch; }' +
     '.hr-qtycheck-row { display:flex; align-items:flex-start; gap:6px; font-size:13px; cursor:pointer; }' +

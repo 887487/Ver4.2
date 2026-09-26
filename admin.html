@@ -390,6 +390,8 @@
 /* ログ作成補助：ボタンごとの中の項目の区切り（本物の質問ではなく、見出し＋その場で追加できるボタン） */
 .hr-log-opt-divider{display:flex;align-items:center;gap:6px;padding:6px 14px 4px;margin:0 -14px;border-top:1px dashed var(--border);}   /* 点線は、行の実線（border-bottom）と同じ幅にそろえる */
 .hr-log-opt-divider-label{font-size:9px;font-weight:700;color:var(--text3);white-space:nowrap;opacity:.8;}
+/* ログ作成補助の2つ目以降のボタン（そのボタンの中身のすぐ上に出す） */
+.hr-log-btn-row{padding:6px 0 2px 18px;}
 .hr-log-opt-add{height:18px;padding:0 7px;border-radius:3px;border:1px solid var(--border);background:var(--surface);color:var(--text3);font-size:10px;font-family:inherit;cursor:pointer;}
 .hr-log-opt-add:hover{border-color:var(--accent);color:var(--accent-text);}
 .hr-tpl-edit{
@@ -600,6 +602,7 @@
 }
 .hr-cb-tpl { height:30px;width:auto; }
 .hr-cb-label { height:30px; }
+.hr-cb-label.is-empty { color:var(--red,#e63946);border-color:var(--red,#e63946); }   /* コピーするテキストが空 */
 .hr-cb-text { height:30px;min-height:30px;resize:none;overflow:hidden;line-height:1.5;display:block; }   /* 初めは1行。改行すると広がる（_hrCbFit） */
 .hr-cb-tpl:focus, .hr-cb-label:focus, .hr-cb-text:focus { outline:none;border-color:var(--accent); }
 .hr-cb-card .hr-cb-add { align-self:flex-start;margin-left:32px;padding:3px 12px;border:1px dashed var(--accent);background:transparent;color:var(--accent-text);font-weight:700; }
@@ -1955,11 +1958,17 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
   <div class="tab-panel tab-panel-hearing" id="tabHearing">
     <div style="max-width:920px;margin:0 auto;display:flex;flex-direction:column;gap:20px;">
 
+      <!-- ── ヒアリングタブ ヘッダーバー ── -->
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:14px;font-weight:700;color:var(--text);">📋 ヒアリング設定</div>
+      </div>
+      <div id="hrSaveStatus" style="display:none;padding:8px 12px;border-radius:6px;font-size:12px;"></div>
+
       <!-- ── プレビュー ── -->
       <div>
         <!-- ボタンは hearing.html と同じく見出しの右に置く -->
         <div class="hr-prev-head">
-          <span class="hr-prev-head-title">📋 ヒアリング設定（プレビュー）</span>
+          <span class="hr-prev-head-title">📋 ヒアリングシート（プレビュー）</span>
           <div class="hearing-header-btns">
             <button class="hearing-copy-btn" onclick="window.copyHearingText&&window.copyHearingText()" title="ヒアリング内容をコピー">📋 コピー</button>
             <button class="hearing-reset-btn" onclick="window.resetHearing&&window.resetHearing()" title="入力内容をすべて消去">🗑 リセット</button>
@@ -2020,7 +2029,7 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
         <div class="hr-section-acc-body">
           <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.7;">
             紐付けたテンプレートを選んでいるときだけ、ヒアリングの結果文の下に別枠でボタンを表示します（「共通」はどのテンプレートでも表示）。<br>
-            ボタンを押すと、登録したテキストがそのままコピーされます（ツール画面では編集できません）。テキストが空のボタンは表示されません。<br>
+            ボタンを押すと、登録したテキストがそのままコピーされます（ツール画面では編集できません）。テキストが空のボタンは、ボタン名が赤で表示されます。<br>
             テンプレートごとに1つの枠にまとまります。同じテンプレートのボタンは、枠の中の「＋ 追加」で続けて登録できます。<br>
             「＋ グループを追加」で枠の中にグループを作ると、ツール画面ではグループ名の見出しの下にボタンがまとまって表示されます。
           </div>
@@ -2064,6 +2073,12 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
     </div>
   </div>
 </div>
+
+<!-- ===== 画像ライブラリ（画面遷移タブ内オーバーレイパネル） ===== -->
+  <!-- 旧・全画面の画像ライブラリは廃止（右パネルに統合） -->
+
+
+
 
   <!-- ===== 画面遷移タブ（1カラム構成） ===== -->
   <div class="tab-panel" id="tabScreen">
@@ -3046,7 +3061,10 @@ function _hrCbRowEl(card, sg, b, i, mkBtn) {
   var txt = document.createElement('textarea'); txt.className = 'hr-cb-text'; txt.rows = 1;
   txt.placeholder = 'ボタンを押したときにコピーするテキスト'; txt.value = b.text || '';
   var warn = document.createElement('span'); warn.className = 'hr-cb-warn';
-  var paintWarn = function () { warn.textContent = txt.value ? '' : '⚠ テキストが空のためツール画面には表示されません'; };
+  var paintWarn = function () {
+    warn.textContent = txt.value ? '' : '⚠ テキストが空です（ツール画面ではボタン名が赤で表示されます）';
+    lab.classList.toggle('is-empty', !txt.value);
+  };
   lab.addEventListener('input', function () { _hrCbUpdate(b.id, { label: lab.value }); });
   txt.addEventListener('input', function () { _hrCbFit(txt); _hrCbUpdate(b.id, { text: txt.value }); paintWarn(); });
   paintWarn();
@@ -8095,9 +8113,9 @@ function smRender() {
         ? '<span class="sm-name-fixed" title="名称は common-utils.js で管理しています（変更できません）">' + escHtml(sec.label) + '</span>'
         : '<input class="sm-input" value="' + escHtml(sec.label) + '" placeholder="カテゴリ名（絵文字可）" oninput="smSetCat(' + si + ',\'label\',this.value)" style="flex:1;min-width:0;font-weight:700;font-size:13px;">') +
       (isCode
-        ? '<span class="sm-type-label sm-type-label-code" title="内容・名称は common-utils.js で管理。data.js には並び順だけ保存されます">' + (isFixed ? '表（見出し付き）' : '表') + '・共通管理</span>'
+        ? '<span class="sm-type-label sm-type-label-code" title="内容・名称は common-utils.js で管理。data.js には並び順だけ保存されます">' + (isFixed ? 'ショートカット一覧' : '表') + '・共通管理</span>'
         : isFixed
-        ? '<span class="sm-type-label">表（見出し付き）</span>'
+        ? '<span class="sm-type-label">ショートカット一覧</span>'
         : isTable
           ? '<span class="sm-type-label">表</span>'
           : '<select class="sm-select" onchange="smSetCat(' + si + ',\'type\',this.value)">' +
@@ -15377,7 +15395,6 @@ window.addEventListener('resize',function(){
     };
     container._hrOutline = function(dir) {
       var tNow = (typeof typeSel !== 'undefined' && typeSel) ? typeSel.value : (editQ && editQ.type);
-      if (tNow === 'spacer') { toast('⚠️ 空白行は中に置けないため、段は変えられません'); return; }
       if (isEdit && (editQ.field === 'memo' || editQ.id === 'q_memo')) { toast('⚠️ メモの段は変えられません'); return; }
       var next = _pendIndent + dir;
       if (isEdit && window._hrOutlineSimulate) {
@@ -15531,7 +15548,9 @@ window.addEventListener('resize',function(){
       '<option value="qtycheck" style="display:none">チェック＋数量</option>' +
       '<option value="image">画像</option>';
     // 中には、空白行だけは置けない（見出し・ログ作成補助は中に置ける。ログ作成補助の中にログ作成補助も可）
-    if (parentId) {
+    // ただし、ログ作成補助の中には空白行も置ける（ボタンの中身の区切りとして使う）
+    var _parentQ = parentId ? _hrQuestionsGet().find(function(x) { return x.id === parentId; }) : null;
+    if (parentId && !(_parentQ && _parentQ.type === 'log')) {
       ['spacer'].forEach(function(v) {
         var o = typeSel.querySelector('option[value="' + v + '"]'); if (o) typeSel.removeChild(o);
       });
@@ -15556,7 +15575,8 @@ window.addEventListener('resize',function(){
       pfxSel.value = (typeof editQ.prefix === 'string') ? editQ.prefix : '';
       // 「チェック＋数量」は回答方法のプルダウンには出さないので、
       // 編集時は見た目上「チェックボックス」を選んだ状態にし、下のチェックで数量つきに戻す
-      typeSel.value = (editQ.type === 'qtycheck') ? 'checkbox' : (editQ.type || 'text');
+      // 数量つきにする前の回答方法（qtyBase）があればそれに戻す（ラジオボタン＋数量など）
+      typeSel.value = (editQ.type === 'qtycheck') ? (editQ.qtyBase || 'checkbox') : (editQ.type || 'text');
       var _ids = window.getQuestionTplIds(editQ);
       tplChks.forEach(function(c) { c.checked = _ids.indexOf(c.value) >= 0; });
       syncTpl(null);
@@ -15601,6 +15621,7 @@ window.addEventListener('resize',function(){
     container.appendChild(extra);
 
     var multiline = null, multi = null, optsArea = null, qtyPhInput = null, includeOutputChk = null, textPhInput = null, imgBody = null, qtyToggleChk = null, dateKindSel = null, dateFmtSel = null;
+    var logHeadInp = null, logHeadOutChk = null, logMultiChk = null;   // ログ作成補助の見出し・複数選択
     var _qtyMode = (isEdit && editQ.type === 'qtycheck');   // 「数量も選べるようにする」の状態。チェックボックスの操作だけで変わる
     var _syncOtherBtn = null;   // 「その他（手入力）」ボタンの出し分け
 
@@ -15987,6 +16008,39 @@ window.addEventListener('resize',function(){
         extra.appendChild(qtyRow);
       }
 
+      // ── ログ作成補助：見出し（任意）と、複数選択を許可するか ──
+      if (t === 'log') {
+        var logBox = document.createElement('div');
+        logBox.style.cssText = 'display:flex;flex-direction:column;gap:6px;padding-bottom:8px;border-bottom:1px dashed var(--border);';
+        var lhRow = document.createElement('div');
+        lhRow.style.cssText = 'display:flex;align-items:center;gap:8px;';
+        var lhLbl = document.createElement('span');
+        lhLbl.style.cssText = 'font-size:11px;font-weight:700;color:var(--text2);white-space:nowrap;';
+        lhLbl.textContent = '見出し（任意）';
+        logHeadInp = document.createElement('input');
+        logHeadInp.type = 'text';
+        logHeadInp.style.cssText = INP + 'flex:1;';
+        logHeadInp.placeholder = '空欄なら見出しなし（ボタンの上に表示されます）';
+        logHeadInp.value = (isEdit && editQ.logHeading) || '';
+        lhRow.appendChild(lhLbl); lhRow.appendChild(logHeadInp);
+        var lhOut = document.createElement('label');
+        lhOut.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);cursor:pointer;';
+        logHeadOutChk = document.createElement('input'); logHeadOutChk.type = 'checkbox';
+        logHeadOutChk.checked = !(isEdit && editQ.logHeadingOut === false);
+        var lhOutTxt = document.createElement('span');
+        lhOutTxt.textContent = '見出しを結果文・コピーにも含める（オフにすると、ツール画面の表示だけになります）';
+        lhOut.appendChild(logHeadOutChk); lhOut.appendChild(lhOutTxt);
+        var lmRow = document.createElement('label');
+        lmRow.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);cursor:pointer;';
+        logMultiChk = document.createElement('input'); logMultiChk.type = 'checkbox';
+        logMultiChk.checked = !(isEdit && editQ.logMulti === false);   // 既定は許可（これまでと同じ動き）
+        var lmTxt = document.createElement('span');
+        lmTxt.textContent = '複数選択を許可する（オフにすると、ボタンを1つだけ選べます）';
+        lmRow.appendChild(logMultiChk); lmRow.appendChild(lmTxt);
+        logBox.appendChild(lhRow); logBox.appendChild(lhOut); logBox.appendChild(lmRow);
+        extra.insertBefore(logBox, extra.firstChild);
+      }
+
       // ラジオは1つだけ選ぶもの。複数選択にすると見た目がチェックボックスになり
       // 意味が分からなくなるため許可しない（複数選ばせたい場合はチェックボックス型を使う）。
       setAllowChk((t === 'toggle') ? 'multi' : '');
@@ -16159,6 +16213,8 @@ window.addEventListener('resize',function(){
         newQ.imageHtml = imgHtml;
       } else {
         if (t === 'qtycheck' && qtyPhInput) newQ.placeholder = qtyPhInput.value.trim();
+        // 数量つきにした元の回答方法を覚えておく（ラジオボタンなら1つだけ選ぶ・編集時にラジオに戻す）
+        if (t === 'qtycheck') newQ.qtyBase = typeSel.value;
         if (t === 'select' && dateKindSel && dateKindSel.checked) {
           newQ.manualInputKind = 'date';
           newQ.manualDateFormat = dateFmtSel ? dateFmtSel.value : 'ymd_slash';
@@ -16216,6 +16272,11 @@ window.addEventListener('resize',function(){
             newQ.autoLabel = true;
           }
           label = newQ.label;
+          // 見出し（任意）と複数選択の可否
+          var lh = logHeadInp ? logHeadInp.value.trim() : '';
+          if (lh) newQ.logHeading = lh;
+          if (lh && logHeadOutChk && !logHeadOutChk.checked) newQ.logHeadingOut = false;
+          if (logMultiChk && !logMultiChk.checked) newQ.logMulti = false;
         }
         if (t === 'radio' || t === 'toggle') newQ.multi = !!(multi && multi.checked);
       }
@@ -16336,6 +16397,18 @@ window.addEventListener('resize',function(){
       + (isLog ? 'ログ内' : '子項目') + '</span>';
   }
 
+  /** ログ作成補助・空白行の行の名前（種類名。ログ作成補助は見出し・1つだけ選ぶ設定も添える） */
+  function _hrLogSpacerLabelHtml(q, list) {
+    var h = _hrChildTagHtml(q, list)
+      + '<span class="hr-label-text hr-kind-label" style="opacity:.7;font-size:11px;">' + (q.type === 'spacer' ? '空白行' : 'ログ作成補助') + '</span>';
+    if (q.type === 'log') {
+      var hd = String(q.logHeading || '').trim();
+      if (hd) h += ' <span class="hr-label-prefix">' + escHtml(window.getHearingPrefix(q)) + '</span><span class="hr-label-text">' + escHtml(hd) + '</span>';
+      if (q.logMulti === false) h += ' <span class="hr-child-tag" title="ボタンは1つだけ選べます">1つだけ選ぶ</span>';
+    }
+    return h;
+  }
+
   // ── 行の編集機能を付加（ID指定） ──
   function _attachRowEditing(rowEl, qId) {
     var qs = _hrQuestionsGet();
@@ -16352,7 +16425,7 @@ window.addEventListener('resize',function(){
       // 見つけにくく使いこなせないという指摘のため、右端の「編集」から
       // 追加フォームと同じ画面でまとめて設定する形にしている。
       labelEl.innerHTML = (q.type === 'log' || q.type === 'spacer')
-        ? '<span class="hr-label-text" style="opacity:.7;font-size:11px;">' + (q.type === 'spacer' ? '空白行' : 'ログ作成補助') + '</span>'
+        ? _hrLogSpacerLabelHtml(q, qs)
         : _hrChildTagHtml(q, qs) + '<span class="hr-label-prefix">' + escHtml(window.getHearingPrefix(q)) +
           '</span><span class="hr-label-text">' + _hrLabelAdmin(q) + '</span>';
       var labelTextEl = labelEl.querySelector('.hr-label-text');
@@ -16417,8 +16490,8 @@ window.addEventListener('resize',function(){
         });
         actions.appendChild(addKid);
       }
-      // 段（インデント）の変更。空白行・メモは中に置けないので出さない
-      if (!undeletable && q.type !== 'spacer') {
+      // 段（インデント）の変更。メモは動かせないので出さない（空白行はログ作成補助の中にだけ入れられる）
+      if (!undeletable) {
         var mkIndent = function(delta, label, tip) {
           var b = document.createElement('button');
           b.type = 'button'; b.className = 'hr-row-indent'; b.textContent = label; b.title = tip;
@@ -16560,7 +16633,7 @@ window.addEventListener('resize',function(){
   // 並べ替え・インデントのたびに、プレビューに並んでいる順で見て
   // 「直上にある項目のうち、自分よりインデントの少ない項目」を親として付け直す。
   //   ・見出し・空白行・メモは親になれない（見出しの中の項目はツール画面に出せないため）
-  //   ・空白行は中に置けない（常に 0 段）
+  //   ・空白行はログ作成補助の中にだけ置ける（それ以外では常に 0 段）
   //   ・1つ上の項目より2段以上深くはできない（親にできる項目が無い段は付けられない）
   //   ・ログ作成補助の中に入るときは、直上に見えている「↳ ボタン名」の区切りのボタンの中に入る
   // 保存データは従来どおり parentId / parentOpt（段は親をたどった深さ）なので、ツール画面の表示はそのまま使える。
@@ -16630,7 +16703,7 @@ window.addEventListener('resize',function(){
       var q = byId[e.id];
       if (!q) return;
       var k = Math.max(0, e.indent | 0);
-      if (q.type === 'spacer' || _hrIsMemoQ(q)) k = 0;
+      if (_hrIsMemoQ(q)) k = 0;
       var last = done.length ? done[done.length - 1] : null;
       var limit = !last ? 0
                 : last.div ? last.indent
@@ -16646,6 +16719,8 @@ window.addEventListener('resize',function(){
         }
         if (d.indent < k) { parent = byId[d.id]; break; }
       }
+      // 空白行は、ログ作成補助の中にだけ置ける（それ以外の中には入れず、いちばん外側に置く）
+      if (q.type === 'spacer' && parent && parent.type !== 'log') { parent = null; viaDiv = null; e.indent = k = 0; }
       done.push(e);
       if (!parent) { delete q.parentId; delete q.parentOpt; return; }
       if (parent.type === 'log') {
@@ -16965,13 +17040,24 @@ window.addEventListener('resize',function(){
       };
       qs.forEach(function(q) { if (!q.parentId) addWithChildren(q, 0); });
       var hiddenParents = {};
+      var logBtnHtml = {};   // ログ作成補助のボタン（区切りの直前に1つずつ出す）
 
       ordered.forEach(function(q) {
         if (q.__divider) {
           // 本物の質問ではなく、ボタンごとの中の項目をまとめる見出し（＋その場で追加できる小さなボタン）
           var divDepth = (depthOf[q.parentLogId] || 0) + 1;
+          var logDepth = depthOf[q.parentLogId] || 0;
+          // 2つ目以降のボタンは、その区切りのすぐ上に出す（ボタン → ↳ ボタン名 ＋ 項目 → 中の項目 の順）
+          var btnList = logBtnHtml[q.parentLogId] || [];
+          var opts0 = (window.getHearingOptions(qsAll.find(function(x) { return x.id === q.parentLogId; }) || {}) || []);
+          var oi = opts0.findIndex(function(o) { return (o.v || o.l) === q.optV; });
+          if (oi > 0 && btnList[oi]) {
+            h += '<div class="hr-log-btn-row" style="margin-left:' + (24 * logDepth) + 'px">'
+              + '<div class="hr-log-group">' + btnList[oi] + '</div></div>';
+          }
+          // 区切りは、ボタンより一段インデントして、ボタンのすぐ下に出す
           h += '<div class="hr-log-opt-divider" data-log-id="' + escHtml(q.parentLogId) + '" data-opt="' + escHtml(q.optV) + '">'
-            + '<span class="hr-log-opt-divider-label" style="margin-left:' + (24 * divDepth) + 'px">↳ ' + escHtml(q.optLabel) + '</span>'
+            + '<span class="hr-log-opt-divider-label" style="margin-left:' + (24 * divDepth + 18) + 'px">↳ ' + escHtml(q.optLabel) + '</span>'
             + '<button type="button" class="hr-row-addkid hr-log-opt-add" data-log-id="' + escHtml(q.parentLogId) + '" data-opt="' + escHtml(q.optV) + '">＋ 項目</button>'
             + '</div>';
           return;
@@ -16999,7 +17085,14 @@ window.addEventListener('resize',function(){
 
         // 選択肢そのものを編集できる型だけ専用の描画。それ以外は共通の描画を使う
         var content = '';
-        if (q.type === 'bool') {
+        if (q.type === 'log') {
+          // ログ作成補助：ボタンごとの中身（↳ ボタン名 ＋ 項目）を、そのボタンのすぐ下に並べるため、
+          // この行には最初のボタンだけを出し、2つ目以降は各ボタンの区切りの直前に出す（logBtnHtml）
+          var lrow = window.hearingItemHTML(q, s);
+          var ltmp = document.createElement('div'); ltmp.innerHTML = lrow;
+          logBtnHtml[q.id] = Array.prototype.map.call(ltmp.querySelectorAll('.hr-log-btn'), function(b) { return b.outerHTML; });
+          content = '<div class="hr-log-group">' + (logBtnHtml[q.id][0] || '') + '</div>';
+        } else if (q.type === 'bool') {
           content = _boolBtnsEdit(q.field, s[q.field], q.trueLabel||'はい', q.falseLabel||'いいえ');
         } else if (q.type === 'str') {
           content = _strBtnsEdit(q.field, s[q.field], window.getHearingOptions(q));
@@ -17018,7 +17111,7 @@ window.addEventListener('resize',function(){
              (hiddenBy ? ' data-hidden-by="' + escHtml(hiddenBy) + '"' : '') + '>' +
              '<div class="hr-label">' +
                ((q.type === 'log' || q.type === 'spacer')
-                 ? '<span class="hr-label-text" style="opacity:.7;font-size:11px;">' + (q.type === 'spacer' ? '空白行' : 'ログ作成補助') + '</span>'
+                 ? _hrLogSpacerLabelHtml(q, qsAll)
                  : _hrChildTagHtml(q, qsAll) +
                    '<span class="hr-label-prefix">' + escHtml(window.getHearingPrefix(q)) + '</span>' +
                    '<span class="hr-label-text">' + _hrLabelAdmin(q) + '</span>') + '</div>' +
