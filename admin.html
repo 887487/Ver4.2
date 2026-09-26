@@ -427,7 +427,9 @@
   position:absolute; top:4px; right:6px;
   display:inline-flex; align-items:center; gap:4px;
 }
-.tab-panel-hearing .hr-row{ position:relative; padding-right:126px; padding-left:18px; }
+.tab-panel-hearing .hr-row{ position:relative; padding-right:calc(var(--hr-act-w, 116px) + 10px); padding-left:18px; }   /* 右上のボタンの幅だけ空ける（_hrFitActions） */
+/* 行に収まらない長い項目名（長い見出しなど）は、右上のボタンに重ならないよう折り返す（収まる名前は今までどおり1行） */
+.tab-panel-hearing .hr-row:not([class*="hr-pos-"]) > .hr-label{ white-space:normal; max-width:100%; flex-shrink:0; overflow-wrap:anywhere; }
 .hr-row-indent{ height:18px; min-width:20px; padding:0 4px; border-radius:3px; border:1px solid var(--border); background:var(--surface); color:var(--text3); font-size:11px; line-height:1; font-family:inherit; cursor:pointer; }
 .hr-row-indent:hover{ border-color:var(--accent); color:var(--accent-text); }
 /* 編集フォームの「段」の案内 */
@@ -16712,6 +16714,23 @@ window.addEventListener('resize',function(){
     return h;
   }
 
+  /**
+   * 右上のボタン（＋ 項目・⇤ ⇥・編集・×）の幅だけ、行の右側を空ける。
+   * ボタンの数は行ごとに違う（中の項目には「＋ 項目」が付く）ので、実際の幅を測って決める。
+   * 回答を項目名の右・左・上に置いた行では回答が1行目に来るため、ここが足りないとボタンに重なっていた。
+   */
+  function _hrFitActions(rowEl, actions) {
+    var w = actions.offsetWidth;
+    if (w) { rowEl.style.setProperty('--hr-act-w', w + 'px'); return; }
+    // 画面に出ていない（別のタブを表示中など）ときは、ボタンの数から見積もる（表示時の描き直しで正しい幅になる）
+    var est = 0;
+    Array.prototype.forEach.call(actions.children, function(b) {
+      est += b.classList.contains('hr-row-addkid') ? 46 : b.classList.contains('hr-row-edit') ? 36 : 24;
+    });
+    est += Math.max(0, actions.children.length - 1) * 4;
+    rowEl.style.setProperty('--hr-act-w', est + 'px');
+  }
+
   // ── 行の編集機能を付加（ID指定） ──
   function _attachRowEditing(rowEl, qId) {
     var qs = _hrQuestionsGet();
@@ -16822,6 +16841,7 @@ window.addEventListener('resize',function(){
         actions.appendChild(delQ);
       }
       rowEl.appendChild(actions);
+      _hrFitActions(rowEl, actions);
 
       // 「文」「選択肢」の小さなボタンは廃止。
       // 出力文も選択肢も、右端の「編集」から開く画面でまとめて設定する。
