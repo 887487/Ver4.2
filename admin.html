@@ -385,6 +385,13 @@
 .prev-add .mail-input{flex:1;}
 .prev-hint{font-size:11px;color:var(--muted);}
 .page-admin .hr-spacer{height:10px;border-top:1px dashed var(--border);margin:5px 0;}   /* 左の「空白行」ラベルで用途は分かるため、説明文は出さない */
+/* 空白行の行：ドラッグハンドル・「空白行」・点線・⇤ ⇥・編集・× を1行に並べ、高さも1行分にする */
+.tab-panel-hearing .hr-row.hr-row-spacer{ flex-direction:row !important; flex-wrap:nowrap !important; align-items:center !important; min-height:32px; padding-top:0 !important; padding-bottom:0 !important; box-sizing:border-box; }
+.tab-panel-hearing .hr-row.hr-row-spacer > .hr-label{ flex:0 0 auto; min-width:0 !important; padding-top:0 !important; margin:0 !important; }
+.tab-panel-hearing .hr-row.hr-row-spacer > .hr-btns{ flex:1 1 auto !important; min-width:0; width:auto !important; margin:0 !important; align-self:center; }
+.tab-panel-hearing .hr-row.hr-row-spacer .hr-spacer{ height:0; margin:0 0 0 10px; }
+.tab-panel-hearing .hr-row.hr-row-spacer > .hr-row-actions,
+.tab-panel-hearing .hr-row.hr-row-spacer > .hr-drag-handle{ top:50% !important; transform:translateY(-50%); }
 .hr-row-child{border-left:3px solid var(--accent-lt,#dfe3ff);background:var(--surface2);}   /* margin-left は深さに応じて行ごとに指定 */
 .hr-child-tag{display:inline-block;margin-right:6px;padding:0 6px;border-radius:8px;font-size:9px;font-weight:700;background:var(--accent-lt);color:var(--accent-text);vertical-align:middle;}
 /* ログ作成補助：ボタンごとの中の項目の区切り（本物の質問ではなく、見出し＋その場で追加できるボタン） */
@@ -17538,7 +17545,7 @@ window.addEventListener('resize',function(){
         // 深さに応じて字下げを重ねる（親→子→孫…）
         var depth = depthOf[q.id] || 0;
         var ansPos = window.hearingAnsPos ? window.hearingAnsPos(q) : '';
-        var rowHtml = '<div class="hr-row' + (q.parentId ? ' hr-row-child' : '') + (hiddenBy ? ' hr-row-cond-hidden' : '') + (ansPos ? ' hr-pos-' + ansPos : '') + '"' +
+        var rowHtml = '<div class="hr-row' + (q.parentId ? ' hr-row-child' : '') + (hiddenBy ? ' hr-row-cond-hidden' : '') + (ansPos ? ' hr-pos-' + ansPos : '') + (q.type === 'spacer' ? ' hr-row-spacer' : '') + '"' +
              (q.parentId ? ' style="margin-left:' + (24 * depth) + 'px"' : '') +
              ' data-q-id="' + escHtml(q.id) + '"' +
              (hiddenBy ? ' data-hidden-by="' + escHtml(hiddenBy) + '"' : '') + '>' +
