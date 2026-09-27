@@ -384,7 +384,7 @@
 .prev-add{display:flex;gap:6px;width:100%;}
 .prev-add .mail-input{flex:1;}
 .prev-hint{font-size:11px;color:var(--muted);}
-.page-admin .hr-spacer{height:10px;border-top:1px dashed var(--border);margin:5px 0;}   /* 左の「空白行」ラベルで用途は分かるため、説明文は出さない */
+.page-admin .hr-spacer{height:10px;margin:5px 0;}   /* 左の「空白行」ラベルで用途は分かるため、説明文・点線は出さない */
 /* 空白行の行：ドラッグハンドル・「空白行」・点線・⇤ ⇥・編集・× を1行に並べ、高さも1行分にする */
 .tab-panel-hearing .hr-row.hr-row-spacer{ flex-direction:row !important; flex-wrap:nowrap !important; align-items:center !important; min-height:32px; padding-top:0 !important; padding-bottom:0 !important; box-sizing:border-box; }
 .tab-panel-hearing .hr-row.hr-row-spacer > .hr-label{ flex:0 0 auto; min-width:0 !important; padding-top:0 !important; margin:0 !important; }
@@ -15819,9 +15819,9 @@ window.addEventListener('resize',function(){
       '<option value="toggle">トグルボタン</option>' +
       '<option value="log">ログ作成補助</option>' +
       '<option value="spacer">空白行</option>' +
-      // 「チェック＋数量」は、チェックボックス／トグルボタン／ラジオボタンの追加設定
-      // （「数量も選べるようにする」）から有効にする。回答方法としては直接選ばせない。
-      '<option value="qtycheck" style="display:none">チェック＋数量</option>' +
+      // 「チェック＋数量」は回答方法には置かない（選択肢自体を出さない）。
+      // チェックボックス／トグルボタン／ラジオボタンの「数量も選べるようにする」で個別に設定する。
+      // （display:none の選択肢は、Safari などではプルダウンに表示されてしまうため、要素ごと置かない）
       '<option value="image">画像</option>';
     // 中には、空白行だけは置けない（見出し・ログ作成補助は中に置ける。ログ作成補助の中にログ作成補助も可）
     // ただし、ログ作成補助の中には空白行も置ける（ボタンの中身の区切りとして使う）
