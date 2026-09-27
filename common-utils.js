@@ -5300,6 +5300,12 @@ function _hrApplyAnsPos(q, raw) {
 
 window.hearingItemHTML = function (q, s) {
   var raw = _hrApplyAnsPos(q, _hearingItemHTMLRaw(q, s));
+  // 中の段にある見出し（ログ作成補助の中など）にも中の項目があれば、見出しのすぐ下に一段下げて出す
+  if (raw && q.type === 'heading' && !(document.body && document.body.classList.contains('page-admin'))) {
+    var hk = window.hearingChildItems(q, s);
+    if (hk.length) raw += '<div class="hr-nested-children hr-heading-children">' + hk.map(function (k) { return window.hearingItemHTML(k, s); }).join('') + '</div>';
+    return raw;
+  }
   if (!raw || q.type === 'spacer' || q.type === 'heading' || q.type === 'log') return raw;
   if (document.body && document.body.classList.contains('page-admin')) return raw;
   var kids = window.hearingChildItems(q, s);
@@ -5996,6 +6002,12 @@ function renderHearing() {
         +     escHtml(window.getHearingPrefix(q)) + window.hrLabelHtml(q)
         +   '</div>'
         +   '<div class="hr-group-body">';
+      // 見出しの下にインデントした項目（見出しの中の項目）は、見出しのすぐ下に一段下げて出す
+      var hKids = window.hearingChildItems(q, s);
+      if (hKids.length) {
+        h += '<div class="hr-nested-children hr-heading-children">'
+          + hKids.map(function (k) { return window.hearingItemHTML(k, s); }).join('') + '</div>';
+      }
       _hrGroupOpen = true;
       return;
     }

@@ -392,6 +392,12 @@
 .tab-panel-hearing .hr-row.hr-row-spacer .hr-spacer{ height:0; margin:0 0 0 10px; }
 .tab-panel-hearing .hr-row.hr-row-spacer > .hr-row-actions,
 .tab-panel-hearing .hr-row.hr-row-spacer > .hr-drag-handle{ top:50% !important; transform:translateY(-50%); }
+/* 見出しの行も同じく1行の高さにする（回答を持たないので、空の回答欄を2行目に出さない） */
+.tab-panel-hearing .hr-row.hr-row-heading{ flex-direction:row !important; flex-wrap:nowrap !important; align-items:center !important; min-height:32px; padding-top:0 !important; padding-bottom:0 !important; box-sizing:border-box; }
+.tab-panel-hearing .hr-row.hr-row-heading > .hr-label{ padding-top:0 !important; margin:0 !important; }
+.tab-panel-hearing .hr-row.hr-row-heading > .hr-btns:empty{ display:none; }
+.tab-panel-hearing .hr-row.hr-row-heading > .hr-row-actions,
+.tab-panel-hearing .hr-row.hr-row-heading > .hr-drag-handle{ top:50% !important; transform:translateY(-50%); }
 .hr-row-child{border-left:3px solid var(--accent-lt,#dfe3ff);background:var(--surface2);}   /* margin-left は深さに応じて行ごとに指定 */
 .hr-child-tag{display:inline-block;margin-right:6px;padding:0 6px;border-radius:8px;font-size:9px;font-weight:700;background:var(--accent-lt);color:var(--accent-text);vertical-align:middle;}
 /* ログ作成補助：ボタンごとの中の項目の区切り（本物の質問ではなく、見出し＋その場で追加できるボタン） */
@@ -16968,13 +16974,14 @@ window.addEventListener('resize',function(){
   // ヒアリング項目は、インデントの数（段）で親子を表す。
   // 並べ替え・インデントのたびに、プレビューに並んでいる順で見て
   // 「直上にある項目のうち、自分よりインデントの少ない項目」を親として付け直す。
-  //   ・見出し・空白行・メモは親になれない（見出しの中の項目はツール画面に出せないため）
+  //   ・空白行・メモは親になれない（見出しは親になれる。中の項目は見出しのすぐ下に一段下げて出す）
   //   ・空白行はログ作成補助の中にだけ置ける（それ以外では常に 0 段）
   //   ・1つ上の項目より2段以上深くはできない（親にできる項目が無い段は付けられない）
   //   ・ログ作成補助の中に入るときは、直上に見えている「↳ ボタン名」の区切りのボタンの中に入る
   // 保存データは従来どおり parentId / parentOpt（段は親をたどった深さ）なので、ツール画面の表示はそのまま使える。
   function _hrIsMemoQ(q) { return !!q && (q.field === 'memo' || q.id === 'q_memo'); }
-  function _hrCanBeParent(q) { return !!q && q.type !== 'spacer' && q.type !== 'heading' && !_hrIsMemoQ(q); }
+  // 見出しも親になれる（見出しの下にインデントした項目は、その見出しの中の項目になる）
+  function _hrCanBeParent(q) { return !!q && q.type !== 'spacer' && !_hrIsMemoQ(q); }
 
   /** 親→子→孫…の順（親のすぐ後に子孫が続く順）に並べ直す。画面の見え方は変わらない */
   function _hrDfsOrder(qs) {
@@ -17545,7 +17552,7 @@ window.addEventListener('resize',function(){
         // 深さに応じて字下げを重ねる（親→子→孫…）
         var depth = depthOf[q.id] || 0;
         var ansPos = window.hearingAnsPos ? window.hearingAnsPos(q) : '';
-        var rowHtml = '<div class="hr-row' + (q.parentId ? ' hr-row-child' : '') + (hiddenBy ? ' hr-row-cond-hidden' : '') + (ansPos ? ' hr-pos-' + ansPos : '') + (q.type === 'spacer' ? ' hr-row-spacer' : '') + '"' +
+        var rowHtml = '<div class="hr-row' + (q.parentId ? ' hr-row-child' : '') + (hiddenBy ? ' hr-row-cond-hidden' : '') + (ansPos ? ' hr-pos-' + ansPos : '') + (q.type === 'spacer' ? ' hr-row-spacer' : '') + (q.type === 'heading' ? ' hr-row-heading' : '') + '"' +
              (q.parentId ? ' style="margin-left:' + (24 * depth) + 'px"' : '') +
              ' data-q-id="' + escHtml(q.id) + '"' +
              (hiddenBy ? ' data-hidden-by="' + escHtml(hiddenBy) + '"' : '') + '>' +
