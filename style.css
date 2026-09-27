@@ -590,7 +590,7 @@ body > .hearing-panel { top:var(--header-h); }
 .hr-row[class*="hr-pos-"] > .hr-nested-children, .hr-row[class*="hr-pos-"] > .hr-log-children { order:1;flex:0 0 100%; }
 /* 結果文の値：先頭の空白（字下げ）や連続する空白をそのまま見せる */
 .hr-sum-val { white-space:pre-wrap; }
-.hr-label { font-size:10px;font-weight:700;color:#555;line-height:1.4; }
+.hr-label { font-size:12px;font-weight:700;color:#555;line-height:1.4; }
 .hr-btns { display:flex;flex-wrap:wrap;gap:5px; }
 .hr-btn { min-height:28px;padding:4px 10px;border:1px solid var(--border);border-radius:5px;background:var(--surface);font-size:11px;cursor:pointer;color:var(--text);transition:border-color 0.15s,background 0.15s,color 0.15s;font-family:inherit;line-height:1.4;white-space:normal;text-align:left; }
 .hr-btn:hover { border-color:var(--accent);color:var(--accent-text);background:#f0f4ff; }
