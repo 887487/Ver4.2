@@ -6282,7 +6282,7 @@ function buildHearingLines(s) {
       out.push({
         kind: 'row', label: q.label, outLabel: (q.outLabel || q.label),
         value: blocks.join('\n' + LOG_SEPARATOR + '\n'),
-        htmlValue: hasRich ? htmlBlocks.join('<br>' + escHtml(LOG_SEPARATOR) + '<br>') : '',
+        htmlValue: hasRich ? _hrFixBlockBr(htmlBlocks.join('<br>' + escHtml(LOG_SEPARATOR) + '<br>')) : '',
         type: '', outTpl: '', multiline: true, logOnly: true
       });
       return;
@@ -6313,7 +6313,7 @@ function buildHearingLines(s) {
       out.push({
         kind: 'row', label: q.label, outLabel: (q.outLabel || q.label),
         value: qp.texts.join('\n'),
-        htmlValue: qp.hasRich ? qp.htmls.join('<br>') : '',
+        htmlValue: qp.hasRich ? _hrFixBlockBr(qp.htmls.join('<br>')) : '',
         type: '', outTpl: '', multiline: true, logOnly: true
       });
       return;
@@ -6422,6 +6422,17 @@ function buildHearingLines(s) {
   });
   return _hrTrimBlanks(kept);
 }
+
+/**
+ * 書式つきの本文をつなぐときの改行の重なりを直す。
+ * 書式つきの本文は1行ずつ <div>…</div> になっているため、その後ろにつなぎの <br> を置くと、
+ * 画面では空行が1つ余分に見えていた（コピーした文字では改行1つなので、画面だけ空行が増えていた）。
+ * ブロックの終わり（</div> など）のすぐ後ろの <br> を1つだけ取り除く（2つ目以降は本当の空行なので残す）。
+ */
+function _hrFixBlockBr(html) {
+  return String(html || '').replace(/(<\/(?:div|p|table|ul|ol|li|h[1-6]|blockquote|pre)>)(\s*)<br\s*\/?>/gi, '$1$2');
+}
+window._hrFixBlockBr = _hrFixBlockBr;
 
 /**
  * 空白行の整理：先頭・末尾の空白行と、連続する空白行は1つにまとめて取り除く。
@@ -6589,7 +6600,7 @@ function renderHearingSummary() {
   }
   h += '</div>';
   h += copyHtml;   // 結果文の下段に別枠で出す
-  area.innerHTML = h;
+  area.innerHTML = _hrFixBlockBr(h);
   if (hasPolicy) {
     setTimeout(function () {
       var pEl = document.getElementById('hearingPolicyArea');
@@ -6609,7 +6620,7 @@ window.copyHearingText = function () {
   // 書式に対応した貼り付け先では書式つきで、対応しない所では今までどおり plain で入る。
   if (items.some(_hrLineIsRich) &&
       window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
-    var html = items.map(_hrLineHtml).join('<br>');
+    var html = _hrFixBlockBr(items.map(_hrLineHtml).join('<br>'));
     var plainOnly = function () {
       try { navigator.clipboard.writeText(text).then(done, function () { _fallbackCopy(text); done(); }); }
       catch (e) { _fallbackCopy(text); done(); }
