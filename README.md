@@ -1,3 +1,10 @@
+data.jsにデータは入っているが読み込まれていない
+
+hearing.html:1 Unsafe attempt to load URL file:///C:/Users/z2253238/%E3%80%90SOD%E3%80%91%20Ver4.2/hearing.html from frame with URL file:///C:/Users/z2253238/%E3%80%90SOD%E3%80%91%20Ver4.2/hearing.html. 'file:' URLs are treated as unique security origins.
+
+<img width="1560" height="1032" alt="image" src="https://github.com/user-attachments/assets/19c259a7-2145-408e-abfc-46ae263ea243" />
+
+
 〓〓〓〓〓〓〓〓〓〓common-utils.js〓〓〓〓〓〓〓〓〓〓
 // ── 表のセクション（フォネティックコード／メールドメイン一覧）と、ショートカットの見出し ──
 window.SIDEMENU_DEFAULT_TABLES = [
