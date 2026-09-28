@@ -930,6 +930,10 @@ details[open] > summary .hr-acc-arrow { transform: rotate(90deg); }
 .rt-color-auto-sw{ width:16px; height:16px; background:#000; border:1px solid #999; }
 .rt-color-more{ display:flex; align-items:center; gap:6px; margin-top:6px; padding:4px; border-radius:3px; cursor:pointer; position:relative; font-size:11px; }
 .rt-color-more input{ position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+/* カテゴリの色（●）：押すとパレットが開く */
+.cat-color-pick{ cursor:pointer; transition:box-shadow .12s, transform .12s; }
+.cat-color-pick:hover{ box-shadow:0 0 0 2px var(--surface), 0 0 0 3px var(--accent); transform:scale(1.25); }
+.cat-color-pop .cat-color-title{ margin-top:0; }
 /* 選択中の色（「A」の下線の色）。マスをオレンジの枠で囲む */
 .rt-color-cell.is-current{ outline:2px solid #e3842b; outline-offset:1px; position:relative; z-index:2; }
 .rt-color-auto.is-current, .rt-color-more.is-current{ border:1px solid #e3842b; background:#fdf1e6; }
@@ -4027,7 +4031,7 @@ function renderSidebar(){
       <div class="cat-header" onclick="toggleCatAcc(event,'${key}')" style="cursor:pointer;">
         <span class="cat-drag-handle" draggable="true" ondragstart="catDragStart(event,'script','${key}')" ondragend="catDragEnd(event)" onclick="event.stopPropagation()" title="ドラッグして並べ替え">⠿</span>
         <span class="cat-acc-arrow">▶</span>
-        <div class="cat-color" style="background:${cat.color||'#ccc'}"></div>
+        <div class="cat-color cat-color-pick" style="background:${cat.color||'#ccc'}" onclick="catColorMenu(event,this,'script','${key}')" title="クリックで色を変更"></div>
         <span class="cat-name-display" style="flex:1;font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:default;"
               ondblclick="event.stopPropagation();startCatNameEdit(this,'${key}')"
               title="ダブルクリックで名前を編集">${escHtml(cat.name)}</span>
@@ -4702,6 +4706,7 @@ function importJSON(input){
 // 画面遷移データをメモリ・localStorage に反映してサイドバーを再描画する
 function _applyScreenData(data, silent) {
   screenPatterns = data;
+  _scrReady = true;
   scrSaveIndex();
   try { localStorage.removeItem('screenFlowData'); } catch(e) {}
   _scrCurrentPatId = screenPatterns.length ? screenPatterns[0].id : null;
@@ -5080,7 +5085,7 @@ function _fileToDataUrl(url) {
 
 function exportJSON(){
   // screenPatterns が空なら localStorage インデックスを読む（スクリーンタブ未開封時対策）
-  var inMem = (typeof screenPatterns!=='undefined'&&screenPatterns&&screenPatterns.length)
+  var inMem = (typeof screenPatterns!=='undefined'&&screenPatterns&&(screenPatterns.length||_scrReady))
     ? screenPatterns : (typeof scrLoadIndex==='function' ? scrLoadIndex() : null);
 
   function _doExport(rawPatterns) {
@@ -5354,7 +5359,7 @@ function renderMailSidebar(){
       <div class="cat-header" onclick="toggleMailCatAcc(event,'${cat.key}')" style="cursor:pointer;">
         <span class="cat-drag-handle" draggable="true" ondragstart="catDragStart(event,'mail','${cat.key}')" ondragend="catDragEnd(event)" onclick="event.stopPropagation()" title="ドラッグして並べ替え">⠿</span>
         <span class="cat-acc-arrow${_collapsedMailCats[cat.key]?'':' open'}">▶</span>
-        <div class="cat-color" style="background:${cat.color}"></div>
+        <div class="cat-color cat-color-pick" style="background:${cat.color}" onclick="catColorMenu(event,this,'mail','${cat.key}')" title="クリックで色を変更"></div>
         <span class="cat-name-display" style="flex:1;font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:default;"
               ondblclick="event.stopPropagation();startMailCatNameEdit(this,'${cat.key}')"
               title="ダブルクリックで名前を編集">${escHtml(cat.name)}</span>
@@ -7141,15 +7146,18 @@ function _rtHex(c) {
  */
 function _rtMarkCurrentColor() {
   if (!_rtColorPop) return;
-  _rtColorPop.querySelectorAll('.is-current').forEach(function(x) { x.classList.remove('is-current'); });
-  var cur = (!_rtLastColor || _rtLastColor === 'auto') ? 'auto' : (_rtHex(_rtLastColor) || 'auto');
+  _rtMarkColorIn(_rtColorPop, (!_rtLastColor || _rtLastColor === 'auto') ? 'auto' : (_rtHex(_rtLastColor) || 'auto'));
+}
+/** pop の中で、色 cur（'#RRGGBB' か 'auto'）のマスに枠を付ける */
+function _rtMarkColorIn(pop, cur) {
+  pop.querySelectorAll('.is-current').forEach(function(x) { x.classList.remove('is-current'); });
   var hit = null;
-  if (cur === 'auto') hit = _rtColorPop.querySelector('.rt-color-auto');
+  if (cur === 'auto') hit = pop.querySelector('.rt-color-auto');
   else {
     // テーマの色と標準の色で同じ色（オレンジ #FFC000 など）があれば、Office と同じくテーマの色の方に付ける
-    hit = Array.prototype.find.call(_rtColorPop.querySelectorAll('.rt-color-cell'), function(x) {
+    hit = Array.prototype.find.call(pop.querySelectorAll('.rt-color-cell'), function(x) {
       return String(x.getAttribute('data-color')).toUpperCase() === cur;
-    }) || _rtColorPop.querySelector('.rt-color-more');   // パレットに無い色は「その他の色」に枠を付ける
+    }) || pop.querySelector('.rt-color-more');   // パレットに無い色は「その他の色」に枠を付ける
   }
   if (hit) hit.classList.add('is-current');
 }
@@ -7177,8 +7185,9 @@ function _rtAddRecentColor(hex) {
   try { localStorage.setItem(RT_RECENT_KEY, JSON.stringify(list.slice(0, RT_RECENT_MAX))); } catch (e) {}
 }
 /** パレットの「最近使用した色」の段を描き直す（履歴が無ければ段ごと出さない） */
-function _rtRenderRecent() {
-  var wrap = _rtColorPop && _rtColorPop.querySelector('.rt-color-recent-wrap');
+function _rtRenderRecent(pop) {
+  pop = pop || _rtColorPop;
+  var wrap = pop && pop.querySelector('.rt-color-recent-wrap');
   if (!wrap) return;
   var list = _rtRecentColors();
   if (!list.length) { wrap.innerHTML = ''; return; }
@@ -7192,6 +7201,30 @@ function _rtRenderRecent() {
     + '</div>';
 }
 
+/**
+ * 色のパレットの中身（Microsoft 365 と同じ配色・配置）。文字色とカテゴリの色（●）で共通に使う。
+ * withAuto：先頭に「自動」（色を外す）を付けるか（文字色だけ）
+ */
+function _rtPaletteHtml(withAuto) {
+  var cell = function(hex, title) {
+    return '<button type="button" class="rt-color-cell" data-color="#' + hex + '" title="' + escHtml(title) + '" style="background:#' + hex + '"></button>';
+  };
+  var h = withAuto ? '<button type="button" class="rt-color-auto" data-color="auto"><span class="rt-color-auto-sw"></span>自動</button>' : '';
+  h += '<div class="rt-color-cap">テーマの色</div><div class="rt-color-grid rt-color-theme-top">';
+  RT_THEME_ROWS[0].forEach(function(hex, c) { h += cell(hex.replace('#', ''), RT_THEME_NAMES[c]); });
+  h += '</div><div class="rt-color-grid rt-color-theme-shades">';
+  // 明るさ違いは、Office と同じく列ごとに縦につながって見えるように並べる
+  for (var r = 1; r < RT_THEME_ROWS.length; r++) {
+    RT_THEME_ROWS[r].forEach(function(hex, c) { h += cell(hex.replace('#', ''), RT_THEME_NAMES[c] + '、' + _rtVariantName(c, r)); });
+  }
+  h += '</div><div class="rt-color-cap">標準の色</div><div class="rt-color-grid">';
+  RT_STD_COLORS.forEach(function(x) { h += cell(x[0], x[1]); });
+  // 「その他の色」で作った色の履歴（最近使用した色）。開くたびに _rtRenderRecent で中身を入れ直す
+  h += '</div><div class="rt-color-recent-wrap"></div>';
+  h += '<label class="rt-color-more">🎨 その他の色…<input type="color" value="#c00000"></label>';
+  return h;
+}
+
 /** ▾：パレットを開く */
 function rtColorMenu(btn) {
   if (_rtColorPop && _rtColorPop.style.display === 'block' && _rtColorPop._btn === btn) { rtColorClose(); return; }
@@ -7199,23 +7232,7 @@ function rtColorMenu(btn) {
   if (!_rtColorPop) {
     _rtColorPop = document.createElement('div');
     _rtColorPop.className = 'rt-color-pop';
-    var cell = function(hex, title) {
-      return '<button type="button" class="rt-color-cell" data-color="#' + hex + '" title="' + escHtml(title) + '" style="background:#' + hex + '"></button>';
-    };
-    var h = '<button type="button" class="rt-color-auto" data-color="auto"><span class="rt-color-auto-sw"></span>自動</button>';
-    h += '<div class="rt-color-cap">テーマの色</div><div class="rt-color-grid rt-color-theme-top">';
-    RT_THEME_ROWS[0].forEach(function(hex, c) { h += cell(hex.replace('#', ''), RT_THEME_NAMES[c]); });
-    h += '</div><div class="rt-color-grid rt-color-theme-shades">';
-    // 明るさ違いは、Office と同じく列ごとに縦につながって見えるように並べる
-    for (var r = 1; r < RT_THEME_ROWS.length; r++) {
-      RT_THEME_ROWS[r].forEach(function(hex, c) { h += cell(hex.replace('#', ''), RT_THEME_NAMES[c] + '、' + _rtVariantName(c, r)); });
-    }
-    h += '</div><div class="rt-color-cap">標準の色</div><div class="rt-color-grid">';
-    RT_STD_COLORS.forEach(function(x) { h += cell(x[0], x[1]); });
-    // 「その他の色」で作った色の履歴（最近使用した色）。開くたびに _rtRenderRecent で中身を入れ直す
-    h += '</div><div class="rt-color-recent-wrap"></div>';
-    h += '<label class="rt-color-more">🎨 その他の色…<input type="color" value="#c00000"></label>';
-    _rtColorPop.innerHTML = h;
+    _rtColorPop.innerHTML = _rtPaletteHtml(true);
     // 押しても編集欄の選択が外れないようにする（「その他の色」の入力だけは除く）
     _rtColorPop.addEventListener('mousedown', function(e) { if (!e.target.closest('.rt-color-more')) e.preventDefault(); });
     _rtColorPop.addEventListener('click', function(e) {
@@ -7254,6 +7271,83 @@ function rtColorMenu(btn) {
   _rtColorPop.style.top = top + 'px';
 }
 window.addEventListener('scroll', function() { rtColorClose(); }, true);
+
+// ── カテゴリの色（●）のパレット ──
+// スクリプト・メールのカテゴリ、画面遷移のパターンの ● を押すと、文字色と同じパレットで色を選べる。
+// （以前は追加したときにランダムで1色が決まり、あとから変えられなかった）
+var _catColorPop = null;
+function catColorClose() { if (_catColorPop) _catColorPop.style.display = 'none'; }
+
+function catColorMenu(ev, dot, kind, key) {
+  if (ev) { ev.stopPropagation(); ev.preventDefault(); }   // 見出しの開閉を起こさない
+  if (_catColorPop && _catColorPop.style.display === 'block' && _catColorPop._dot === dot) { catColorClose(); return; }
+  rtColorClose();
+  if (!_catColorPop) {
+    _catColorPop = document.createElement('div');
+    _catColorPop.className = 'rt-color-pop cat-color-pop';
+    _catColorPop.innerHTML = '<div class="rt-color-cap cat-color-title">カテゴリの色</div>' + _rtPaletteHtml(false);
+    _catColorPop.addEventListener('click', function(e) {
+      var b = e.target.closest('[data-color]');
+      if (!b) return;
+      catColorClose();
+      _catColorApply(_catColorPop._kind, _catColorPop._key, b.getAttribute('data-color'));
+    });
+    var moreInp = _catColorPop.querySelector('.rt-color-more input');
+    moreInp.addEventListener('change', function() {
+      catColorClose();
+      var hex = moreInp.value.toUpperCase();
+      _rtAddRecentColor(hex);          // 文字色と同じく「最近使用した色」に残す
+      _catColorApply(_catColorPop._kind, _catColorPop._key, hex);
+    });
+    document.body.appendChild(_catColorPop);
+    document.addEventListener('mousedown', function(e) {
+      if (_catColorPop.style.display !== 'block') return;
+      if (_catColorPop.contains(e.target) || e.target.closest('.cat-color-pick')) return;
+      catColorClose();
+    }, true);
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') catColorClose(); });
+    window.addEventListener('scroll', function(e) {
+      if (_catColorPop && !_catColorPop.contains(e.target)) catColorClose();
+    }, true);
+  }
+  _catColorPop._dot = dot; _catColorPop._kind = kind; _catColorPop._key = key;
+  var cur = _rtHex(dot.style.backgroundColor || getComputedStyle(dot).backgroundColor);
+  var more = _catColorPop.querySelector('.rt-color-more input');
+  if (more && cur) more.value = cur.toLowerCase();
+  _rtRenderRecent(_catColorPop);
+  _rtMarkColorIn(_catColorPop, cur || '');
+  _catColorPop.style.display = 'block';
+  // ● のすぐ下に出す（画面からはみ出す場合は内側へずらす）
+  var r = dot.getBoundingClientRect(), w = _catColorPop.offsetWidth, hh = _catColorPop.offsetHeight;
+  var left = Math.min(Math.max(4, r.left - 10), window.innerWidth - w - 4);
+  var top = r.bottom + 6;
+  if (top + hh > window.innerHeight - 4) top = Math.max(4, r.top - hh - 6);
+  _catColorPop.style.left = left + 'px';
+  _catColorPop.style.top = top + 'px';
+}
+
+/** 選んだ色をカテゴリ（パターン）に付けて、未保存の変更として扱う（「保存して反映」で各ページに反映） */
+function _catColorApply(kind, key, color) {
+  color = _rtHex(color);
+  if (!color) return;
+  if (kind === 'script') {
+    if (!data[key]) return;
+    data[key].color = color;
+    save(); renderSidebar();
+  } else if (kind === 'mail') {
+    initMailCatMeta();
+    var mc = mailCatMeta.cats.find(function(c) { return c.key === key; });
+    if (mc) { mc.color = color; saveMailCatMeta(); }
+    // メール画面はテンプレートごとの catColor で色を出すので、同じカテゴリのものをそろえて変える
+    mailData.filter(function(t) { return t.catKey === key; }).forEach(function(t) { t.catColor = color; });
+    markDirty(); renderMailSidebar();
+  } else if (kind === 'screen') {
+    var p = screenPatterns.find(function(x) { return x.id === key; });
+    if (!p) return;
+    p.color = color;
+    scrSaveIndex(); scrSaveData(); markDirty(); scrRenderUnifiedSidebar();
+  }
+}
 
 // ── 本文のインデント ──
 // 選んだ行（カーソルのある行）の行頭に全角スペースを1つ足す／1つ減らす。
@@ -8081,7 +8175,7 @@ function exportDataJS(silent, screenPayload) {
     // ① フォルダが接続されていれば data.js を直接上書きする
     return window.AppFS.writeText(dataFile, js, false).then(function(ok) {
       if (ok) {
-        return window.idbSetAppData('lastSavedAt', savedAt).then(function() {
+        return _markStaticSaved(savedAt).then(function() {
           if (!silent) toast('✅ ' + dataFile + ' に直接書き込みました');
           return 'file';
         });
@@ -8095,7 +8189,7 @@ function exportDataJS(silent, screenPayload) {
       document.body.appendChild(a);
       a.click();
       setTimeout(function() { document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 200);
-      return window.idbSetAppData('lastSavedAt', savedAt).then(function() {
+      return _markStaticSaved(savedAt).then(function() {
         if (!silent) toast('📥 ' + dataFile + ' をダウンロードしました（フォルダに上書きしてください）');
         return 'download';
       });
@@ -8104,6 +8198,20 @@ function exportDataJS(silent, screenPayload) {
     toast('❌ ' + dataFile + ' 出力失敗: ' + (err && err.message || err));
     throw err;
   });
+}
+
+/**
+ * data.js を書き出した時刻を IndexedDB に記録する。
+ *   lastSavedAt    … スクリプト・メールの新旧比較用（従来どおり）
+ *   staticSyncedAt … IndexedDB の内容が「どの data.js と同じか」の印（common-utils.js ⓪-1）。
+ *                    これを合わせておかないと、ダウンロード保存でまだ data.js を置き換えていない間に、
+ *                    古い data.js の内容で編集内容を巻き戻してしまう。
+ */
+function _markStaticSaved(savedAt) {
+  return Promise.all([
+    window.idbSetAppData('lastSavedAt', savedAt),
+    window.idbSetAppData('staticSyncedAt', savedAt)
+  ]);
 }
 
 // ── common-utils.js へのヒアリングデータ直接書き込み ──
@@ -10194,11 +10302,15 @@ function _resolveAllImgSrcs(patterns, callback) {
 }
 
 function scrSaveIndex() {
+  // 画面遷移のデータをまだ読み込んでいない（タブを開いていない・復元中）ときは保存しない。
+  // メモリ上は空の配列なので、ここで保存するとインデックスを空で上書きしてしまう。
+  if (!_scrReady) return;
   try {
     var index = (screenPatterns || []).map(function(p) {
       return {
         id: p.id,
         name: p.name,
+        color: p.color || undefined,          // カテゴリの色（●）。選んだ色を次回も使う
         screens: (p.screens || []).map(function(s) {
           return {
             id: s.id,
@@ -10219,9 +10331,18 @@ function scrSaveIndex() {
       };
     });
     localStorage.setItem(window.profileScopedKey('screenFlowIndex'), JSON.stringify(index));
+    // パターンを全部消した状態も「利用者が決めた状態」として覚えておく。
+    // （以前の版では、タブを開く前の保存で空のインデックスが書かれることがあったため、
+    //   印の無い空のインデックスは「未保存」とみなして data.js から復元する）
+    if (index.length) localStorage.removeItem(window.profileScopedKey('screenFlowEmpty'));
+    else localStorage.setItem(window.profileScopedKey('screenFlowEmpty'), '1');
   } catch(e) {
     console.warn('[scrSaveIndex] failed:', e.message);
   }
+}
+/** パターンを全部消して保存した状態か */
+function _scrEmptyMarked() {
+  try { return localStorage.getItem(window.profileScopedKey('screenFlowEmpty')) === '1'; } catch (e) { return false; }
 }
 
 // 起動時：localStorage のインデックスから骨格だけ復元
@@ -10299,7 +10420,9 @@ function _imgLibFilePath(item, ext, used) {
 
 function _exportScreenToFiles() {
   // 対象パターンを決める：メモリ → IDB の順
-  var inMem = (typeof screenPatterns !== 'undefined' && screenPatterns && screenPatterns.length)
+  // 画面遷移タブで読み込み済みなら、空（パターンを全部消した）でもメモリの内容を正とする。
+  // 以前は空だと IndexedDB の古いパターンを書き出してしまい、消したパターンが復活していた。
+  var inMem = (typeof screenPatterns !== 'undefined' && screenPatterns && (screenPatterns.length || _scrReady))
     ? screenPatterns : null;
   var patsP = inMem ? Promise.resolve(inMem)
                     : idbGetScreenData().then(function(d) { return Array.isArray(d) ? d : []; });
@@ -10830,6 +10953,7 @@ var screenPatterns=[];
 var _scrCurrentPatId=null;
 var _scrSelScrId=null;
 var _scrInit=false;
+var _scrReady=false;   // screenPatterns が読み込み済み（保存・書き出しに使ってよい）か
 var _scrEditMode='hotspot';
 var _scrCropSel=null;
 var _scrHsDrawing=false,_scrHsDrawStart=null;
@@ -10843,32 +10967,32 @@ function initScreenEditor(){
     // scrLoadIndex() で localStorage からインデックス（パターン名・画面名・ホットスポット）を復元
     // imageSrc はインポート時に補完される
     var loaded = scrLoadIndex();
-    if (Array.isArray(loaded) && loaded.length) {
-      // 既存 screenPatterns に imageSrc をマージ（メモリに既にある場合）
-      if (screenPatterns.length) {
-        // インポート済みデータがメモリにあれば優先
-      } else {
-        screenPatterns = loaded;
-      }
-    }
-    // localStorage インデックスが空の場合は data.js / IDB から復元する
-    // （別PCでフォルダを受け取った直後などはこちらが本命）
-    if (!screenPatterns.length) {
+    if (screenPatterns.length) {
+      // インポート済みデータがメモリにあれば優先
+      _scrReady = true;
+    } else if (Array.isArray(loaded) && (loaded.length || _scrEmptyMarked())) {
+      // 保存したインデックス（パターンを全部消した状態も含む）
+      screenPatterns = loaded;
+      _scrReady = true;
+    } else {
+      // インデックスが無い場合は data.js / IDB から復元する
+      // （別PCでフォルダを受け取った直後などはこちらが本命）
       idbGetScreenData().then(function(d) {
-        if (Array.isArray(d) && d.length) {
+        // 復元を待つ間に追加したパターンがあれば、そちらを優先する
+        if (!screenPatterns.length && Array.isArray(d) && d.length) {
           screenPatterns   = d;
           _scrCurrentPatId = screenPatterns[0].id;
-          scrSaveIndex();
-          scrRenderUnifiedSidebar();
-          _scrUpdateCenterCanvas();
-          _scrUpdateRightSidebar();
         }
+      }).catch(function() {}).then(function() {
+        _scrReady = true;
+        scrSaveIndex();
+        scrRenderUnifiedSidebar();
+        _scrUpdateCenterCanvas();
+        _scrUpdateRightSidebar();
       });
     }
-    if (!screenPatterns.length) {
-      screenPatterns = [{ id: _scrGenId(), name: 'パターン1', screens: [] }];
-    }
-    _scrCurrentPatId = screenPatterns[0].id;
+    // パターンが1つも無いときは、空のまま表示する（以前は「パターン1」を自動で作っていた）
+    _scrCurrentPatId = screenPatterns.length ? screenPatterns[0].id : null;
   }
   // 右パネルの画像ライブラリを初期化
   if (typeof _scrLibRender === 'function') _scrLibRender();
@@ -10918,6 +11042,10 @@ function scrRenderUnifiedSidebar(){
   }, 0);
   var el=document.getElementById('scrUnifiedList');if(!el)return;
   var h='';
+  if(!screenPatterns.length){
+    h='<div class="scr-empty-pats" style="padding:16px;font-size:12px;color:var(--muted);text-align:center;">'
+     +(_scrReady?'パターンがありません<br>［＋ パターンを追加］から作成してください':'読み込み中…')+'</div>';
+  }
   screenPatterns.forEach(function(pat, pIdx){
     var isOpen=pat.id===_scrCurrentPatId;
     var color=pat.color||_scrPatColor(pIdx); // パターン固有色（なければインデックス順フォールバック）
@@ -10928,7 +11056,7 @@ function scrRenderUnifiedSidebar(){
     h+='<span class="cat-drag-handle" draggable="true" onclick="event.stopPropagation()" title="ドラッグして並べ替え">⠿</span>';
     h+='<span class="cat-acc-arrow'+(isOpen?' open':'')+'">▶</span>';
     // 色ドット（screen.html / index.html / mail.html と同一の .sb-cat-dot クラス）
-    h+='<div class="cat-color" style="background:'+color+'"></div>';
+    h+='<div class="cat-color cat-color-pick" style="background:'+color+'" onclick="catColorMenu(event,this,\'screen\',\''+pat.id+'\')" title="クリックで色を変更"></div>';
     if(_scrEditingPatId===pat.id){
       h+='<input class="cat-name-input editing" id="scrPatInp_'+pat.id+'"'
         +' value="'+escHtml(pat.name)+'" style="flex:1;font-size:12px;font-weight:700;"'
@@ -11149,7 +11277,7 @@ function scrAddPatternInline(){
   screenPatterns.push(p);
   _scrCurrentPatId=p.id;
   scrRenderUnifiedSidebar();
-  scrSaveData();markDirty();
+  scrSaveIndex();scrSaveData();markDirty();
 }
 /**
  * パターン行の「＋」ボタン押下時に呼ばれる。
@@ -11184,11 +11312,11 @@ function _scrOpenAddScreenDialog(patId) {
 function scrDelPat(id){
   if(!confirm('このパターンを削除しますか？'))return;
   screenPatterns=screenPatterns.filter(function(p){return p.id!==id;});
-  if(!screenPatterns.length)screenPatterns=[{id:_scrGenId(),name:'パターン1',screens:[]}];
-  if(_scrCurrentPatId===id)_scrCurrentPatId=screenPatterns[0].id;
+  // 最後の1つを消したときも、空のままにする（以前は「パターン1」を自動で作り直していた）
+  if(_scrCurrentPatId===id)_scrCurrentPatId=screenPatterns.length?screenPatterns[0].id:null;
   _scrSelScrId=null;
   scrRenderUnifiedSidebar();_scrUpdateCenterCanvas();_scrUpdateRightSidebar();
-  scrSaveData();markDirty();
+  scrSaveIndex();scrSaveData();markDirty();
 }
 
 /**
@@ -16219,7 +16347,8 @@ window.addEventListener('resize',function(){
         var qnote = document.createElement('div');
         qnote.style.cssText = 'font-size:10px;color:var(--text3);';
         qnote.textContent = '項目名に「●」を入れておくと、下のテキストエリアに入力した値に置き換わります（例：テスト、●本）。'
-          + 'チェックした項目だけ、項目名を付けずにそのまま出力されます。';
+          + 'チェックした項目は、ほかの回答方法と同じく「出力」の設定で出力されます'
+          + '（空なら「項目名：回答」。複数チェックしたときは1行ずつ並びます）。';
         extra.appendChild(qnote);
       }
       // 「チェック＋数量」は、チェックボックス／トグルボタン／ラジオボタンの追加設定として選べるようにする

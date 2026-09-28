@@ -361,7 +361,97 @@ function _appIdbOpenNamed(name) {
     req.onerror = function(e) { reject(e.target.error); };
   });
 }
+// =============================================================================
+// ⓪-1 data.js → IndexedDB の同期（data.js を差し替えたのに反映されない不具合の対策）
+//
+//   各ページは、管理画面で編集した内容を IndexedDB から読んで data.js の内容より優先する
+//   （ヒアリングの質問・テンプレート・コピーボタン、スクリプト、メールなど）。
+//   ところが、data.js を別の内容に差し替えたり、別PCで保存した data.js を配ったりしても、
+//   IndexedDB に以前の内容（空の配列など）が残っていると、そちらが優先されてしまい、
+//   「data.js にデータは入っているのに表示されない」状態になっていた。
+//
+//   そこで、IndexedDB を使う前に一度だけ、
+//     「IndexedDB の内容はどの data.js（savedAt）から作ったものか（staticSyncedAt）」
+//   と、いま読み込んだ data.js の savedAt を比べ、data.js の方が新しければ
+//   data.js で管理している項目を IndexedDB へ書き戻してから使う。
+//     ・管理画面の「💾 保存して反映」は staticSyncedAt を保存時刻にそろえるので、
+//       保存後に続けて編集した（まだ反映していない）内容は消えない。
+//     ・ダウンロード保存でまだ data.js を置き換えていないとき（data.js の方が古い）も消えない。
+//     ・staticSyncedAt が無い（この仕組みが入る前の）環境は、lastSavedAt より新しいか
+//       同じ data.js なら data.js を正とする。
+//   画面遷移データ（APP_SCREEN_DATA）は別の仕組み（screenSavedAt）で比べているので対象外。
+// =============================================================================
+var _APP_STATIC_SYNC_KEYS = [
+  // [data.js の項目名, IndexedDB のキー]
+  ['sideMenuData'], ['updateHistory'], ['fixedTexts'],
+  ['hearingQuestions'], ['hearingPolicies'], ['hearingPatterns'],
+  ['hearingTemplates'], ['hearingCopyButtons'], ['hearingLabelPrefix'], ['hearingFixedReady'],
+  ['hearingDevices'], ['hearingCarriers'],
+  ['faqData'], ['linkify'],
+  ['notice'], ['noticeDate'], ['noticeHtml'], ['maintenance'],
+  ['talkScripts', 'scripts'], ['mailTemplates'], ['mailCatMeta']
+];
+var _appStaticSyncP = {};   // DB 名 → 同期の Promise（ページごとに1回）
+
+function _appStaticSync() {
+  var key = window.APP_IDB_NAME || 'screenFlowDB';
+  if (_appStaticSyncP[key]) return _appStaticSyncP[key];
+  var p = new Promise(function (res) {
+    // データファイルは common-utils.js の後に読み込まれるので、読み込み完了を待つ
+    if (window.AppProfile && typeof window.AppProfile.onDataReady === 'function') window.AppProfile.onDataReady(res);
+    else res();
+  }).then(function () {
+    var P  = window.APP_PROFILE || {};
+    var sd = window.APP_STATIC_DATA;
+    // 読み込めていない（未選択・読み込み失敗）ときは何もしない
+    if (!P.loaded || !sd || !sd.savedAt) return;
+    // 読み込みに失敗して保存先が切り替わった場合に備え、待った後の DB 名でも確かめる
+    if ((window.APP_IDB_NAME || 'screenFlowDB') !== key) return;
+    var fileTs = Date.parse(sd.savedAt) || 0;
+    if (!fileTs) return;
+    return _appIdbOpenRaw().then(function (db) {
+      return new Promise(function (resolve) {
+        var tx;
+        try { tx = db.transaction('appData', 'readwrite'); } catch (e) { resolve(); return; }
+        var st = tx.objectStore('appData');
+        var rSync = st.get('staticSyncedAt'), rLast = st.get('lastSavedAt');
+        var left = 2;
+        var done = function () {
+          if (--left) return;
+          var synced = rSync.result, last = rLast.result;
+          var lastTs = last ? (Date.parse(last) || 0) : 0;
+          var need = (synced != null)
+            ? fileTs > (Date.parse(synced) || 0)
+            : fileTs >= lastTs;
+          if (!need) return;
+          _APP_STATIC_SYNC_KEYS.forEach(function (m) {
+            var src = m[0], dst = m[1] || m[0];
+            if (!Object.prototype.hasOwnProperty.call(sd, src) || sd[src] === undefined) return;
+            st.put(sd[src], dst);
+          });
+          // ヒアリングの保存データは、このバージョン番号が一致するときだけ使われる
+          if (typeof HEARING_DATA_VERSION !== 'undefined') st.put(HEARING_DATA_VERSION, 'hearingDataVersion');
+          st.put(sd.savedAt, 'staticSyncedAt');
+          if (fileTs > lastTs) st.put(sd.savedAt, 'lastSavedAt');
+          console.info('[data] ' + (P.file || 'data.js') + '（' + sd.savedAt + '）の内容で、ブラウザに残っていた以前の保存内容を更新しました。');
+        };
+        rSync.onsuccess = rSync.onerror = done;
+        rLast.onsuccess = rLast.onerror = done;
+        tx.oncomplete = function () { resolve(); };
+        tx.onerror = tx.onabort = function () { resolve(); };
+      });
+    });
+  }).catch(function (e) { console.warn('[data] data.js と保存内容の同期に失敗しました', e); });
+  _appStaticSyncP[key] = p;
+  return p;
+}
+
+/** プロファイルの DB を開く（data.js との同期が済んでから返す） */
 function _appIdbOpen() {
+  return _appStaticSync().then(function () { return _appIdbOpenRaw(); });
+}
+
+function _appIdbOpenRaw() {
   if (_APP_IDB_INST) return Promise.resolve(_APP_IDB_INST);
   return new Promise(function(resolve, reject) {
     var req = indexedDB.open(window.APP_IDB_NAME || 'screenFlowDB', 5);
@@ -2524,11 +2614,48 @@ window.openNamedTab = function (url, name) {
 };
 
 /**
+ * ヘッダーの時計（全ページ共通。ホームの #homeClock もここで動かす）。
+ *
+ * 【ずれの対策】
+ * 以前は setInterval(…, 1000) で1秒ごとに書き換えていた。これには次の問題があった。
+ *   ・ページを開いた瞬間（秒の途中）から1秒ごとに動くため、表示が切り替わるのが
+ *     実際の秒の変わり目より最大で約1秒遅れる（ページごとに遅れ方もばらばら）。
+ *   ・setInterval は少しずつ遅れがたまる。
+ *   ・裏に回ったタブではブラウザがタイマーを間引く（長く裏にあると1分に1回程度まで落ちる）ため、
+ *     タブに戻った直後は古い時刻のまま止まって見える。
+ * そこで、毎回「次の秒の変わり目」に合わせてタイマーを掛け直し、
+ * タブに戻ったとき・ウィンドウが前面に来たときは、すぐに時刻を合わせ直す。
+ * （時刻そのものはパソコンの時計を使う。パソコンの時計がずれている場合は、そちらの設定で合わせる）
+ */
+window.startToolClock = function (el) {
+  if (!el || el._toolClock) return;
+  el._toolClock = true;
+  var DAYS = ['日', '月', '火', '水', '木', '金', '土'];
+  var p = function (n) { return String(n).padStart(2, '0'); };
+  var timer = null;
+  var tick = function () {
+    clearTimeout(timer);
+    var d = new Date();
+    var txt = d.getFullYear() + '/' + p(d.getMonth() + 1) + '/' + p(d.getDate())
+      + '(' + DAYS[d.getDay()] + ') ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+    if (el.textContent !== txt) el.textContent = txt;
+    // 次の秒の変わり目の少し後（タイマーの誤差で変わり目の手前に起きないよう 20ms 足す）
+    timer = setTimeout(tick, 1000 - (Date.now() % 1000) + 20);
+  };
+  tick();
+  var resync = function () { if (!document.hidden) tick(); };
+  document.addEventListener('visibilitychange', resync);
+  window.addEventListener('focus', resync);
+  window.addEventListener('pageshow', resync);
+};
+
+/**
  * ヘッダー右端に日時を出す。
  * これまでホームだけだったので、全ページで同じ位置に出す。
  */
 function _injectClock() {
-  if (document.getElementById('homeClock')) return;      // ホームは元からある
+  var home = document.getElementById('homeClock');      // ホームは元から置き場所がある
+  if (home) { window.startToolClock(home); return; }
   var right = document.querySelector('header .hd-right');
   if (!right) return;
 
@@ -2540,16 +2667,7 @@ function _injectClock() {
     + 'flex:0 0 auto;min-width:11.5em;text-align:left;'
     + 'display:inline-flex;align-items:center;height:32px;';
   right.appendChild(el);
-
-  var DAYS = ['日', '月', '火', '水', '木', '金', '土'];
-  var p = function (n) { return String(n).padStart(2, '0'); };
-  var tick = function () {
-    var d = new Date();
-    el.textContent = d.getFullYear() + '/' + p(d.getMonth() + 1) + '/' + p(d.getDate())
-      + '(' + DAYS[d.getDay()] + ') ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
-  };
-  tick();
-  setInterval(tick, 1000);
+  window.startToolClock(el);
 }
 
 /**
@@ -5328,7 +5446,20 @@ function _hearingItemHTMLRaw(q, s) {
       kidsHtml = picked.map(function (v) {
         var kids = window.hearingChildItemsForOpt(q, v, s);
         if (!kids.length) return '';
-        return '<div class="hr-log-children">' + kids.map(function (k) { return window.hearingItemHTML(k, s); }).join('') + '</div>';
+        // ボタンごとの中の項目は、アコーディオンで格納できるようにする（開閉状態は覚えておく）
+        var fo = opts.find(function (x) { return (x.v || x.l) === v; }) || { l: v };
+        var fOpen = _hrLogFoldIsOpen(fld, v);
+        return '<div class="hr-log-fold' + (fOpen ? ' open' : '') + '"'
+          + ' data-fold-fld="' + escHtml(fld) + '" data-fold-opt="' + escHtml(v) + '">'
+          + '<button type="button" class="hr-log-fold-head" aria-expanded="' + (fOpen ? 'true' : 'false') + '"'
+          + ' title="押すと中の項目を格納／展開します（入力した内容はそのまま出力されます）"'
+          + ' onclick="toggleHearingLogFold(this)">'
+          + '<span class="hr-log-fold-arrow">\u25bc</span>'
+          + '<span class="hr-log-fold-name">' + window.hrOptHtmlEsc(fo, v) + '</span>'
+          + '<span class="hr-log-fold-count"></span>'
+          + '</button>'
+          + '<div class="hr-log-children">' + kids.map(function (k) { return window.hearingItemHTML(k, s); }).join('') + '</div>'
+          + '</div>';
       }).join('');
     }
     // 見出し（任意）：ボタンの上に、他の項目の項目名と同じように出す
@@ -5391,6 +5522,69 @@ try {
   var _gs = localStorage.getItem(window.profileScopedKey('hearingGroups'));
   if (_gs) _hrGroupState = JSON.parse(_gs);
 } catch (e) { _hrGroupState = {}; }
+
+// ── ログ作成補助の中の項目のアコーディオン ──
+// ボタンを選ぶと出てくる「中の項目」を、ボタンごとに格納（折りたたみ）できるようにする。
+// 格納しても入力した内容は消えず、結果文・コピーにもそのまま出る（見た目だけ畳む）。
+// 開閉状態は「項目の保存先キー＋ボタンの値」ごとに、プロファイル別に覚えておく（既定は開いた状態）。
+var _hrLogFoldState = {};    // 'field\u0001ボタンの値' → false なら格納中
+try {
+  var _lfs = localStorage.getItem(window.profileScopedKey('hearingLogFolds'));
+  if (_lfs) _hrLogFoldState = JSON.parse(_lfs) || {};
+} catch (e) { _hrLogFoldState = {}; }
+
+function _hrLogFoldKey(fld, v) { return String(fld) + '\u0001' + String(v); }
+function _hrLogFoldIsOpen(fld, v) { return _hrLogFoldState[_hrLogFoldKey(fld, v)] !== false; }
+
+window.toggleHearingLogFold = function (btn) {
+  var box = btn && btn.closest ? btn.closest('.hr-log-fold') : null;
+  if (!box) return;
+  var key = _hrLogFoldKey(box.getAttribute('data-fold-fld'), box.getAttribute('data-fold-opt'));
+  var open = !box.classList.contains('open');
+  // 描き直さずに開閉する（入力中の内容・スクロール位置をそのまま保つ）
+  box.classList.toggle('open', open);
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (open) delete _hrLogFoldState[key]; else _hrLogFoldState[key] = false;
+  try { localStorage.setItem(window.profileScopedKey('hearingLogFolds'), JSON.stringify(_hrLogFoldState)); } catch (e) {}
+  // 格納中は高さを測れないため、開いたときに複数行の入力欄の高さを合わせ直す
+  if (open) box.querySelectorAll('.hr-autogrow').forEach(function (el) { window.hrAutoGrow(el); });
+};
+
+/**
+ * 見出しに「入力 2/3」のように、中の項目のうち入力済みの数を出す（格納中でも分かるように）。
+ * 入力のたびに呼ばれる結果文の更新（renderHearingSummary）から呼ぶので、打つたびに数が変わる。
+ * 見出し・空白行・画像は入力を持たないので数えない。中の項目がさらに持つ項目も数える。
+ */
+function _hrLogFoldCountOf(list, s, acc) {
+  list.forEach(function (k) {
+    if (k.type !== 'heading' && k.type !== 'spacer' && k.type !== 'image') {
+      acc.total++;
+      if (String(window.hearingAnswerText(k, s) || '') !== '') acc.done++;
+    }
+    if (k.type === 'log') {
+      var kp = Array.isArray(s[k.field || k.id]) ? s[k.field || k.id] : (s[k.field || k.id] ? [s[k.field || k.id]] : []);
+      kp.forEach(function (v) { _hrLogFoldCountOf(window.hearingChildItemsForOpt(k, v, s), s, acc); });
+    } else {
+      _hrLogFoldCountOf(window.hearingChildItems(k, s), s, acc);
+    }
+  });
+  return acc;
+}
+function _hrUpdateLogFoldCounts() {
+  var boxes = document.querySelectorAll('.hr-log-fold');
+  if (!boxes.length) return;
+  var s = (typeof hearingState !== 'undefined') ? hearingState : {};
+  var qs = (typeof _hrGetQuestions === 'function') ? _hrGetQuestions() : [];
+  Array.prototype.forEach.call(boxes, function (box) {
+    var fld = box.getAttribute('data-fold-fld'), v = box.getAttribute('data-fold-opt');
+    var q = qs.find(function (x) { return x.type === 'log' && (x.field || x.id) === fld; });
+    var el = box.querySelector('.hr-log-fold-count');
+    if (!q || !el) return;
+    var c = _hrLogFoldCountOf(window.hearingChildItemsForOpt(q, v, s), s, { total: 0, done: 0 });
+    el.textContent = c.total ? ('入力 ' + c.done + '/' + c.total) : '';
+    el.classList.toggle('done', c.total > 0 && c.done === c.total);
+  });
+}
 
 window.toggleHearingGroup = function(gid) {
   _hrGroupState[gid] = (_hrGroupState[gid] === false);
@@ -5557,10 +5751,8 @@ var LOG_SEPARATOR = '－－－－－－－－－－－－－－－－－－－�
 window.LOG_SEPARATOR = LOG_SEPARATOR;
 
 // ── お知らせ ────────────────────────────────────────
-// 以前は ★お知らせ★.js / .txt を別ファイルで置いていたが、
-// ファイル名に記号が入るため環境によって読めないことがあり、
-// 管理画面からも編集できなかった。いまは data.js に載せる。
-// 旧ファイルが残っていればそちらを優先して読む（移行のため）。
+// 管理画面で編集し、data.js に載せる。
+// （以前の ★お知らせ★.js / .txt の読み込みは廃止した）
 
 /** お知らせ本文。無ければ空文字 */
 window.getNotice = function () {
@@ -5568,25 +5760,9 @@ window.getNotice = function () {
   // 中身の有無で判定すると、空にしても data.js の内容が復活してしまう。
   var v = window._appCache && window._appCache.notice;
   if (typeof v === 'string') return v;
-  if (typeof window.APP_NOTICE === 'string') return window.APP_NOTICE;  // 旧ファイル
   var sd = window.APP_STATIC_DATA;
   return (sd && typeof sd.notice === 'string') ? sd.notice : '';
 };
-
-// 旧 ★お知らせ★.js が置かれている場合は、そちらを最初に採り込む。
-// （管理画面に移行するまでの橋渡し。移行後は旧ファイルを削除してください）
-// データファイルの読み込み後に判定する（⓪-P 参照）。
-window.AppProfile.onDataReady(function () {
-  if (!window._appCache) return;
-  if (typeof window.APP_NOTICE !== 'string' || !window.APP_NOTICE.trim()) return;
-  // 管理画面で一度でも設定していれば（空にした場合も含めて）そちらを尊重する。
-  // 中身の有無で判定すると、空にしたときに旧ファイルが復活してしまう。
-  var sd = window.APP_STATIC_DATA;
-  var configured = (typeof window._appCache.notice === 'string' && window._appCache.notice !== '')
-             || (sd && typeof sd.notice === 'string');
-  if (configured) return;
-  window._appCache.notice = window.APP_NOTICE;
-});
 
 /** 書式つき本文に、表示するもの（文字か画像）があるか */
 window.noticeHtmlHasContent = function (html) {
@@ -5599,7 +5775,6 @@ window.noticeHtmlHasContent = function (html) {
 
 /** お知らせの更新日（手動指定）。無ければ空文字 */
 window.getNoticeDate = function () {
-  if (window.APP_NOTICE_DATE) return String(window.APP_NOTICE_DATE);
   var v = window._appCache && window._appCache.noticeDate;
   return v ? String(v) : '';
 };
@@ -6090,7 +6265,8 @@ function _hrLineHtml(item) {
   }
   if (item.kind === 'policy') return '対応方針：' + (item.htmlValue ? window.hearingSanitizeHtml(item.htmlValue) : esc(item.value));
   if (item.logOnly) return item.htmlValue || esc(item.value);
-  var valH = esc(item.value);
+  // 回答部分に書式（チェック＋数量の選択肢の書式など）があればそれを使う
+  var valH = item.htmlValue || esc(item.value);
   if (item.outTpl && window.hearingHasSlot(item.outTpl)) {
     return window.hearingFillSlotHtml(item.outTplHtml || escHtml(item.outTpl), valH);
   }
@@ -6244,16 +6420,22 @@ function buildHearingLines(s) {
 
     var fld = q.field || q.id;
 
-    // チェック＋数量：チェックした項目だけ、●を数量に置き換えて、そのまま出力する（項目名は付けない）
+    // チェック＋数量：チェックした項目の「●」を数量に置き換えた文字を回答にする。
+    // 【不具合対応】以前は項目名を付けず（logOnly）、出力欄の設定も捨てていたため、
+    // 「数量も選べるようにする」をオンにすると、項目名・出力の設定が結果文に反映されなかった。
+    // チェックボックス／トグル／ラジオと同じく、出力欄が文章なら文章で、
+    // 空なら「出力名（未設定なら項目名）：回答」で出す。複数チェックしたときは1行ずつ並べる。
     if (q.type === 'qtycheck') {
       var qp = _hrQtyCheckParts(q, s);
       if (!qp.texts.length) return;
-      out.push({
+      out.push(Object.assign({
         kind: 'row', label: q.label, outLabel: (q.outLabel || q.label),
         value: qp.texts.join('\n'),
+        // 選択肢に書式（太字・色など）があるときだけ、回答部分の HTML を持たせる
         htmlValue: qp.hasRich ? _hrFixBlockBr(qp.htmls.join('<br>')) : '',
-        type: '', outTpl: '', multiline: true, logOnly: true
-      });
+        type: '', outTpl: q.outTpl || '',
+        multiline: qp.texts.length > 1
+      }, _hrRichParts(q)));
       return;
     }
 
@@ -6481,6 +6663,7 @@ window.copyHearingFixedText = function (id) {
 };
 
 function renderHearingSummary() {
+  _hrUpdateLogFoldCounts();   // ログ作成補助のアコーディオンの「入力 n/m」
   var area = document.getElementById('hearingSummaryArea');
   if (!area) return;
   var items = buildHearingLines(hearingState);
@@ -6507,9 +6690,10 @@ function renderHearingSummary() {
     }
     // 出力文が設定されている項目は、文章そのものを1行で見せる
     if (it.outTpl && window.hearingHasSlot(it.outTpl)) {
+      var sentValH = it.htmlValue || escHtml(it.value).replace(/\n/g, '<br>');
       h += '<div class="hr-summary-row hr-summary-sentence">' +
-           '<span class="hr-sum-val">' + (it.outTplHtml
-             ? window.hearingFillSlotHtml(it.outTplHtml, escHtml(it.value))
+           '<span class="hr-sum-val">' + ((it.outTplHtml || it.htmlValue)
+             ? window.hearingFillSlotHtml(it.outTplHtml || escHtml(it.outTpl), sentValH)
              : escHtml(window.hearingFillSlot(it.outTpl, it.value))) + '</span></div>';
       return;
     }
@@ -6520,6 +6704,7 @@ function renderHearingSummary() {
     var val = escHtml(it.value);
     var block = (it.isMemo || it.multiline);
     if (block) { valClass += ' hr-sum-multiline'; val = val.replace(/\n/g, '<br>'); }
+    if (it.htmlValue) val = it.htmlValue;   // 回答部分の書式（チェック＋数量の選択肢の書式など）
     // 画面の結果文とコピー結果を完全に一致させるため、出力名（未設定なら項目名）で出す
     var sumLabH = _hrHasOutLabel(it) ? (it.outLabelHtml || escHtml(it.outLabel)) : '';   // 項目名が空なら「：」も出さない
     h += '<div class="hr-summary-row' + (block ? ' hr-summary-block' : '') + '">' +
@@ -6670,6 +6855,19 @@ document.addEventListener('keydown', function (e) {
     // ログ作成補助の中の項目：ボタンの下に、左に線を引いて続ける
     '.hr-log-children, .hr-nested-children { display:flex; flex-direction:column; gap:4px; margin-top:6px; padding:4px 0 2px 10px; border-left:3px solid var(--accent-lt,#dfe3ff); }' +
     '.hr-log-children > .hr-row, .hr-nested-children > .hr-row { padding:4px 0 !important; border:none !important; background:none !important; }' +
+    // ログ作成補助の中の項目のアコーディオン（ボタンごと）
+    '.hr-log-fold { margin-top:6px; }' +
+    '.hr-log-fold-head { display:flex; align-items:center; gap:6px; width:100%; box-sizing:border-box; padding:4px 10px;' +
+      'border:1px solid var(--border); border-radius:6px; background:var(--surface2,#f5f6fa); color:var(--text2);' +
+      'font-size:11px; font-weight:700; font-family:inherit; text-align:left; cursor:pointer; }' +
+    '.hr-log-fold-head:hover { border-color:var(--accent,#3742fa); color:var(--accent-text,#3742fa); }' +
+    '.hr-log-fold-arrow { font-size:9px; display:inline-block; transition:transform .15s; flex:0 0 auto; }' +
+    '.hr-log-fold:not(.open) .hr-log-fold-arrow { transform:rotate(-90deg); }' +
+    '.hr-log-fold-name { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }' +
+    '.hr-log-fold-count { margin-left:auto; flex:0 0 auto; font-weight:400; color:var(--text3); }' +
+    '.hr-log-fold-count.done { color:var(--green,#2a9d8f); }' +
+    '.hr-log-fold > .hr-log-children { margin-top:4px; }' +
+    '.hr-log-fold:not(.open) > .hr-log-children { display:none; }' +
     // 空白行：枠も余白も持たない、ただの空き
     '.hr-spacer-row { padding:0 !important; border:none !important; background:none !important; min-height:0 !important; box-shadow:none !important; }' +
     '.hr-spacer { height:10px; }' +
@@ -7038,11 +7236,7 @@ window.refreshAppCacheFromIDB = function (keys) {
     if (type === 'noticeUpdated') {
       if (ev.data.data != null) window._appCache.notice = String(ev.data.data);
       if (ev.data.html !== undefined) window._appCache.noticeHtml = (ev.data.html == null) ? null : String(ev.data.html);
-      if (ev.data.date != null) {
-        window._appCache.noticeDate = String(ev.data.date);
-        // getNoticeDate() は読み込み時に設定した APP_NOTICE_DATE を先に見るので、こちらも更新する
-        window.APP_NOTICE_DATE = window._appCache.noticeDate;
-      }
+      if (ev.data.date != null) window._appCache.noticeDate = String(ev.data.date);
       call('renderNotice');
     }
 
@@ -7095,6 +7289,8 @@ window.refreshAppCacheFromIDB = function (keys) {
   var required = false;      // 選ぶまで閉じられないモード
   var message = '';          // モーダル内のお知らせ
   var busy = false;          // 検出・確認の処理中
+  var checking = false;      // モーダルを開いたときの、フォルダの中身の確認中
+  var currentMissing = false; // 表示中のデータファイルが、フォルダから削除されている
 
   var TOOL_DIR_KEY = 'profileToolDir:' + (AP.FOLDER || '');   // 選んだツールのフォルダ（共通 DB）
   var PROBE_KEY    = 'appProfileProbe';                       // 確認結果（このタブの間だけ）
@@ -7149,7 +7345,49 @@ window.refreshAppCacheFromIDB = function (keys) {
    * ファイル名の形（isDataFile）だけで候補として扱うようにした。
    */
   function probe(file, force) {
-    return Promise.resolve(AP.isDataFile(file));
+    if (!AP.isDataFile(file)) return Promise.resolve(false);
+    if (!force) return Promise.resolve(true);
+    return probeLoad(file);
+  }
+
+  /**
+   * file を、いま開いているツールのフォルダから実際に読み込めるかを確かめる（force のときだけ使う）。
+   * データファイルの本読み込みと同じく <script src="..."> で読むので、file:// でも確実に判定できる
+   * （iframe・fetch のように、file:// のセキュリティ制限で失敗することがない）。
+   *   ・削除されたファイルは onerror になる → 一覧から外す。
+   *   ・読み込むとデータファイルの中身（window.APP_STATIC_DATA／APP_SCREEN_DATA）が実行されるので、
+   *     読み終わった直後（onload は実行の直後に続けて呼ばれ、間に他の処理は入らない）に元へ戻す。
+   *     表示中のデータが入れ替わることはない。
+   *   ・URL に確認用の ?probe=… を付け、以前に読んだ内容（キャッシュ）で判定しないようにする。
+   *   ・大きなファイルで時間がかかりすぎたときは、消さない側（あるもの）として扱う。
+   */
+  var PROBE_GLOBALS = ['APP_STATIC_DATA', 'APP_SCREEN_DATA'];
+  var probeSeq = 0;
+  function probeLoad(file) {
+    return new Promise(function (resolve) {
+      var saved = PROBE_GLOBALS.map(function (k) {
+        return { k: k, has: Object.prototype.hasOwnProperty.call(window, k), v: window[k] };
+      });
+      var restore = function () {
+        saved.forEach(function (x) {
+          try { if (x.has) window[x.k] = x.v; else delete window[x.k]; } catch (e) {}
+        });
+      };
+      var settled = false;
+      var settle = function (ok) { if (!settled) { settled = true; resolve(ok); } };
+      var sc = document.createElement('script');
+      var end = function (ok) {
+        restore();                                   // 時間切れの後に読み終わった場合も必ず戻す
+        if (sc.parentNode) sc.parentNode.removeChild(sc);
+        clearTimeout(timer);
+        settle(ok);
+      };
+      sc.onload  = function () { end(true); };
+      sc.onerror = function () { end(false); };
+      var timer = setTimeout(function () { settle(true); }, 20000);
+      sc.src = encodeURIComponent(file).replace(/"/g, '%22') + '?probe=' + Date.now().toString(36) + '_' + (++probeSeq);
+      (document.head || document.documentElement).appendChild(sc);
+    });
   }
   /** 複数を確かめて、読み込めたものだけ返す */
   function probeAll(files, force) {
@@ -7170,14 +7408,26 @@ window.refreshAppCacheFromIDB = function (keys) {
       return names;
     })();
   }
-  /** ② 以前に選んだツールのフォルダ（読み取り権限があるときだけ） */
-  function namesFromToolDir() {
-    if (!fsSupported() || !window.idbGetSharedData) return Promise.resolve([]);
+  /**
+   * ② 以前に選んだツールのフォルダの中身（読み取り権限があるときだけ）。
+   * @param ask true なら、権限が切れているときに許可を求める（クリックで開いたときだけ。操作なしでは求められない）
+   * @return Promise<string[]|null>  フォルダを読めなかったときは null（空のフォルダなら []）
+   */
+  function namesFromToolDir(ask) {
+    if (!fsSupported() || !window.idbGetSharedData) return Promise.resolve(null);
     return window.idbGetSharedData(TOOL_DIR_KEY).then(function (dir) {
-      if (!dir || typeof dir.values !== 'function') return [];
+      if (!dir || typeof dir.values !== 'function') return null;
       var q = dir.queryPermission ? dir.queryPermission({ mode: 'read' }) : Promise.resolve('granted');
-      return Promise.resolve(q).then(function (p) { return p === 'granted' ? listDir(dir) : []; });
-    }).catch(function () { return []; });
+      return Promise.resolve(q).then(function (p) {
+        if (p === 'granted') return listDir(dir);
+        if (ask && p === 'prompt' && dir.requestPermission) {
+          return dir.requestPermission({ mode: 'read' }).then(function (p2) {
+            return p2 === 'granted' ? listDir(dir) : null;
+          });
+        }
+        return null;
+      });
+    }).catch(function () { return null; });
   }
   /** ③ 管理画面で接続したフォルダ（手がかりとしてだけ使う） */
   function namesFromConnected() {
@@ -7238,7 +7488,7 @@ window.refreshAppCacheFromIDB = function (keys) {
 
   /** 表示用の候補一覧 */
   function candidates() {
-    if (P.loaded && P.file && AP.readList().indexOf(P.file) < 0) AP.writeList(AP.readList().concat([P.file]));
+    if (P.loaded && P.file && !currentMissing && AP.readList().indexOf(P.file) < 0) AP.writeList(AP.readList().concat([P.file]));
     var bad = AP.readBad();
     return AP.readList().filter(function (f) { return bad.indexOf(f) < 0 || (P.loaded && f === P.file); });
   }
@@ -7302,7 +7552,7 @@ window.refreshAppCacheFromIDB = function (keys) {
   }
 
   // ── モーダル ──
-  function openModal(req) {
+  function openModal(req, byUser) {
     required = !!req || !P.loaded;
     if (!document.body) return;
     var isNew = !modal;
@@ -7316,20 +7566,43 @@ window.refreshAppCacheFromIDB = function (keys) {
     render();
     var cur = modal.querySelector('.profile-item.is-current') || modal.querySelector('.profile-item');
     if (cur) { try { cur.focus(); } catch (e) {} }
-    // 開いたときに、一覧のファイルが今もフォルダにあるか確かめ直す（消えたものは外す）
-    if (isNew && !busy) {
-      var list = AP.readList();
-      if (list.length) {
-        probeAll(list, true).then(function (res) {
-          if (res.missing.length) {
-            AP.writeList(res.found);
-            message = '「' + res.missing.join('」「') + '」は開いているフォルダに見つからないため、一覧から外しました。';
-          }
-          updateBadge();
-          if (modal) render();
-        });
-      }
-    }
+    // 開いたときに、いま開いているツールのフォルダを確かめ直し、実際にあるデータファイルだけを出す
+    if (isNew && !busy) refreshFromFolder(!!byUser);
+  }
+
+  /**
+   * モーダルを開いたときの確認。確認が終わるまでは一覧を出さない（削除済みのファイルを一瞬でも見せない）。
+   *   ① 以前に［📁 ツールのフォルダを選択］で選んだフォルダが読めれば、その中身を候補にする
+   *      （新しく置いたファイルも見つかる。権限が切れていれば、クリックで開いたときに許可を求める）。
+   *   ② 読めなければ、前回までの一覧と標準の data.js を候補にする。
+   *   どちらの場合も、候補を1件ずつ実際に読み込めるか確かめ（probeLoad）、読めたものだけで一覧を置き換える。
+   */
+  function refreshFromFolder(byUser) {
+    checking = true;
+    render();
+    namesFromToolDir(byUser).then(function (dirNames) {
+      var cands = (dirNames ? dirNames.filter(AP.isDataFile) : [])
+        .concat(AP.readList(), [AP.DEFAULT_FILE], P.loaded ? [P.file] : []);
+      return probeAll(cands, true).then(function (res) {
+        var prev = AP.readList();
+        AP.writeList(res.found);
+        currentMissing = !!(P.loaded && P.file && res.found.indexOf(P.file) < 0);
+        var gone = prev.filter(function (f) { return res.found.indexOf(f) < 0 && !(P.loaded && f === P.file); });
+        var notes = [];
+        if (currentMissing) {
+          notes.push('表示中の「' + P.file + '」は、開いているフォルダから削除されています。'
+            + '別のプロファイルを選ぶか、ファイルを戻してください。');
+        }
+        if (gone.length) notes.push('「' + gone.join('」「') + '」は開いているフォルダに見つからないため、一覧から外しました。');
+        if (notes.length) message = (message ? message + ' ' : '') + notes.join(' ');
+      });
+    }).catch(function (e) {
+      console.warn('[profile] フォルダの確認に失敗しました', e);
+    }).then(function () {
+      checking = false;
+      updateBadge();
+      if (modal) render();
+    });
   }
 
   function closeModal() {
@@ -7357,7 +7630,9 @@ window.refreshAppCacheFromIDB = function (keys) {
     }
     if (message) html += '<div class="profile-modal-msg">' + esc(message) + '</div>';
 
-    if (list.length) {
+    if (checking) {
+      html += '<div class="profile-modal-empty">⏳ いま開いているツールのフォルダを確認しています…</div>';
+    } else if (list.length) {
       html += '<div class="profile-modal-list">';
       list.forEach(function (f) {
         var isCur = P.loaded && f === P.file;
@@ -7381,7 +7656,8 @@ window.refreshAppCacheFromIDB = function (keys) {
       + '</div>'
       + '<div class="profile-modal-note">※ いま開いているツールのフォルダ'
       + (AP.FOLDER ? '（' + esc(AP.FOLDER) + '）' : '') + 'にある「◯◯data.js」だけを表示します'
-      + '（例：【NGH】data.js → NGH）。新しく追加したときは［'
+      + '（例：【NGH】data.js → NGH）。開くたびにフォルダを確かめ、削除したファイルは表示しません。'
+      + '新しく追加したときは［'
       + (pickOk ? '📁 ツールのフォルダを選択' : '📄 ファイルを指定') + '］で読み込み直してください。</div>'
       + '</div>';
     modal.innerHTML = html;
@@ -7455,7 +7731,7 @@ window.refreshAppCacheFromIDB = function (keys) {
     b.type = 'button';
     b.id = 'profileBadge';
     b.className = 'profile-badge';
-    b.addEventListener('click', function () { message = ''; openModal(false); });
+    b.addEventListener('click', function () { message = ''; openModal(false, true); });
     var left = document.querySelector('header .hd-left');
     if (left) {
       left.appendChild(b);
@@ -7492,7 +7768,7 @@ window.refreshAppCacheFromIDB = function (keys) {
     detectAuto().then(function (list) { afterDetect(list, false); });
   }
 
-  window.AppProfile.openModal = function () { message = ''; openModal(false); };
+  window.AppProfile.openModal = function () { message = ''; openModal(false, true); };
   window.AppProfile.detect = detectAuto;
   window.AppProfile.probe = probe;
 

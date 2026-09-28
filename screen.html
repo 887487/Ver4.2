@@ -1360,7 +1360,7 @@ function renderSidebar() {
   list.innerHTML = displayPatterns.map((p, pIdx) => {
     const accId  = 'scrAcc_' + p.id;
     const isOpen = q ? true : p.id === currentPatId;  // 検索中は全て展開
-    const color  = _patColor(patterns.indexOf(p));  // 元の色インデックスを維持
+    const color  = p.color || _patColor(patterns.indexOf(p));  // 管理画面で選んだ色。無ければ元の色インデックス
 
     // このパターン内にアクティブ画面があるか（アクティブ時はパターン青枠を外す）
     const hasActiveScreen = isOpen && p.screens.some(s => s.id === pvCurrentId);
@@ -2296,7 +2296,7 @@ function pvSwitchVariant(src) {
           }
         } catch(e) {}
       }
-      if (!patterns.length) patterns = [{ id: genId(), name: 'パターン1', screens: [] }];
+      // パターンが無いときは空のまま（「パターンがありません」と表示する）
       currentPatId = null; // デフォルトクローズ
       renderSidebar();
       renderFlow();
@@ -2311,7 +2311,6 @@ function pvSwitchVariant(src) {
   }
 
   // 3. 埋め込みデータがある場合はそのまま描画
-  if (!patterns.length) patterns = [{ id: genId(), name: 'パターン1', screens: [] }];
 
   // デフォルトクローズ：初期表示ではパターンを展開しない
   currentPatId = null;

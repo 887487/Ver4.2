@@ -6,8 +6,6 @@
   <title>🏠 ホーム</title>
   <link rel="stylesheet" href="style.css">
   <!-- データファイル（◯◯data.js）は common-utils.js がプロファイルに応じて読み込む -->
-  <!-- お知らせ（任意）。file:// でも確実に読めるのはこの形式 -->
-  <script src="★お知らせ★.js" onerror="void(0)"></script>
   <script src="common-utils.js"></script>
   <style>
     html, body {
@@ -257,7 +255,7 @@
   <aside id="sideMenu"></aside>
   <main class="home-main">
 
-  <!-- お知らせ（★お知らせ★.js / ★お知らせ★.txt を自動読み込み。内容が無ければ非表示） -->
+  <!-- お知らせ（管理画面で編集し data.js に保存した内容を表示。内容が無ければ非表示） -->
   <section class="home-notice is-empty" id="homeNotice">
     <div class="home-notice-head">
       <span>📢 お知らせ</span>
@@ -325,22 +323,11 @@
 </div>
 
 <script>
-  // ===== お知らせの読み込み =====
-  // 本文の取得元（優先順）
-  //   ① ★お知らせ★.js の window.APP_NOTICE（file:// でも確実に読める）
-  //   ② ★お知らせ★.txt を fetch（http(s) 配信時）
-  //   ③ ★お知らせ★.txt を iframe で埋め込み表示（file:// の最終手段）
-  //
-  // 更新日時の取得元（優先順）
-  //   ⓐ window.APP_NOTICE_DATE（手動指定があれば最優先）
-  //   ⓑ File System Access のフォルダ接続経由でファイルの実際の更新日時
-  //   ⓒ fetch の Last-Modified ヘッダ
-  //   ⓓ 本文中の最も新しい日付（【2026/08/07】など）
-  //   ※ file:// では ⓑ が使えない場合 ⓓ になる。JS からローカルファイルの
-  //     更新日時を直接読む手段が他に無いため。
+  // ===== お知らせの表示 =====
+  // 本文は、管理画面で編集して data.js に保存した内容（getNotice／getNoticeHtml）を出す。
+  // （以前の ★お知らせ★.js／★お知らせ★.txt の読み込みは廃止した）
+  // 更新日は、管理画面で手動指定した日付を優先し、無ければ本文中の最も新しい日付（【2026/08/07】など）を出す。
   function loadNotice() {
-    var FILE_TXT = '★お知らせ★.txt';
-    var FILE_JS  = '★お知らせ★.js';
     var box  = document.getElementById('homeNotice');
     var body = document.getElementById('homeNoticeBody');
     var dateEl = document.getElementById('homeNoticeDate');
@@ -362,47 +349,20 @@
       return best;
     }
 
-    /** 接続フォルダ経由でファイルの実際の更新日時を取る（Chrome / Edge） */
-    function fileMtime(name) {
-      if (!window.AppFS || !window.AppFS.isSupported()) return Promise.resolve(null);
-      // 権限ダイアログは出さない（ページを開いただけで許可を求めない）
-      return window.AppFS.ensure(false).then(function (dir) {
-        if (!dir) return null;
-        return dir.getFileHandle(name, { create: false })
-          .then(function (fh) { return fh.getFile(); })
-          .then(function (f) { return f.lastModified ? new Date(f.lastModified) : null; })
-          .catch(function () { return null; });
-      }).catch(function () { return null; });
+    function setDate(text) {
+      // 手動指定が最優先。無ければ本文中の最新の日付
+      var manual = (typeof window.getNoticeDate === 'function') ? window.getNoticeDate() : '';
+      var d = manual ? new Date(manual) : null;
+      if (!d || isNaN(d)) d = newestDateIn(text || '');
+      if (dateEl) dateEl.textContent = fmt(d);
     }
 
-    function setDate(text, headerLastMod) {
-      // ⓐ 手動指定が最優先
-      if (window.APP_NOTICE_DATE) {
-        var manual = new Date(window.APP_NOTICE_DATE);
-        if (!isNaN(manual)) { if (dateEl) dateEl.textContent = fmt(manual); return; }
-      }
-      // ⓑ 実ファイルの更新日時
-      fileMtime(FILE_JS).then(function (d) {
-        if (!d) return fileMtime(FILE_TXT);
-        return d;
-      }).then(function (d) {
-        // ⓒ fetch の Last-Modified
-        if (!d && headerLastMod) {
-          var h = new Date(headerLastMod);
-          if (!isNaN(h)) d = h;
-        }
-        // ⓓ 本文中の最新日付
-        if (!d) d = newestDateIn(text || '');
-        if (dateEl) dateEl.textContent = fmt(d);
-      });
-    }
-
-    function showText(text, headerLastMod) {
+    function showText(text) {
       var t = String(text || '').replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n').trim();
       if (!t) return false;
       body.classList.remove('is-rich');
       body.textContent = t;
-      setDate(t, headerLastMod);
+      setDate(t);
       box.classList.remove('is-empty');
       return true;
     }
@@ -418,39 +378,22 @@
       if (!safe) return false;
       body.classList.add('is-rich');
       body.innerHTML = safe;
-      setDate(String(text || ''), null);
+      setDate(String(text || ''));
       box.classList.remove('is-empty');
       return true;
     }
 
-    // iframe による埋め込み表示はやめた。
-    // ファイルが無くても空の枠だけが残ってしまい、
-    // 「お知らせが無いのに枠が出ている」状態になるため。
-
-    // ① 管理画面で編集した内容（data.js）。旧 ★お知らせ★.js があればそちらが優先される
     if (typeof window.getNotice === 'function') {
-      var manualDate = (typeof window.getNoticeDate === 'function') ? window.getNoticeDate() : '';
-      if (manualDate) window.APP_NOTICE_DATE = manualDate;
       // 書式つき本文（画像あり）があればそれを、無ければ文字だけの本文を出す
       var noticeHtml = (typeof window.getNoticeHtml === 'function') ? window.getNoticeHtml() : null;
       if (typeof noticeHtml === 'string') {
         if (showHtml(noticeHtml, window.getNotice())) return;
       } else if (showText(window.getNotice())) return;
-    } else if (typeof window.APP_NOTICE === 'string' && window.APP_NOTICE.trim()) {
-      if (showText(window.APP_NOTICE)) return;
     }
-
-    // ② 旧 ★お知らせ★.txt（http(s) 配信時のみ読める）。
-    //    読めない・中身が無い場合は枠ごと隠す
-    try {
-      fetch(FILE_TXT, { cache: 'no-store' })
-        .then(function (r) {
-          if (!r.ok) throw new Error('HTTP ' + r.status);
-          var lm = r.headers.get('last-modified');
-          return r.text().then(function (t) { if (!showText(t, lm)) box.classList.add('is-empty'); });
-        })
-        .catch(function () { box.classList.add('is-empty'); });
-    } catch (e) { box.classList.add('is-empty'); }
+    // 表示する内容が無ければ枠ごと隠す（管理画面で消したときも、ここで隠れる）
+    body.textContent = '';
+    if (dateEl) dateEl.textContent = '';
+    box.classList.add('is-empty');
   }
   // 管理画面でお知らせを保存したときも、開いているホームの表示を更新できるようにする
   window.renderNotice = loadNotice;
@@ -476,19 +419,9 @@
     }).catch(function () { /* 判定できないときは全部表示のまま */ });
   })();
 
-  (function() {
-    var DAYS = ['日','月','火','水','木','金','土'];
-    function updateClock() {
-      var d = new Date();
-      var p = function(n){ return String(n).padStart(2,'0'); };
-      document.getElementById('homeClock').textContent =
-        d.getFullYear() + '/' + p(d.getMonth()+1) + '/' + p(d.getDate()) +
-        '(' + DAYS[d.getDay()] + ') ' +
-        p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
-    }
-    updateClock();
-    setInterval(updateClock, 1000);
-  })();
+  // 時計は全ページ共通の処理（common-utils.js の startToolClock）で動かす。
+  // 秒の変わり目に合わせて更新し、タブに戻ったときもすぐ合わせ直す（以前の setInterval は少しずれていた）。
+  if (window.startToolClock) window.startToolClock(document.getElementById('homeClock'));
 </script>
 </body>
 </html>

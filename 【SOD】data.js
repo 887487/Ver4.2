@@ -1,9 +1,9 @@
 // ツール設定ファイル — スクリプト・メール・サイドメニュー・ヒアリング・更新履歴・固定テキスト・画面遷移
 // admin.html の「💾 保存して反映」で自動更新されます。手動編集は非推奨です。
-// 生成日時: 2026-09-27T08:35:37.203Z
+// 生成日時: 2026-09-28T16:12:07.674Z
 window.APP_STATIC_DATA = {
-  "generatedAt": "2026-09-27T08:35:37.203Z",
-  "savedAt": "2026-09-27T08:35:37.203Z",
+  "generatedAt": "2026-09-28T16:12:07.674Z",
+  "savedAt": "2026-09-28T16:12:07.674Z",
   "sideMenuData": [
     {
       "id": "smCat_1789973152233",
@@ -656,9 +656,9 @@ window.APP_STATIC_DATA = {
     {
       "id": "q_s8andm1",
       "enabled": true,
-      "label": "",
+      "label": "ソーダストリームのガスシリンダーが",
       "outLabel": "",
-      "outTpl": "",
+      "outTpl": "ソーダストリームのガスシリンダーが[入力]",
       "type": "qtycheck",
       "common": false,
       "tplIds": [
@@ -671,12 +671,12 @@ window.APP_STATIC_DATA = {
       "qtyBase": "radio",
       "options": [
         {
-          "l": "ソーダストリームのガスシリンダーが●本、資源ごみに出されていた。",
-          "v": "ソーダストリームのガスシリンダーが●本、資源ごみに出されていた。"
+          "l": "●本、資源ごみに出されていた。",
+          "v": "●本、資源ごみに出されていた。"
         },
         {
-          "l": "ソーダストリームのガスシリンダーが●本、不法投棄されていた。",
-          "v": "ソーダストリームのガスシリンダーが●本、不法投棄されていた。"
+          "l": "●本、不法投棄されていた。",
+          "v": "●本、不法投棄されていた。"
         }
       ]
     },
@@ -4661,61 +4661,42 @@ window.APP_STATIC_DATA = {
     "screen.html": true
   },
   "talkScripts": {},
-  "mailTemplates": [
-    {
-      "id": "mail_1789969022961",
-      "catKey": "mcat_1789969021752",
-      "category": "aaa",
-      "catColor": "#00b894",
-      "subCatKey": null,
-      "subCategory": "",
-      "title": "新しいテンプレート",
-      "subject": "aaa",
-      "body": "test",
-      "note": "ddd",
-      "enabled": true,
-      "prevSubjects": [
-        ":::::",
-        "aaa;"
-      ],
-      "bodyHtml": "test"
-    }
-  ],
+  "mailTemplates": [],
   "mailCatMeta": {
-    "cats": [
-      {
-        "key": "mcat_1789969021752",
-        "name": "aaa",
-        "color": "#00b894"
-      }
-    ],
-    "subs": {
-      "mcat_1789969021752": []
-    }
+    "cats": [],
+    "subs": {}
   }
 };
 
 // 画面遷移データ。画像は screen-images/ フォルダに実ファイルとして保存されています。
 // library は画像ライブラリの復元用です（別PCでも一覧が再現されます）。
 window.APP_SCREEN_DATA = {
-  "savedAt": "2026-09-27T08:35:37.202Z",
+  "savedAt": "2026-09-28T16:12:07.673Z",
   "images": {
+    "lib6r9d81d4c": "【SOD】screen-images/download.png",
     "libk7d3dxigl": "【SOD】screen-images/download.png"
   },
-  "library": [],
-  "patterns": [
+  "library": [
     {
-      "id": "scv24rjx01",
-      "name": "パターン1",
-      "screens": [
-        {
-          "id": "scsecmcggj",
-          "name": "download",
-          "note": "",
-          "imageSrc": "lib:libk7d3dxigl",
-          "hotspots": []
-        }
-      ]
+      "id": "lib6r9d81d4c",
+      "name": "download",
+      "folder": "",
+      "file": "【SOD】screen-images/download.png",
+      "note": "",
+      "noteHtml": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libk7d3dxigl",
+      "name": "download",
+      "folder": "",
+      "file": "【SOD】screen-images/download.png",
+      "note": "",
+      "noteHtml": "",
+      "hotspots": [],
+      "hsLinkFrom": null
     }
-  ]
+  ],
+  "patterns": []
 };
