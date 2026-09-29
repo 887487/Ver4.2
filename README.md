@@ -1,3 +1,30 @@
+生産性ページ(cph.html)を作成したい
+
+社員番号、名前 のリストを管理画面側で作成してdata.jsに保存する
+
+ 管理画面で以下の配列で記載されたExcelファイルをインポート
+名前｜合計応答数｜平均応答数｜CPH｜AHT｜合計通話時間｜ATT｜合計後処理時間｜ACW｜合計保留時間｜ HOLD/acd｜HOLD/hold｜保留数｜保留率｜実質CPH｜平均稼働率｜平均有給稼働時間｜平均ユーザー対応時間｜平均離席休憩時間｜平均食事時間｜
+
+インポートしたデータの 集計対象期間 を設定する
+- [ ] 1日
+- [ ] 複数日
+
+1日が選択された場合は、yyyy/mm/dd 形式で日付を登録
+複数日が選択された場合は yyyy/mm/dd 形式で
+始点と終点を登録する
+
+〇月〇週 実績 として cph.html に表示する ※〇月に入る数字は始点のmm、〇週 は始点のdd
+
+インポートしたデータから表示する列、不要な列を登録する
+
+cph.html ページ内では 名前 を 社員番号 で表示する
+
+累積のスコアを表示可能にする
+
+
+
+
+
 data.jsにデータは入っているが読み込まれていない
 
 hearing.html:1 Unsafe attempt to load URL file:///C:/Users/z2253238/%E3%80%90SOD%E3%80%91%20Ver4.2/hearing.html from frame with URL file:///C:/Users/z2253238/%E3%80%90SOD%E3%80%91%20Ver4.2/hearing.html. 'file:' URLs are treated as unique security origins.
