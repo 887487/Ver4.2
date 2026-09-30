@@ -1,9 +1,9 @@
 // ツール設定ファイル — スクリプト・メール・サイドメニュー・ヒアリング・更新履歴・固定テキスト・画面遷移
 // admin.html の「💾 保存して反映」で自動更新されます。手動編集は非推奨です。
-// 生成日時: 2026-09-26T10:15:22.089Z
+// 生成日時: 2026-09-30T10:35:44.586Z
 window.APP_STATIC_DATA = {
-  "generatedAt": "2026-09-26T10:15:22.089Z",
-  "savedAt": "2026-09-26T10:15:22.089Z",
+  "generatedAt": "2026-09-30T10:35:44.586Z",
+  "savedAt": "2026-09-30T10:35:44.586Z",
   "sideMenuData": [
     {
       "id": "smCat_1789974391763",
@@ -57,42 +57,42 @@ window.APP_STATIC_DATA = {
           "items": [
             {
               "name": "コールセンターについて",
-              "url": "\\\\tohoku\\share\\拠点\\仙台青葉\\00_事業所\\NGH\\業務資料\\マニュアル関連\\NHK ONE 関連資料\\【NHK ONE】コールセンターについて_20260626.pdf",
+              "url": "\\\\tohoku\\share\\拠点\\仙台青葉\\00_事業所\\NGH\\業務資料\\マニュアル関連\\NHK ONE 関連資料\\【NGH版】PW＋ログインID忘れの対応_20260727.pdf",
               "manualUrl": "",
               "videoUrl": "\\\\tohoku\\share\\拠点\\仙台青葉\\00_事業所\\NGH\\業務資料\\研修関連\\新人研修用動画\\NHK ONE\\【NHK ONE】コールセンターについて.mp4"
             },
             {
               "name": "サービス概要・世帯での利用",
-              "url": "\\\\tohoku\\share\\拠点\\仙台青葉\\00_事業所\\NGH\\業務資料\\マニュアル関連\\NHK ONE 関連資料\\【NHK ONE】サービス概要・世帯での利用_20260626.pdf",
+              "url": "\\\\tohoku\\share\\拠点\\仙台青葉\\00_事業所\\NGH\\業務資料\\マニュアル関連\\NHK ONE 関連資料\\【NGH版】PW＋ログインID忘れの対応_20260727.pdf",
               "manualUrl": "",
               "videoUrl": "\\\\tohoku\\share\\拠点\\仙台青葉\\00_事業所\\NGH\\業務資料\\研修関連\\新人研修用動画\\NHK ONE\\①世帯　動画.mp4"
             },
             {
               "name": "学校での利用",
-              "url": "\\\\tohoku\\share\\拠点\\仙台青葉\\00_事業所\\NGH\\業務資料\\マニュアル関連\\NHK ONE 関連資料\\【NHK ONE】学校での利用_20260626.pdf",
+              "url": "\\\\tohoku\\share\\拠点\\仙台青葉\\00_事業所\\NGH\\業務資料\\マニュアル関連\\NHK ONE 関連資料\\【NGH版】PW＋ログインID忘れの対応_20260727.pdf",
               "manualUrl": "",
               "videoUrl": "\\\\tohoku\\share\\拠点\\仙台青葉\\00_事業所\\NGH\\業務資料\\研修関連\\新人研修用動画\\NHK ONE\\②学校　動画.mp4"
             },
             {
               "name": "事業での利用",
-              "url": "\\\\tohoku\\share\\拠点\\仙台青葉\\00_事業所\\NGH\\業務資料\\マニュアル関連\\NHK ONE 関連資料\\【NHK ONE】事業での利用_20250626.pdf",
+              "url": "\\\\tohoku\\share\\拠点\\仙台青葉\\00_事業所\\NGH\\業務資料\\マニュアル関連\\NHK ONE 関連資料\\【NGH版】PW＋ログインID忘れの対応_20260727.pdf",
               "manualUrl": "",
               "videoUrl": "\\\\tohoku\\share\\拠点\\仙台青葉\\00_事業所\\NGH\\業務資料\\研修関連\\新人研修用動画\\NHK ONE\\③事業　動画.mp4"
             },
             {
               "name": "ユーザーお困りポイント",
-              "url": "\\\\tohoku\\share\\拠点\\仙台青葉\\00_事業所\\NGH\\業務資料\\マニュアル関連\\NHK ONE 関連資料\\【NHK ONE】事業での利用_20250626.pdf",
+              "url": "\\\\tohoku\\share\\拠点\\仙台青葉\\00_事業所\\NGH\\業務資料\\マニュアル関連\\NHK ONE 関連資料\\【NGH版】PW＋ログインID忘れの対応_20260727.pdf",
               "manualUrl": "",
               "videoUrl": "\\\\tohoku\\share\\拠点\\仙台青葉\\00_事業所\\NGH\\業務資料\\研修関連\\新人研修用動画\\NHK ONE\\【世帯アカウント】ユーザーお困りポイント.mp4"
             },
             {
               "name": "アカウント登録導線説明資料",
-              "url": "\\\\tohoku\\share\\拠点\\仙台青葉\\00_事業所\\NGH\\業務資料\\マニュアル関連\\NHK ONE 関連資料\\【NHK ONE】アカウント登録導線説明資料.pdf",
+              "url": "\\\\tohoku\\share\\拠点\\仙台青葉\\00_事業所\\NGH\\業務資料\\マニュアル関連\\NHK ONE 関連資料\\【NGH版】PW＋ログインID忘れの対応_20260727.pdf",
               "manualUrl": ""
             },
             {
               "name": "受信料アカウント全国説明会資料",
-              "url": "\\\\tohoku\\share\\拠点\\仙台青葉\\00_事業所\\NGH\\業務資料\\マニュアル関連\\NHK ONE 関連資料\\【確定版】20251110_受信料アカウント全国説明会資料_1117修正.pdf",
+              "url": "\\\\tohoku\\share\\拠点\\仙台青葉\\00_事業所\\NGH\\業務資料\\マニュアル関連\\NHK ONE 関連資料\\【NGH版】PW＋ログインID忘れの対応_20260727.pdf",
               "manualUrl": ""
             },
             {
@@ -173,6 +173,28 @@ window.APP_STATIC_DATA = {
               "videoUrl": "\\\\tohoku\\share\\拠点\\仙台青葉\\00_事業所\\NGH\\業務資料\\マニュアル関連\\応対品質\\【NGH】応対時間短縮研修.mp4"
             }
           ]
+        },
+        {
+          "id": "sub_1790764041645",
+          "label": "紅白観覧募集資料",
+          "items": [
+            {
+              "name": "FAQ「第77回NHK紅白歌合戦」問合せ対応資料",
+              "url": "\\\\tohoku\\share\\拠点\\仙台青葉\\00_事業所\\NGH\\業務資料\\マニュアル関連\\NHK ONE 関連資料\\紅白観覧募集資料\\★FAQ「第77回NHK紅白歌合戦」問合せ対応資料.pdf"
+            },
+            {
+              "name": "①メインの報道資料",
+              "url": "\\\\tohoku\\share\\拠点\\仙台青葉\\00_事業所\\NGH\\業務資料\\マニュアル関連\\NHK ONE 関連資料\\紅白観覧募集資料\\①メインの報道資料.pdf"
+            },
+            {
+              "name": "②一般応募報道資料",
+              "url": "\\\\tohoku\\share\\拠点\\仙台青葉\\00_事業所\\NGH\\業務資料\\マニュアル関連\\NHK ONE 関連資料\\紅白観覧募集資料\\②一般応募報道資料.pdf"
+            },
+            {
+              "name": "③NHK ONEアカウント登録者向け応募報道資料",
+              "url": "\\\\tohoku\\share\\拠点\\仙台青葉\\00_事業所\\NGH\\業務資料\\マニュアル関連\\NHK ONE 関連資料\\紅白観覧募集資料\\③NHK ONEアカウント登録者向け応募報道資料.pdf"
+            }
+          ]
         }
       ]
     },
@@ -237,56 +259,7 @@ window.APP_STATIC_DATA = {
     }
   ],
   "sideMenuFiles": {},
-  "hearingQuestions": [
-    {
-      "id": "q_3vtxiu8",
-      "enabled": true,
-      "label": "",
-      "outLabel": "",
-      "outTpl": "",
-      "type": "heading",
-      "common": false,
-      "tplIds": [
-        "tpl_gbbve1"
-      ],
-      "tplId": "tpl_gbbve1",
-      "field": "q_3vtxiu8",
-      "prefix": "",
-      "includeInOutput": false
-    },
-    {
-      "id": "q_gfl0srx",
-      "enabled": true,
-      "label": "",
-      "outLabel": "",
-      "outTpl": "",
-      "type": "heading",
-      "common": false,
-      "tplIds": [
-        "tpl_ehnxez"
-      ],
-      "tplId": "tpl_ehnxez",
-      "field": "q_gfl0srx",
-      "prefix": "",
-      "includeInOutput": false
-    },
-    {
-      "id": "q_dhtej93",
-      "enabled": true,
-      "label": "",
-      "outLabel": "",
-      "outTpl": "",
-      "type": "heading",
-      "common": false,
-      "tplIds": [
-        "tpl_jw8d24"
-      ],
-      "tplId": "tpl_jw8d24",
-      "field": "q_dhtej93",
-      "prefix": "",
-      "includeInOutput": false
-    }
-  ],
+  "hearingQuestions": [],
   "hearingPolicies": [],
   "hearingPatterns": [],
   "updateHistory": [
@@ -340,25 +313,16 @@ window.APP_STATIC_DATA = {
       "date": "2026/03/08"
     }
   ],
-  "fixedTexts": {},
+  "fixedTexts": {
+    "opening": "お電話 ありがとうございます。NHKONE窓口 担当●●でございます。\n\n--------------------------------------------------\n＜<b>対応時の注意点</b>＞\n・用途の切り分け（<font color=\"#f4b083\">世帯</font>／<font color=\"#9cc3e5\">事業</font>／<font color=\"#a8d08d\">学校</font>）",
+    "closingDefault": "ご案内は以上となりますが、そのほか確認されたいことなどはございませんでしょうか？",
+    "closingNone": "ありがとうございます。 それでは本日●●がご案内いたしました。それでは失礼いたします。",
+    "closingAsk": "○○○についてでございますね。（お問い合わせ内容に回答）",
+    "closingNoneLabel": "不明点なし",
+    "closingAskLabel": "不明点あり"
+  },
   "faqData": [],
-  "hearingTemplates": [
-    {
-      "id": "tpl_gbbve1",
-      "name": "世帯",
-      "order": 0
-    },
-    {
-      "id": "tpl_ehnxez",
-      "name": "事業",
-      "order": 1
-    },
-    {
-      "id": "tpl_jw8d24",
-      "name": "学校",
-      "order": 2
-    }
-  ],
+  "hearingTemplates": [],
   "hearingCopyButtons": [],
   "hearingLabelPrefix": "",
   "hearingFixedReady": true,
@@ -366,8 +330,8 @@ window.APP_STATIC_DATA = {
   "noticeDate": "",
   "noticeHtml": null,
   "maintenance": {
-    "screen.html": true,
-    "faq.html": true
+    "faq.html": true,
+    "screen.html": true
   },
   "talkScripts": {
     "cat_1772931103363": {
@@ -1688,15 +1652,27 @@ window.APP_STATIC_DATA = {
           "title": "S ⇒ J 転送",
           "steps": [
             {
-              "text": "\n<table>\n<thead><tr><th colspan=\"4\"><span style=\"font-size: 13px; font-weight: 400;\">転送パターン表\n</span></th></tr></thead>\n<tbody><tr><td colspan=\"4\"><span style=\"font-size: 13px;\">転送が想定される問合せ内容</span></td></tr>\n<tr><td>旧NHKプラスからの移行対象者だが、\n移行メールアドレスを覚えていない</td><td>旧NHKプラスからの移行対象者だが、\n現在、移行メールアドレスは使用不可</td><td>パスワードを忘れてしまい、\n受信料アカウントにログインできない</td><td>身に覚えのないハガキ\n（受信料アカウント関連）が届いた</td></tr>\n<tr><td colspan=\"4\"><span style=\"font-size: 13px;\">SアカCC側での確認事項</span></td></tr>\n<tr><td>① 旧NHKプラスからの移行対象であること\n・2025年8月15日時点で旧NHKプラスを利用していた\n・P.3に記載のいずれかのメールを受信していた（現在は確認不可）\n② 新規でNHK ONEアカウントを登録しているか\n\nすべて「確認済」</td><td>① 旧NHKプラスからの移行対象であること\n・2025年8月15日時点で旧NHKプラスを利用していた\n・P.3に記載のいずれかのメールを受信していた\n② 移行対象のメールアドレスは現在使用できないこと\n③ 新規でNHK ONEアカウントを登録しているか\n\nすべて「確認済」</td><td>① 受信料アカウントのPWを忘れてしまい、メール等でも確認できないこと\n② NHK ONEアカウントにはログインできていること\n\nすべて「確認済」\n</td><td>① ご家族にも受信料アカウントを登録した方がいないこと\n② 受信料アカウントに関するメールが一切届いていないこと\n\nいずれも「Yes」</td></tr>\n<tr><td colspan=\"4\"><span style=\"font-size: 13px;\">JアカCC側の対応内容</span></td></tr>\n<tr><td><span style=\"font-size: 13px;\">パターンＡ\n移行対象のメールアドレス確認\n</span></td><td><span style=\"font-size: 13px;\">パターンＢ\n移行アカウントの受信料アカウント削除</span></td><td><span style=\"font-size: 13px;\">パターンＣ\n受信料アカウントの初期パスワード再送</span></td><td><span style=\"font-size: 13px;\">パターンＤ\n受信料アカウントの登録状況確認</span></td></tr>\n</tbody></table>\nパターンA　⇒　「旧NHKプラスからの移行メールアドレス確認について、専門の窓口にお繋ぎします」\nパターンB　⇒　「移行アカウントの受信契約情報の削除が必要なため、専門の窓口にお繋ぎします」\nパターンC　⇒　「受信料アカウントの初期パスワードを再送いたしますので、専門の窓口にお繋ぎします」\nパターンD　⇒　「登録完了ハガキの内容について、専門の窓口にお繋ぎします」\n\n本日ご連絡いただいておりますのは、受信契約者ご本人様か配偶者様でしょうか？　\n",
+              "text": "<table class=\"rt-table\"><tbody><tr><th style=\"text-align: left;\">転送が想定される問い合わせ内容</th><th>SアカCC側での確認事項​</th><th>JアカCC側の対応内容\n</th></tr><tr><td style=\"text-align: left;\" class=\"\">パスワードを忘れてしまい、​受信料アカウントにログインできない​</td><td class=\"\"><div style=\"text-align: left;\">① 受信料アカウントのPWを忘れてしまい、メール等でも確認できないこと​<div style=\"text-align: left;\">② NHK ONEアカウントにはログインできていること​</td><td><b>パターンＣ</b>\n\n受信料アカウントの\n初期パスワード再送\n</td></tr><tr><td><div style=\"text-align: left;\">身に覚えのないハガキ​が届いた​<div style=\"text-align: left;\">（受信料アカウント登録完了ハガキ）​</td><td><div style=\"text-align: left;\">① ご家族にも受信料アカウントを登録した方がいないこと​<div style=\"text-align: left;\"><div style=\"text-align: left;\">​② 受信料アカウントに関するメールが一切届いていないこと​<div style=\"text-align: left;\"><div style=\"text-align: left;\">​③ ハガキの宛名面に「受信料アカウント登録完了のお知らせです」と​記載されていること​</td><td><b>パターンＤ</b>\n\n受信料アカウントの\n登録状況確認\n</td></tr><tr><td class=\"\"><div style=\"text-align: left;\">Sアカで新規登録した（もしくは移行済みの）メールアドレスを覚えていない<div style=\"text-align: left;\">（＝受信料アカウントのメールアドレスを照会したい）​</td><td class=\"\"><div style=\"text-align: left;\">① 新規でNHK ONEアカウントを登録済み（もしくは26年9月以前に移行済み）であること​<div style=\"text-align: left;\">② S-J連携済みであること（お客様から口頭での申し出ベース　可能性があれば可）​<div style=\"text-align: left;\">③ 利用しているSアカとJアカのメアドが同一である可能性があるならJアカCCに照会を掛けられる旨を確認→お客様了承​</td><td><b>パターンE</b>\n\n連携済みの受信料アカウント\n（メールアドレス）確認\n</td></tr><tr><td class=\"\" style=\"text-align: left;\">Sアカで新規登録した（もしくは移行済みの）メールアドレスが使用不可になった\n（＝受信料アカウントを削除したい）​</td><td class=\"\"><div style=\"text-align: left;\">① 新規でNHK ONEアカウントを登録済み（もしくは26年9月以前に移行済み）であること<div style=\"text-align: left;\">② S-J連携済みであること<div style=\"text-align: left;\">③ 登録メールアドレスが現在使用不可<div style=\"text-align: left;\">④ 復旧用メールアドレス・電話番号による復旧導線も使用不可</td><td><b>パターンF</b>\n\n連携済みの受信料アカウント削除\n</td></tr></tbody></table><p>\n</p>",
               "choices": [
                 {
-                  "label": "はい",
-                  "go": 3
+                  "label": "パターンC",
+                  "go": 1,
+                  "labelHtml": "<b>パターンC</b>"
                 },
                 {
-                  "label": "いいえ",
-                  "go": 1
+                  "label": "パターンD",
+                  "go": 1,
+                  "labelHtml": "<b>パターンD</b>"
+                },
+                {
+                  "label": "パターンE",
+                  "go": 1,
+                  "labelHtml": "<b>パターンE</b>"
+                },
+                {
+                  "label": "パターンF",
+                  "go": 1,
+                  "labelHtml": "<b>パターンF</b>"
                 }
               ],
               "memo": "※「転送します」「回します」「代わります」は、たらい回しにされている印象を受けるためNG！"
@@ -3951,24 +3927,344 @@ window.APP_STATIC_DATA = {
 // 画面遷移データ。画像は screen-images/ フォルダに実ファイルとして保存されています。
 // library は画像ライブラリの復元用です（別PCでも一覧が再現されます）。
 window.APP_SCREEN_DATA = {
-  "savedAt": "2026-09-26T10:15:22.089Z",
-  "images": {},
-  "library": [],
+  "savedAt": "2026-09-30T10:35:44.586Z",
+  "images": {
+    "lib74rr4xbkz": "【NGH】screen-images/image_20260929_12.30.43.png",
+    "libfus67wyao": "【NGH】screen-images/image_20260929_12.31.14.png",
+    "libpqk91r5sj": "【NGH】screen-images/image_20260929_12.31.03.png",
+    "libro9zx46o4": "【NGH】screen-images/image_20260929_12.31.19.png",
+    "libv4axrn8tb": "【NGH】screen-images/image_20260929_12.31.08.png",
+    "libyp85kdi4d": "【NGH】screen-images/image_20260929_12.30.56.png"
+  },
+  "library": [
+    {
+      "id": "lib74rr4xbkz",
+      "name": "image_20260929_12.30.43",
+      "folder": "",
+      "file": "【NGH】screen-images/image_20260929_12.30.43.png",
+      "note": "",
+      "noteHtml": "",
+      "hotspots": [
+        {
+          "id": "lhscpr40ysy5",
+          "x": 0,
+          "y": 0,
+          "w": 0.332687338501292,
+          "h": 1,
+          "note": "管理者",
+          "targetId": null,
+          "targetType": null
+        },
+        {
+          "id": "lhsl1eawcbfq",
+          "x": 0.667312661498708,
+          "y": 0,
+          "w": 0.332687338501292,
+          "h": 1,
+          "note": "生徒",
+          "targetId": null,
+          "targetType": null
+        }
+      ],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libfus67wyao",
+      "name": "image_20260929_12.31.14",
+      "folder": "",
+      "file": "【NGH】screen-images/image_20260929_12.31.14.png",
+      "note": "",
+      "noteHtml": "",
+      "hotspots": [
+        {
+          "id": "lhsxs649avcn",
+          "x": 0,
+          "y": 0,
+          "w": 0.332687338501292,
+          "h": 1,
+          "note": "世帯",
+          "targetId": null,
+          "targetType": null
+        },
+        {
+          "id": "lhscpbjdm5lf",
+          "x": 0.667312661498708,
+          "y": 0,
+          "w": 0.332687338501292,
+          "h": 1,
+          "note": "事業",
+          "targetId": null,
+          "targetType": null
+        }
+      ],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libpqk91r5sj",
+      "name": "image_20260929_12.31.03",
+      "folder": "",
+      "file": "【NGH】screen-images/image_20260929_12.31.03.png",
+      "note": "",
+      "noteHtml": "",
+      "hotspots": [
+        {
+          "id": "lhsyd0j1rjgx",
+          "x": 0,
+          "y": 0,
+          "w": 0.332687338501292,
+          "h": 1,
+          "note": "メアド忘れ",
+          "targetId": null,
+          "targetType": null
+        },
+        {
+          "id": "lhsw4yqwqnzh",
+          "x": 0.667312661498708,
+          "y": 0,
+          "w": 0.332687338501292,
+          "h": 1,
+          "note": "PW忘れ",
+          "targetId": null,
+          "targetType": null
+        }
+      ],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libro9zx46o4",
+      "name": "image_20260929_12.31.19",
+      "folder": "",
+      "file": "【NGH】screen-images/image_20260929_12.31.19.png",
+      "note": "",
+      "noteHtml": "",
+      "hotspots": [
+        {
+          "id": "lhsu6iifcar9",
+          "x": 0,
+          "y": 0,
+          "w": 0.332687338501292,
+          "h": 1,
+          "note": "世帯",
+          "targetId": null,
+          "targetType": null
+        },
+        {
+          "id": "lhsstjaa91s3",
+          "x": 0.332687338501292,
+          "y": 0,
+          "w": 0.332687338501292,
+          "h": 1,
+          "note": "事業",
+          "targetId": null,
+          "targetType": null
+        },
+        {
+          "id": "lhs5djt9a1fk",
+          "x": 0.665374677002584,
+          "y": 0,
+          "w": 0.332687338501292,
+          "h": 1,
+          "note": "学校",
+          "targetId": null,
+          "targetType": null
+        }
+      ],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libv4axrn8tb",
+      "name": "image_20260929_12.31.08",
+      "folder": "",
+      "file": "【NGH】screen-images/image_20260929_12.31.08.png",
+      "note": "",
+      "noteHtml": "",
+      "hotspots": [
+        {
+          "id": "lhsai7zxcmrh",
+          "x": 0,
+          "y": 0,
+          "w": 0.332687338501292,
+          "h": 1,
+          "note": "スマホ",
+          "targetId": null,
+          "targetType": null
+        },
+        {
+          "id": "lhs3zm11db4l",
+          "x": 0.667312661498708,
+          "y": 0,
+          "w": 0.332687338501292,
+          "h": 1,
+          "note": "TV",
+          "targetId": null,
+          "targetType": null
+        }
+      ],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libyp85kdi4d",
+      "name": "image_20260929_12.30.56",
+      "folder": "",
+      "file": "【NGH】screen-images/image_20260929_12.30.56.png",
+      "note": "",
+      "noteHtml": "",
+      "hotspots": [
+        {
+          "id": "lhs95jvb409p",
+          "x": 0,
+          "y": 0,
+          "w": 0.332687338501292,
+          "h": 1,
+          "note": "管理者",
+          "targetId": null,
+          "targetType": null
+        },
+        {
+          "id": "lhs5rveioatt",
+          "x": 0.667312661498708,
+          "y": 0,
+          "w": 0.332687338501292,
+          "h": 1,
+          "note": "従業員",
+          "targetId": null,
+          "targetType": null
+        }
+      ],
+      "hsLinkFrom": null
+    }
+  ],
   "patterns": [
     {
+      "id": "scybzl640a",
+      "name": "共通導線",
+      "color": "#000000",
+      "screens": [
+        {
+          "id": "scv8h6m3mt",
+          "name": "画像6",
+          "note": "",
+          "noteHtml": "",
+          "noteOverride": false,
+          "linkify": true,
+          "hotspots": [],
+          "imageSrc": "lib:libhodkzekhw"
+        }
+      ]
+    },
+    {
       "id": "scv24rjx01",
-      "name": "【世帯】登録導線",
+      "name": "世帯",
+      "color": "#ED7D31",
       "screens": []
     },
     {
       "id": "scdiu6vayz",
-      "name": "【事業】登録導線",
-      "screens": []
+      "name": "事業",
+      "color": "#5B9BD5",
+      "screens": [
+        {
+          "id": "scn8ams6fp",
+          "name": "image_20260929_12.30.56",
+          "note": "",
+          "noteHtml": "",
+          "noteOverride": false,
+          "linkify": true,
+          "hotspots": [],
+          "imageSrc": "lib:libyp85kdi4d"
+        }
+      ]
     },
     {
       "id": "sc2gujz5ik",
-      "name": "【学校】登録導線",
+      "name": "学校",
+      "color": "#70AD47",
+      "screens": [
+        {
+          "id": "sc1ceu3yyh",
+          "name": "image_20260929_12.30.43",
+          "note": "",
+          "noteHtml": "",
+          "noteOverride": false,
+          "linkify": true,
+          "hotspots": [],
+          "imageSrc": "lib:lib74rr4xbkz"
+        }
+      ]
+    },
+    {
+      "id": "sc7xn4v2oz",
+      "name": "アプリ起点の登録導線",
+      "color": "#f15bb5",
+      "screens": [
+        {
+          "id": "sc9136thsk",
+          "name": "image_20260929_12.31.08",
+          "note": "",
+          "noteHtml": "",
+          "noteOverride": false,
+          "linkify": true,
+          "hotspots": [],
+          "imageSrc": "lib:libv4axrn8tb"
+        }
+      ]
+    },
+    {
+      "id": "sc02dwg34h",
+      "name": "ログイン不可",
+      "color": "#ffa502",
+      "screens": [
+        {
+          "id": "scqs9b6eb9",
+          "name": "image_20260929_12.31.03",
+          "note": "",
+          "noteHtml": "",
+          "noteOverride": false,
+          "linkify": true,
+          "hotspots": [],
+          "imageSrc": "lib:libpqk91r5sj"
+        }
+      ]
+    },
+    {
+      "id": "sc798x87yi",
+      "name": "解約",
+      "color": "#e63946",
       "screens": []
+    },
+    {
+      "id": "scbtavjf6p",
+      "name": "アプリ利用",
+      "color": "#4361ee",
+      "screens": [
+        {
+          "id": "scae0f1kej",
+          "name": "image_20260929_12.31.14",
+          "note": "",
+          "noteHtml": "",
+          "noteOverride": false,
+          "linkify": true,
+          "hotspots": [],
+          "imageSrc": "lib:libfus67wyao"
+        }
+      ]
+    },
+    {
+      "id": "scxphuyb1u",
+      "name": "アカウント設定のあれこれ",
+      "color": "#e84393",
+      "screens": [
+        {
+          "id": "scwnp8djuy",
+          "name": "image_20260929_12.31.19",
+          "note": "",
+          "noteHtml": "",
+          "noteOverride": false,
+          "linkify": true,
+          "hotspots": [],
+          "imageSrc": "lib:libro9zx46o4"
+        }
+      ]
     }
   ]
 };
